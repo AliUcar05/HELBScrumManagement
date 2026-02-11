@@ -1,0 +1,21 @@
+Le compte Super Utilisateur est configuré avec les identifiants suivants :
+Username : Helb
+Mot de passe : Garedumidi
+
+Avant de démarrer le projet, il est nécessaire d’installer les dépendances en exécutant la commande :
+
+pip install -r requirements.txt
+
+Ensuite, placez-vous dans le dossier du projet :
+
+cd django_project
+
+Puis lancez le serveur de développement avec :
+
+python manage.py runserver
+
+Le projet sera alors accessible via l’adresse :
+http://127.0.0.1:8000/
+
+L’interface d’administration est disponible à l’adresse :
+http://127.0.0.1:8000/admin/
