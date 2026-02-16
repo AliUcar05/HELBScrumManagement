@@ -7,6 +7,7 @@ Designed as a cost-effective alternative to Jira for academic use at **HELB**, f
 HELB currently provides Jira to students for project management exercises, but Jira comes with a significant monthly cost compared to the features used.  
 This project aims to deliver a **Scrum-oriented project management tool** with essential functionalities: project spaces, tickets, backlog prioritization, sprint management, and user access control.
 
+
 ## Key Features
 
 ### 1) Project Spaces
