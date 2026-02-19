@@ -1,0 +1,52 @@
+{% extends "blog/base.html" %}
+{% block content %}
+  <article class="content-section">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2>{{ object.name }}</h2>
+
+      {% if object.created_by == user %}
+        <div>
+          <a class="btn btn-outline-secondary btn-sm" href="{% url 'project-update' object.pk %}">Update</a>
+          <a class="btn btn-outline-danger btn-sm" href="{% url 'project-delete' object.pk %}">Delete</a>
+        </div>
+      {% endif %}
+    </div>
+
+    <p class="text-muted mb-2">
+      Created by {{ object.created_by.username }} |
+      Sprint duration: {{ object.sprint_duration }} days
+    </p>
+
+    <p>{{ object.description|linebreaks }}</p>
+
+    <hr>
+
+    <h4>Sprints</h4>
+    {% if sprints %}
+      <ul class="list-group mb-3">
+        {% for sprint in sprints %}
+          <li class="list-group-item d-flex justify-content-between align-items-center">
+            <span>{{ sprint.name }} ({{ sprint.status }})</span>
+            <small class="text-muted">{{ sprint.start_date }} → {{ sprint.end_date|default:"-" }}</small>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">No sprints yet.</p>
+    {% endif %}
+
+    <h4>Top-level Tickets</h4>
+    {% if tickets %}
+      <ul class="list-group">
+        {% for t in tickets %}
+          <li class="list-group-item">
+            <strong>{{ t.type }}</strong> — {{ t.status }}
+            <div class="text-muted">{{ t.description|truncatechars:160 }}</div>
+          </li>
+        {% endfor %}
+      </ul>
+    {% else %}
+      <p class="text-muted">No tickets yet.</p>
+    {% endif %}
+  </article>
+{% endblock %}

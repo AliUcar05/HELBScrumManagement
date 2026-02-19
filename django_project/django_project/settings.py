@@ -20,6 +20,7 @@ ALLOWED_HOSTS = []
 INSTALLED_APPS = [
     'blog.apps.BlogConfig',
     'users.apps.UsersConfig',
+    'scrum.apps.ScrumConfig',
 
     # Third party
     'crispy_forms',
@@ -74,11 +75,14 @@ WSGI_APPLICATION = 'django_project.wsgi.application'
 # DATABASE
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_project_db',
+        'USER': 'django_user',
+        'PASSWORD': 'Garedumidi',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
     }
 }
-
 
 # PASSWORD VALIDATION
 AUTH_PASSWORD_VALIDATORS = [

@@ -1,20 +1,60 @@
 Le compte Super Utilisateur est configuré avec les identifiants suivants :
+
+pour créer le super utilisateur :
+
+python manage.py createsuperuser
+
 Username : Helb
 Mot de passe : Garedumidi
 
-Avant de démarrer le projet, il est nécessaire d’installer les dépendances en exécutant la commande :
+Installation et lancement du projet (PostgreSQL)
+1) Installer les dépendances
+
+Avant de démarrer le projet, installez les dépendances avec :
 
 pip install -r requirements.txt
+2) Créer la base PostgreSQL (obligatoire)
 
-Ensuite, placez-vous dans le dossier du projet :
+Chaque membre doit créer la base de données en local.
+
+Ouvrez PostgreSQL (psql) puis exécutez :
+
+CREATE USER django_user WITH PASSWORD 'Garedumidi';
+CREATE DATABASE django_project_db OWNER django_user;
+GRANT ALL PRIVILEGES ON DATABASE django_project_db TO django_user;
+
+Le serveur PostgreSQL doit être démarré (port par défaut : 5432).
+
+3) Vérifier la configuration Django
+
+Dans settings.py, la base de données doit être configurée comme ceci :
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_project_db',
+        'USER': 'django_user',
+        'PASSWORD': 'Garedumidi',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
+}
+4) Appliquer les migrations
+
+Placez-vous dans le dossier du projet :
 
 cd django_project
 
-Puis lancez le serveur de développement avec :
+Puis lancez :
+
+python manage.py migrate
+5) Démarrer le serveur
+
+Lancez ensuite le serveur de développement :
 
 python manage.py runserver
 
-Le projet sera alors accessible via l’adresse :
+Le projet sera accessible via l’adresse :
 http://127.0.0.1:8000/
 
 L’interface d’administration est disponible à l’adresse :

@@ -1,0 +1,18 @@
+{% extends "blog/base.html" %}
+{% load crispy_forms_tags %}
+{% block content %}
+  <div class="content-section">
+    <h2 class="mb-3">
+      {% if object %}Update Project{% else %}New Project{% endif %}
+    </h2>
+
+    <form method="POST">
+      {% csrf_token %}
+      {{ form|crispy }}
+      <div class="mt-3">
+        <button class="btn btn-primary" type="submit">Save</button>
+        <a class="btn btn-outline-secondary" href="{% url 'project-list' %}">Cancel</a>
+      </div>
+    </form>
+  </div>
+{% endblock %}
