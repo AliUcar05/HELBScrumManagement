@@ -1,8 +1,7 @@
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.urls import reverse_lazy
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
-
-from .models import Project
+from .models import Project, Sprint, Ticket
 from .forms import ProjectForm
 
 
@@ -74,3 +73,4 @@ class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 
     def test_func(self):
         return self.get_object().created_by == self.request.user
+

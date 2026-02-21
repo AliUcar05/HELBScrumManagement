@@ -1,81 +1,123 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-<head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+        <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
+        <title>ScrumManagement</title>
+    </head>
 
-    <link rel="stylesheet"
-          href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <body>
+        <!-- ── NAVBAR ── -->
+        <header class="site-header">
+            <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+                <div class="container-fluid px-3">
 
-    <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
+                    <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                        <img src="{% static 'blog/images/logo.png' %}" width="50" class="mr-2" alt="Logo">
+                        ScrumManagement
+                    </a>
 
-    <title>ScrumManagement</title>
-</head>
+                    <button class="navbar-toggler" type="button"
+                            data-toggle="collapse" data-target="#navbarToggle">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
 
-<body>
-<header class="site-header">
-  <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
-    <div class="container">
+                    <div class="collapse navbar-collapse" id="navbarToggle">
 
-      <!-- LOGO + NOM -->
-      <a class="navbar-brand d-flex align-items-center"
-         href="{% url 'project-list' %}">
-        <img src="{% static 'blog/images/logo.png' %}"
-             width="50"
-             class="mr-2"
-             alt="Logo">
-        ScrumManagement
-      </a>
+                        <!-- Menu gauche -->
+                        <div class="navbar-nav mr-auto d-flex align-items-center">
+                            <li class="nav-item dropdown list-unstyled mr-2">
+                                <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown">
+                                    Projects
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'project-list' %}">
+                                        <i class="fas fa-list mr-1"></i> View Projects</a></li>
+                                    <li><a class="dropdown-item" href="{% url 'project-create' %}">
+                                        <i class="fas fa-plus mr-1"></i> Create Project</a></li>
+                                </ul>
+                            </li>
+                        </div>
 
-      <button class="navbar-toggler" type="button"
-              data-toggle="collapse"
-              data-target="#navbarToggle">
-          <span class="navbar-toggler-icon"></span>
-      </button>
+                        <!-- Menu droite -->
+                        <div class="navbar-nav">
+                            {% if user.is_authenticated %}
+                            <ul class="navbar-nav align-items-center">
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#"><i class="fas fa-search" style="font-size:1.4rem;"></i></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#"><i class="fas fa-bell" style="font-size:1.4rem;"></i></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#"><i class="fas fa-users" style="font-size:1.4rem;"></i></a>
+                                </li>
+                                <li class="nav-item">
+                                    <a class="nav-link" href="#"><i class="fas fa-cog" style="font-size:1.4rem;"></i></a>
+                                </li>
+                                <li class="nav-item dropdown ml-2">
+                                    <a class="nav-link p-0" href="#" role="button" data-toggle="dropdown">
+                                        {% if user.profile.image %}
+                                            <img src="{{ user.profile.image.url }}" class="rounded-circle"
+                                                 width="35" height="35" style="object-fit:cover;">
+                                        {% else %}
+                                            <div class="rounded-circle d-flex align-items-center justify-content-center"
+                                                 style="width:35px;height:35px;background:#e85d8a;color:white;font-weight:bold;font-size:14px;">
+                                                {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                            </div>
+                                        {% endif %}
+                                    </a>
+                                    <ul class="dropdown-menu dropdown-menu-right">
+                                        <li>
+                                            <div class="px-3 py-2 text-muted" style="font-size:0.85rem;">
+                                                {{ user.get_full_name }}<br>
+                                                <small>{{ user.email }}</small>
+                                            </div>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <li><a class="dropdown-item" href="{% url 'profile' %}">
+                                            <i class="fas fa-user-circle mr-2"></i>Profile</a></li>
+                                        <li><a class="dropdown-item" href="#">
+                                            <i class="fas fa-cog mr-2"></i>Settings</a></li>
+                                        <li><hr class="dropdown-divider"></li>
+                                        <form method="POST" action="{% url 'logout' %}">
+                                            {% csrf_token %}
+                                            <button type="submit" class="dropdown-item text-danger">
+                                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                            </button>
+                                        </form>
+                                    </ul>
+                                </li>
+                            </ul>
+                            {% else %}
+                                <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
+                                <a class="nav-item nav-link" href="{% url 'register' %}">Register</a>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </nav>
+        </header>
 
-      <div class="collapse navbar-collapse" id="navbarToggle">
+        <main class="content-section">
+            <div class="container-fluid">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                    {% endfor %}
+                {% endif %}
 
-        <!-- Menu gauche -->
-        <div class="navbar-nav mr-auto">
-          <a class="nav-item nav-link" href="{% url 'project-list' %}">Projects</a>
-        </div>
-
-        <!-- Menu droite -->
-        <div class="navbar-nav">
-          {% if user.is_authenticated %}
-            <a class="nav-item nav-link" href="{% url 'project-create' %}">New Project</a>
-            <a class="nav-item nav-link" href="{% url 'profile' %}">Profile</a>
-            <a class="nav-item nav-link" href="{% url 'logout' %}">Logout</a>
-          {% else %}
-            <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
-            <a class="nav-item nav-link" href="{% url 'register' %}">Register</a>
-          {% endif %}
-        </div>
-
-      </div>
-    </div>
-  </nav>
-</header>
-
-<main role="main" class="container" style="margin-top: 100px;">
-
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }}">
-                {{ message }}
+                {% block content %}{% endblock %}
             </div>
-        {% endfor %}
-    {% endif %}
+        </main>
 
-    {% block content %}{% endblock %}
 
-</main>
-
-<!-- JS Bootstrap 4 -->
-<script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-
-</body>
+        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+    </body>
 </html>

@@ -34,6 +34,23 @@ ul {
   align-items: center;
 }
 
+/* ===== NAVBAR COMPACTE ===== */
+
+.navbar.fixed-top {
+    height: 65px;
+    min-height: 65px;
+    padding: 0 12px !important;
+}
+
+.navbar .navbar-brand,
+.navbar .nav-link {
+    height: 65px;
+    display: flex;
+    align-items: center;
+    padding-top: 0 !important;
+    padding-bottom: 0 !important;
+}
+
 /* ===== LOGO ===== */
 .navbar-brand img {
   height: 75px;
@@ -63,10 +80,9 @@ ul {
   color: #facc15;
 }
 
-
 /* ===== CONTENT SECTION ===== */
 .content-section {
-  background: #ffffff;
+  background: #f4f5f7;
   padding: 25px;
   border-radius: 15px;
   margin-bottom: 20px;
@@ -142,3 +158,18 @@ a.article-title:hover {
 .btn-helb:hover {
   background-color: #eab308;
 }
+
+/* ===== drop down===== */
+.navbar img {
+    transition: transform 0.2s ease;
+}
+
+.navbar img:hover {
+    transform: scale(1.1);
+}
+
+.tab-item:hover {
+    background-color: white !important;
+    color: #6366f1 !important;
+}
+

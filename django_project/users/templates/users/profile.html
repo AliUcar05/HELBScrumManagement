@@ -1,24 +1,315 @@
 {% extends "blog/base.html" %}
 {% load crispy_forms_tags %}
+{% block title %}My Profile{% endblock %}
+{% block nav_profile %}active{% endblock %}
+
 {% block content %}
-    <div class="content-section">
-      <div class="media">
-        <img class="rounded-circle account-img" src="{{ user.profile.image.url }}">
-        <div class="media-body">
-          <h2 class="account-heading">{{ user.username }}</h2>
-          <p class="text-secondary">{{ user.email }}</p>
+    <div class="container">
+
+        <!-- ── PROFILE HEADER ── -->
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px; overflow: hidden;">
+
+            <!-- Banner -->
+            <div style="height: 90px; background: #0c4a6e"></div>
+
+            <div class="card-body pt-0">
+                <div class="d-flex align-items-end justify-content-between flex-wrap">
+
+                    <!-- Avatar + Infos -->
+                    <div class="d-flex align-items-end gap-3">
+                        <div style="margin-top: -40px; position: relative;">
+                            <img src="{{ user.profile.image.url }}" class="rounded-circle border border-white" width="80" height="80"
+                                 style="object-fit: cover; border-width: 4px !important; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                            <span style="position: absolute; bottom: 4px; right: 4px;width: 14px; height: 14px; background: #36b37e; border-radius: 50%; border: 2px solid white;"></span>
+                        </div>
+                        <div class="pb-1 ml-3">
+                            <h4 class="mb-0 font-weight-bold">{{ user.profile.get_full_name }}</h4>
+                            <span class="badge badge-primary" style="font-size: 0.7rem; border-radius: 20px;">
+                                {{ user.profile.get_role_display|upper }}
+                            </span>
+                            <div class="d-flex flex-wrap mt-1" style="gap: 12px; font-size: 0.825rem; color: #6b778c;">
+                                {% if user.profile.job_title %}
+                                <span><i class="fas fa-briefcase mr-1"></i>{{ user.profile.job_title }}</span>
+                                {% endif %}
+                                <span><i class="fas fa-envelope mr-1"></i>{{ user.email }}</span>
+                                {% if user.profile.phone %}
+                                <span><i class="fas fa-phone mr-1"></i>{{ user.profile.phone }}</span>
+                                {% endif %}
+                                {% if user.profile.location %}
+                                <span><i class="fas fa-map-marker-alt mr-1"></i>{{ user.profile.location }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Actions -->
+                    <div class="d-flex" style="gap: 8px; padding-bottom: 4px;">
+                        <a href="{% url 'change_password' %}"
+                           class="btn btn-outline-secondary btn-sm">
+                            <i class="fas fa-key mr-1"></i> Change Password
+                        </a>
+                        <button class="btn btn-primary btn-sm" id="editBtn" onclick="toggleEdit()">
+                            <i class="fas fa-edit mr-1"></i> Edit Profile
+                        </button>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <form method="POST" enctype="multipart/form-data">
-          {% csrf_token %}
-          <fieldset class="form-group">
-              <legend class="border-bottom mb-4">Profile Info</legend>
-              {{ u_form|crispy }}
-              {{ p_form|crispy }}
-          </fieldset>
-          <div class="form-group">
-              <button class="btn btn-outline-info" type="submit">Update</button>
-          </div>
-      </form>
+
+        <!-- ── STATS ROW ── -->
+        <div class="row mb-4">
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+                    <div style="font-size: 1.8rem; font-weight: 700; color: #172b4d;">0</div>
+                    <div style="font-size: 0.72rem; color: #97a0af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Active Tasks</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+                    <div style="font-size: 1.8rem; font-weight: 700; color: #172b4d;">0</div>
+                    <div style="font-size: 0.72rem; color: #97a0af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Sprints Done</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+                    <div style="font-size: 1.8rem; font-weight: 700; color: #172b4d;">0%</div>
+                    <div style="font-size: 0.72rem; color: #97a0af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Completion</div>
+                </div>
+            </div>
+            <div class="col-md-3 col-6 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3" style="border-radius: 12px;">
+                    <div style="font-size: 1.8rem; font-weight: 700; color: #172b4d;">0</div>
+                    <div style="font-size: 0.72rem; color: #97a0af; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600;">Issues Closed</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── MAIN GRID ── -->
+        <div class="row">
+
+            <!-- LEFT COLUMN -->
+            <div class="col-md-8">
+
+                <!-- Personal Info (view mode) -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;" id="viewMode">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-user mr-2 text-primary"></i>Personal Information
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Username</small>
+                                    <div class="font-weight-medium">{{ user.username }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">First Name</small>
+                                    <div>{{ user.first_name|default:"—" }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Last Name</small>
+                                    <div>{{ user.last_name|default:"—" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Email</small>
+                                    <div>{{ user.email }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Phone</small>
+                                    <div>{{ user.profile.phone|default:"—" }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Location</small>
+                                    <div>{{ user.profile.location|default:"—" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Personal Info (edit mode) - caché par défaut -->
+                <div class="card border-0 shadow-sm mb-4"
+                     style="border-radius: 12px; display: none; border: 2px solid #5b6af0 !important;"
+                     id="editMode">
+                    <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-edit mr-2 text-primary"></i>Edit Personal Information
+                        </h6>
+                        <small class="text-muted">Work info can only be changed by an admin</small>
+                    </div>
+                    <div class="card-body">
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            <div class="row">
+                                <div class="col-md-6">
+                                    {{ p_form.image|as_crispy_field }}
+                                    {{ u_form.username|as_crispy_field }}
+                                    {{ u_form.first_name|as_crispy_field }}
+                                    {{ u_form.last_name|as_crispy_field }}
+                                </div>
+                                <div class="col-md-6">
+                                    {{ u_form.email|as_crispy_field }}
+                                    {{ p_form.phone|as_crispy_field }}
+                                    {{ p_form.location|as_crispy_field }}
+                                </div>
+                            </div>
+                            <div class="d-flex" style="gap: 8px;">
+                                <button type="submit" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-save mr-1"></i> Save Changes
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" onclick="toggleEdit()">
+                                    Cancel
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Work Info -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-building mr-2 text-primary"></i>Work
+                        </h6>
+                        <span class="badge badge-light text-muted" style="font-size:0.7rem;">
+                            <i class="fas fa-lock mr-1"></i> Read only
+                        </span>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Role</small>
+                                    <div>{{ user.profile.get_role_display }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Job Title</small>
+                                    <div>{{ user.profile.job_title|default:"—" }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Department</small>
+                                    <div>{{ user.profile.department|default:"—" }}</div>
+                                </div>
+                                <div class="mb-3">
+                                    <small class="text-muted text-uppercase font-weight-bold" style="font-size:0.7rem; letter-spacing:0.5px;">Supervisor</small>
+                                    <div>{{ user.profile.supervisor|default:"—" }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-history mr-2 text-primary"></i>Recent Activity
+                        </h6>
+                    </div>
+                    <div class="card-body pb-1">
+
+
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="col-md-4">
+
+                <!-- Security -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-shield-alt mr-2 text-primary"></i>Security
+                        </h6>
+                    </div>
+                    <div class="card-body pb-1">
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:500;">Last Login</div>
+                                <small class="text-muted">Most recent session</small>
+                            </div>
+                            <small style="font-family: monospace;">{{ user.last_login|date:"d/M/y g:i A" }}</small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:500;">Last Failed Login</div>
+                                <small class="text-muted">Unsuccessful attempt</small>
+                            </div>
+                            <small style="font-family: monospace;">
+                                {{ user.profile.last_failed_login|date:"d/M/y g:i A"|default:"None" }}
+                            </small>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2 border-bottom">
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:500;">Failed Logins</div>
+                                <small class="text-muted">Current count</small>
+                            </div>
+                            <span class="badge badge-success">
+                                {{ user.profile.current_failed_logins }}
+                            </span>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center py-2">
+                            <div>
+                                <div style="font-size:0.85rem; font-weight:500;">Password</div>
+                                <small class="text-muted">Keep your account safe</small>
+                            </div>
+                            <a href="{% url 'change_password' %}"
+                               class="btn btn-outline-secondary btn-sm">
+                                <i class="fas fa-key mr-1"></i> Change
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Avatar preview -->
+                <div class="card border-0 shadow-sm mb-4 text-center" style="border-radius: 12px;">
+                    <div class="card-body py-4">
+                        <img src="" class="rounded-circle mb-3" width="90" height="90" style="object-fit: cover; box-shadow: 0 4px 12px rgba(0,0,0,0.15);">
+                        <div class="font-weight-bold"></div>
+                        <small class="text-muted"></small>
+
+                        <div class="mt-2">
+                            <span class="badge badge-primary" style="border-radius: 20px; font-size:0.7rem;">
+
+                            </span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
     </div>
-{% endblock content %}
+
+    <script>
+        function toggleEdit()
+        {
+            const viewMode = document.getElementById('viewMode');
+            const editMode = document.getElementById('editMode');
+            const editBtn  = document.getElementById('editBtn');
+
+            if (editMode.style.display === 'none')
+            {
+                viewMode.style.display = 'none';
+                editMode.style.display = 'block';
+                editBtn.innerHTML = '<i class="fas fa-times mr-1"></i> Cancel';
+                editBtn.classList.replace('btn-primary', 'btn-outline-secondary');
+            }
+            else
+            {
+                viewMode.style.display = 'block';
+                editMode.style.display = 'none';
+                editBtn.innerHTML = '<i class="fas fa-edit mr-1"></i> Edit Profile';
+                editBtn.classList.replace('btn-outline-secondary', 'btn-primary');
+            }
+        }
+    </script>
+
+{% endblock %}
