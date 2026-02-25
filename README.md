@@ -1,4 +1,6 @@
 # Project Management Application (Scrum-compatible)
+```md
+## Documentation - Navigation & Flow → docs/navigation.md
 
 A lightweight web application for managing software projects using the Scrum framework.  
 Designed as a cost-effective alternative to Jira for academic use at **HELB**, focusing on the features actually needed in project management courses.
