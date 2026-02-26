@@ -63,6 +63,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                "scrum.context_processors.current_project",
             ],
         },
     },
@@ -107,8 +108,9 @@ STATICFILES_DIRS = [BASE_DIR / 'static']  # si tu ajoutes un dossier static glob
 
 
 # MEDIA FILES
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 MEDIA_URL = '/media/'
-MEDIA_ROOT = BASE_DIR / 'media'
+
 
 
 # CRISPY FORMS

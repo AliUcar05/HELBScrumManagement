@@ -3,7 +3,7 @@ from django.urls import path
 from . import views
 from .views import (
     ProjectListView, ProjectDetailView, ProjectCreateView,
-    ProjectUpdateView, ProjectDeleteView
+    ProjectUpdateView, ProjectDeleteView, ProjectSettingsView, MembershipAddView
 )
 
 urlpatterns = [
@@ -12,5 +12,11 @@ urlpatterns = [
     path("projects/<int:pk>/", ProjectDetailView.as_view(), name="project-detail"),
     path("projects/<int:pk>/update/", ProjectUpdateView.as_view(), name="project-update"),
     path("projects/<int:pk>/delete/", ProjectDeleteView.as_view(), name="project-delete"),
+
+
+    path("projects/<int:pk>/board/", views.project_board, name="project-board"),
+    path("projects/<int:pk>/update-modal/", views.ProjectUpdateModalView.as_view(), name="project-update-modal"),
+    path("projects/<int:pk>/settings/",ProjectSettingsView.as_view(),name="project-settings"),
+    path("projects/<int:pk>/members/add/",MembershipAddView.as_view(),name="membership-add",)
 
 ]

@@ -11,13 +11,26 @@ class Profile(models.Model):
         ('product_owner', 'Product Owner'),
     ]
 
+
+    GLOBAL_ROLES = [
+        ("admin", "Admin"),
+        ("member", "Member"),
+    ]
+    global_role = models.CharField(
+        max_length=20,
+        choices=GLOBAL_ROLES,
+        default="member",
+        help_text="Platform-wide role. Project-level access is managed via Membership."
+    )
+
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    image = models.ImageField(default='default.jpg', upload_to='profile_pics')
+    image = models.ImageField(default='default.png', upload_to='profile_pics')
 
     phone = models.CharField(max_length=20, blank=True)
     location = models.CharField(max_length=100, blank=True)
 
-    role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='developer')
+    role = models.CharField(max_length=20,choices=ROLE_CHOICES,default='developer',help_text="Default Scrum role of this user (can differ per project via Membership).")
+    global_role = models.CharField(max_length=20,choices=GLOBAL_ROLES,default="member",help_text="Platform-wide role. Project-level access is managed via Membership.")
     job_title = models.CharField(max_length=100, blank=True)
     department = models.CharField(max_length=100, blank=True)
     supervisor = models.ForeignKey(User,on_delete=models.SET_NULL,null=True,blank=True,related_name='subordinates')
@@ -26,9 +39,20 @@ class Profile(models.Model):
     last_failed_login = models.DateTimeField(null=True, blank=True)
     current_failed_logins = models.IntegerField(default=0)
 
+    last_activity = models.DateTimeField(('last activity'), auto_now=True)
+
 
     def __str__(self):
-        return f'{self.user.username} Profile'
+        return f'{self.user.username} ({self.get_global_role_display()})'
+
+
+    @property
+    def is_platform_admin(self):
+        return self.global_role == "admin"
+
+    @property
+    def display_name(self):
+        return self.get_full_name() or self.user.username
 
     def get_full_name(self):
         return f'{self.user.last_name} {self.user.first_name}'.strip()

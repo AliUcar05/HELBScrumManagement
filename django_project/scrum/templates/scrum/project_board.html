@@ -1,0 +1,169 @@
+{% extends "blog/base.html" %}
+{% block title %}{{ project.name }}{% endblock %}
+{% block nav_board %}active{% endblock %}
+
+{# Rendre le projet courant accessible dans la sidebar (base.html) #}
+{% with current_project=project %}
+
+{% block content %}
+    <div class="wrapper">
+         <div class="sidebar" id="sidebar">
+             <div class="sidebar-header d-flex align-items-center gap-3">
+                <div class="project-avatar">
+
+                    {% if project.image %}
+                        <img src="{{ project.image.url }}"
+                             class="project-cover"
+                             alt="{{ project.name }}">
+                    {% else %}
+                        <div class="project-fallback">
+                            {{ project.code|first|upper }}
+                        </div>
+                    {% endif %}
+
+                    <img src="{{ project.project_type_image }}"
+                         class="project-type-badge"
+                         alt="{{ project.project_type }}">
+                </div>
+
+                <div class="project-info" style="margin-left: 10px">
+                    <h6 class="project-title mb-0">{{ project.name }}</h6>
+                    <small class="text-muted">{{ project.code }}</small>
+                </div>
+            </div>
+            <hr>
+            <ul>
+                <li>
+                    <a href="{% url 'project-board' pk=project.pk %}" class="btn btn-outline-secondary btn-sm {% if request.resolver_match.url_name == 'project-board' %}active{% endif %}">
+                        <i class="fas fa-th-large" style="font-size:1.1rem; color:#f05d7a;"></i>Board
+                    </a>
+                </li>
+                <li>
+                    <a href="" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-server mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Backlog
+                    </a>
+                </li>
+                <li>
+                    <a href="" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-border-all mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Active Sprints
+                    </a>
+                </li>
+                <li>
+                    <a href="" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-desktop mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Issues
+                    </a>
+                </li>
+                <li>
+                    <a href="" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-map mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Roadmap
+                    </a>
+                </li>
+                <li>
+                    <a href="" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-archive mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Releases
+                    </a>
+                </li>
+                <li>
+                    <a href="" class="btn btn-outline-secondary btn-sm">
+                        <i class="fas fa-chart-line mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Reports
+                    </a>
+                </li>
+                {% if membership.can_manage %}
+                    <li>
+                        <a href="{% url 'project-settings' project.pk %}" class="btn btn-outline-secondary btn-sm">
+                            <i class="bi bi-gear me-1" style="font-size:1.1rem; color:#f05d7a;"></i>Settings
+                        </a>
+                    </li>
+                {% endif %}
+            </ul>
+             <div class="sidebarBtn">
+                <button id="toggleBtn">
+                    <i class="fas fa-angle-double-left"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="main">
+           <!-- ==================== ACTIVE SPRINT ==================== -->
+            {% if active_sprint %}
+                <div class="alert alert-success d-flex align-items-center gap-3 mb-4">
+                    <i class="bi bi-lightning-charge-fill fs-4"></i>
+                    <div class="flex-grow-1">
+                        <strong>Active Sprint:</strong> {{ active_sprint.name }}
+                        {% if active_sprint.goal %}
+                        <br><small>Goal: {{ active_sprint.goal }}</small>
+                        {% endif %}
+                    </div>
+                    <div class="d-flex gap-2">
+                        <a href="#" class="btn btn-success btn-sm">
+                            <i class="bi bi-kanban me-1"></i> View Board
+                        </a>
+                        <a href="#" class="btn btn-outline-success btn-sm">
+                            <i class="bi bi-list-ul me-1"></i> Sprint Backlog
+                        </a>
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
+                    <i class="bi bi-calendar-x fs-4 text-muted"></i>
+                    <div class="flex-grow-1">
+                        <strong>No active sprint.</strong>
+                        <small class="text-muted ms-2">Create and start a sprint to begin tracking work.</small>
+                    </div>
+                    <a href="#" class="btn btn-outline-primary btn-sm" style="margin-left: 100px">
+                        <i class="bi bi-plus me-1"></i> Create Sprint
+                    </a>
+                </div>
+            {% endif %}
+            <hr>
+            <div style="display:flex; gap:15px;overflow-x:auto;align-items:flex-start; padding-bottom: 20px;">
+                {% for column in columns %}
+                    <div class="card p-3" style="min-width:420px; width:420px; min-height: 75vh; background:#f4f5f7; display:flex; flex-direction:column;">
+                        <div class="d-flex align-items-center mb-3">
+                            <h6 class="font-weight-bold mb-0">{{ column.name }}</h6>
+                        </div>
+                        {% for ticket in column.ticket_set.all %}
+                            <div class="card p-2 mb-2 shadow-sm">
+                                {{ ticket.title }}
+                            </div>
+                        {% empty %}
+                            <div style="flex:1; display:flex; align-items:center; justify-content:center;">
+                                <small class="text-muted">No issues</small>
+                            </div>
+                        {% endfor %}
+
+                        <div class="pt-2 border-top mt-2">
+                            <a href="#" class="text-muted text-decoration-none">
+                                + Add Issue
+                            </a>
+                        </div>
+
+                    </div>
+                {% endfor %}
+
+                <div>
+                    <a href="#" class="btn btn-outline-secondary" style="min-width:200px; height:60px; border-style:dashed;">
+                        + Add Column
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        // toggle sidebar
+        document.getElementById('toggleBtn').onclick = function()
+        {
+            document.getElementById('sidebar').classList.toggle('collapsed');
+            const icon = this.querySelector('i');
+            if (document.getElementById('sidebar').classList.contains('collapsed'))
+            {
+                icon.classList.replace('fa-angle-double-left', 'fa-angle-double-right');
+            }
+            else
+            {
+                icon.classList.replace('fa-angle-double-right', 'fa-angle-double-left');
+            }
+        }
+    </script>
+{% endblock content %}
+{% endwith %}

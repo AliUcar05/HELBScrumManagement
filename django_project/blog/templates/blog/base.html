@@ -30,17 +30,47 @@
 
                         <!-- Menu gauche -->
                         <div class="navbar-nav mr-auto d-flex align-items-center">
+                            <!-- Projects button-->
                             <li class="nav-item dropdown list-unstyled mr-2">
                                 <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown">
                                     Projects
                                 </a>
                                 <ul class="dropdown-menu">
+                                    {% if current_project %}
+                                        <li class="px-3 py-2">
+                                            <small class="text-muted">CURRENT PROJECT</small>
+                                            <div class="font-weight-bold">{{ current_project.name }}</div>
+                                        </li>
+                                        <li><hr class="dropdown-divider"></li>
+                                    {% endif %}
+                                    <li><a class="px-3 py-2"><i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i> Software</a></li>
+                                    <li><a class="px-3 py-2"><i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i> Business</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{% url 'project-list' %}">
-                                        <i class="fas fa-list mr-1"></i> View Projects</a></li>
+                                        View All Projects</a></li>
+                                    <li><hr class="dropdown-divider"></li>
                                     <li><a class="dropdown-item" href="{% url 'project-create' %}">
                                         <i class="fas fa-plus mr-1"></i> Create Project</a></li>
                                 </ul>
                             </li>
+
+                            <!-- Issues button-->
+                            <li class="nav-item mr-4">
+                                <a class="nav-link text-white" href="#">Issues</a>
+                            </li>
+
+                            <!-- Bords button-->
+                            <li class="nav-item mr-4">
+                                <a class="nav-link text-white" href="#">Bords</a>
+                            </li>
+
+                            <!-- Plans button-->
+                            <li class="nav-item mr-4">
+                                <a class="nav-link text-white" href="#">Plans</a>
+                            </li>
+
+                            <!-- Create button-->
+                            <button class="btn btn-outline-primary px-4 py-2">created</button>
                         </div>
 
                         <!-- Menu droite -->
@@ -103,16 +133,15 @@
             </nav>
         </header>
 
-        <main class="content-section">
+        <main role="main" >
             <div class="container-fluid">
                 {% if messages %}
                     {% for message in messages %}
                         <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                     {% endfor %}
                 {% endif %}
-
-                {% block content %}{% endblock %}
             </div>
+            {% block content %}{% endblock %}
         </main>
 
 

@@ -1,327 +1,327 @@
 {% extends "blog/base.html" %}
 {% block content %}
-
-<!-- Welcome -->
-<div class="d-flex justify-content-between align-items-start mb-4 flex-wrap" style="gap:12px;">
-    <div>
-        <h4 class="font-weight-bold mb-1">
-            Good morning, {{ user.first_name|default:user.username }}
-        </h4>
-        <p class="text-muted mb-0" style="font-size:0.875rem;">
-            Here's what's happening with your projects today
-        </p>
-    </div>
-    <a href="{% url 'project-create' %}" class="btn btn-primary">
-        <i class="fas fa-plus mr-1"></i> Create Board
-    </a>
-</div>
-
-<!-- ── STATS ── -->
-<div class="row mb-4">
-    <div class="col-6 col-md-3 mb-3">
-        <div class="card border-0 shadow-sm text-center py-3 h-100" style="border-radius:12px; border-top:3px solid #5b6af0 !important; border-top-style:solid !important;">
-            <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
-                {{ user_projects_count|default:"0" }}
+    <div class="container-fluid" style="padding-top:1rem;">
+        <!-- Welcome -->
+        <div class="d-flex justify-content-between align-items-start mb-4 flex-wrap" style="gap:12px;">
+            <div>
+                <h4 class="font-weight-bold mb-1">
+                    Good morning, {{ user.first_name|default:user.username }}
+                </h4>
+                <p class="text-muted mb-0" style="font-size:0.875rem;">
+                    Here's what's happening with your projects today
+                </p>
             </div>
-            <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
-                Active Projects
-            </div>
+            <a href="{% url 'project-create' %}" class="btn btn-primary">
+                <i class="fas fa-plus mr-1"></i> Create Board
+            </a>
         </div>
-    </div>
-    <div class="col-6 col-md-3 mb-3">
-        <div class="card border-0 shadow-sm text-center py-3 h-100" style="border-radius:12px; border-top:3px solid #0fbcb0 !important;">
-            <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
-                {{ open_tickets_count|default:"0" }}
-            </div>
-            <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
-                Open Tickets
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3 mb-3">
-        <div class="card border-0 shadow-sm text-center py-3 h-100"
-             style="border-radius:12px; border-top:3px solid #f05d7a !important;">
-            <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
-                {{ my_tickets_count|default:"0" }}
-            </div>
-            <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
-                My Tasks
-            </div>
-        </div>
-    </div>
-    <div class="col-6 col-md-3 mb-3">
-        <div class="card border-0 shadow-sm text-center py-3 h-100"
-             style="border-radius:12px; border-top:3px solid #f5a623 !important;">
-            <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
-                {{ active_sprints_count|default:"0" }}
-            </div>
-            <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
-                Active Sprints
-            </div>
-        </div>
-    </div>
-</div>
 
-<!-- ── MAIN GRID ── -->
-<div class="row">
-
-    <!-- LEFT COLUMN -->
-    <div class="col-md-8">
-
-        <!-- My Projects -->
-        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-            <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
-                <h6 class="font-weight-bold mb-0">
-                    <i class="fas fa-folder-open mr-2 text-primary"></i>My Projects
-                </h6>
-                <a href="{% url 'project-list' %}" style="font-size:0.78rem; color:#5b6af0;">
-                    View all <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="card-body pt-2 pb-1">
-                {% for project in recent_projects %}
-                <a href="{% url 'project-detail' project.pk %}" class="d-flex align-items-center py-2 border-bottom text-decoration-none" style="gap:12px; color:inherit; transition:background 0.1s;">
-                    <div class="d-flex align-items-center justify-content-center font-weight-bold" style="width:38px;height:38px;border-radius:9px;background:#eef0fe;color:#5b6af0;font-size:0.95rem;flex-shrink:0;">
-                        {{ project.name|first|upper }}
+        <!-- ── STATS ── -->
+        <div class="row mb-4">
+            <div class="col-6 col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100" style="border-radius:12px; border-top:3px solid #5b6af0 !important; border-top-style:solid !important;">
+                    <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
+                        {{ user_projects_count|default:"0" }}
                     </div>
-                    <div style="flex:1; min-width:0;">
-                        <div class="font-weight-600" style="font-size:0.875rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            {{ project.name }}
-                        </div>
-                        <small class="text-muted">
-                            by {{ project.created_by.username }}
-                            · {{ project.sprint_duration }}-day sprints
-                            · {{ project.start_date }}
-                        </small>
+                    <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                        Active Projects
                     </div>
-                    <i class="fas fa-chevron-right text-muted" style="font-size:0.7rem;"></i>
-                </a>
-                {% empty %}
-                <div class="text-center py-4">
-                    <i class="fas fa-folder-open" style="font-size:2rem; color:#dde0e7;"></i>
-                    <p class="text-muted mt-2 mb-3" style="font-size:0.875rem;">No projects yet</p>
-                    <a href="{% url 'project-create' %}" class="btn btn-primary btn-sm">
-                        <i class="fas fa-plus mr-1"></i> Create your first project
-                    </a>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-
-        <!-- My Assigned Tickets -->
-        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-            <div class="card-header bg-white border-0 pt-3 pb-0">
-                <h6 class="font-weight-bold mb-0">
-                    <i class="fas fa-ticket-alt mr-2 text-primary"></i>My Assigned Tickets
-                </h6>
-            </div>
-            <div class="card-body pt-2 pb-1">
-                {% for ticket in my_tickets %}
-                <div class="d-flex align-items-center py-2 border-bottom" style="gap:10px;">
-
-                    <!-- Type badge -->
-                    {% if ticket.type == 'epic' %}
-                        <span class="badge" style="background:#f3e8ff;color:#7c3aed;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
-                            <i class="fas fa-bolt"></i> epic
-                        </span>
-                    {% elif ticket.type == 'user_story' %}
-                        <span class="badge" style="background:#eef0fe;color:#5b6af0;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
-                            <i class="fas fa-bookmark"></i> story
-                        </span>
-                    {% elif ticket.type == 'bug' %}
-                        <span class="badge" style="background:#fff0ee;color:#ff5630;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
-                            <i class="fas fa-bug"></i> bug
-                        </span>
-                    {% else %}
-                        <span class="badge" style="background:#f4f5f7;color:#6b778c;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
-                            <i class="fas fa-tasks"></i> task
-                        </span>
-                    {% endif %}
-
-                    <div style="flex:1; min-width:0;">
-                        <div style="font-size:0.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                            {{ ticket.description|truncatechars:70 }}
-                        </div>
-                        <small class="text-muted">{{ ticket.project.name }}</small>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100" style="border-radius:12px; border-top:3px solid #0fbcb0 !important;">
+                    <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
+                        {{ open_tickets_count|default:"0" }}
                     </div>
-
-                    <!-- Status badge -->
-                    {% if ticket.status == 'done' %}
-                        <span class="badge" style="background:#e6f7f0;color:#36b37e;border-radius:20px;font-size:0.68rem;">done</span>
-                    {% elif ticket.status == 'in_progress' %}
-                        <span class="badge" style="background:#fff7e6;color:#ffab00;border-radius:20px;font-size:0.68rem;">in progress</span>
-                    {% else %}
-                        <span class="badge" style="background:#f4f5f7;color:#6b778c;border-radius:20px;font-size:0.68rem;">todo</span>
-                    {% endif %}
-
+                    <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                        Open Tickets
+                    </div>
                 </div>
-                {% empty %}
-                <div class="text-center py-3">
-                    <i class="fas fa-check-circle" style="font-size:1.5rem; color:#36b37e;"></i>
-                    <p class="text-muted mt-2 mb-0" style="font-size:0.85rem;">No tickets assigned to you</p>
+            </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100"
+                     style="border-radius:12px; border-top:3px solid #f05d7a !important;">
+                    <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
+                        {{ my_tickets_count|default:"0" }}
+                    </div>
+                    <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                        My Tasks
+                    </div>
                 </div>
-                {% endfor %}
             </div>
-        </div>
-
-        <!-- Active Sprint Kanban mini -->
-        {% if active_sprints %}
-        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-            <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
-                <h6 class="font-weight-bold mb-0">
-                    <i class="fas fa-th-large mr-2 text-primary"></i>
-                    Sprint Board – {{ active_sprints.0.name }}
-                </h6>
-                <a href="#" style="font-size:0.78rem; color:#5b6af0;">
-                    Full board <i class="fas fa-arrow-right"></i>
-                </a>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    <div class="col-4">
-                        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#97a0af;margin-bottom:8px;">
-                            To Do
-                        </div>
-                        <div style="background:#f4f5f7;border-radius:8px;padding:8px;min-height:60px;font-size:0.78rem;color:#6b778c;text-align:center;">
-                            <i class="fas fa-inbox"></i><br>
-                            <small>See full board</small>
-                        </div>
+            <div class="col-6 col-md-3 mb-3">
+                <div class="card border-0 shadow-sm text-center py-3 h-100"
+                     style="border-radius:12px; border-top:3px solid #f5a623 !important;">
+                    <div style="font-size:1.8rem; font-weight:700; color:#172b4d;">
+                        {{ active_sprints_count|default:"0" }}
                     </div>
-                    <div class="col-4">
-                        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#5b6af0;margin-bottom:8px;">
-                            In Progress
-                        </div>
-                        <div style="background:#eef0fe;border-radius:8px;padding:8px;min-height:60px;font-size:0.78rem;color:#5b6af0;text-align:center;">
-                            <i class="fas fa-spinner fa-spin"></i><br>
-                            <small>Active tasks</small>
-                        </div>
-                    </div>
-                    <div class="col-4">
-                        <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#36b37e;margin-bottom:8px;">
-                            Done
-                        </div>
-                        <div style="background:#e6f7f0;border-radius:8px;padding:8px;min-height:60px;font-size:0.78rem;color:#36b37e;text-align:center;">
-                            <i class="fas fa-check"></i><br>
-                            <small>Completed</small>
-                        </div>
+                    <div style="font-size:0.72rem; color:#97a0af; text-transform:uppercase; letter-spacing:0.5px; font-weight:600;">
+                        Active Sprints
                     </div>
                 </div>
             </div>
         </div>
-        {% endif %}
 
-    </div>
+        <!-- ── MAIN GRID ── -->
+        <div class="row">
 
-    <!-- RIGHT COLUMN -->
-    <div class="col-md-4">
+            <!-- LEFT COLUMN -->
+            <div class="col-md-8">
 
-        <!-- Quick Actions -->
-        <div class="row mb-3 mx-0" style="gap:0;">
-            <div class="col-6 pl-0 pr-1 mb-2">
-                <a href="{% url 'project-create' %}" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
-                   onmouseover="this.style.borderColor='rgba(79,110,247,0.4)'; this.style.background='#fafbff'" onmouseout="this.style.background='white'">
-                    <i class="fas fa-plus-circle mb-1" style="font-size:1.1rem; color:#5b6af0;"></i>
-                    <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">New Project</span>
-                </a>
-            </div>
-            <div class="col-6 pr-0 pl-1 mb-2">
-                <a href="{% url 'project-list'%}" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
-                   onmouseover="this.style.background='#f0fdf9'" onmouseout="this.style.background='white'">
-                    <i class="fas fa-ticket-alt mb-1" style="font-size:1.1rem; color:#0fbcb0;"></i>
-                    <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Create Ticket</span>
-                </a>
-            </div>
-            <div class="col-6 pl-0 pr-1">
-                <a href="{% url 'project-list' %}" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
-                   onmouseover="this.style.background='#fffbf0'" onmouseout="this.style.background='white'">
-                    <i class="fas fa-redo mb-1" style="font-size:1.1rem; color:#f5a623;"></i>
-                    <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">New Sprint</span>
-                </a>
-            </div>
-            <div class="col-6 pr-0 pl-1">
-                <a href="#" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
-                   onmouseover="this.style.background='#fff5f7'" onmouseout="this.style.background='white'">
-                    <i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>
-                    <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Backlog</span>
-                </a>
-            </div>
-        </div>
-
-        <!-- Active Sprints -->
-        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-            <div class="card-header bg-white border-0 pt-3 pb-0">
-                <h6 class="font-weight-bold mb-0">
-                    <i class="fas fa-redo mr-2 text-primary"></i>Active Sprints
-                </h6>
-            </div>
-            <div class="card-body pt-2 pb-1">
-                {% for sprint in active_sprints %}
-                    <div class="py-2 border-bottom">
-                        <div class="font-weight-600 mb-1" style="font-size:0.875rem;">{{ sprint.name }}</div>
-                        <small class="text-muted d-block mb-2">
-                            <i class="fas fa-folder mr-1"></i>
-                            {{ sprint.project.name }}
-                            &nbsp;·&nbsp;
-                            {{ sprint.start_date }} → {{ sprint.end_date|default:"—" }}
-                        </small>
-                        <div style="height:4px;background:#f4f5f7;border-radius:2px;overflow:hidden;">
-                            <div style="height:100%;width:50%;background:linear-gradient(90deg,#5b6af0,#0fbcb0);border-radius:2px;"></div>
-                        </div>
-                        <div class="d-flex justify-content-between mt-1">
-                            <small class="text-muted">In progress</small>
-                            <span class="badge" style="background:#e6f7f0;color:#36b37e;border-radius:20px;font-size:0.65rem;">
-                                {{ sprint.status }}
-                            </span>
-                        </div>
+                <!-- My Projects -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-folder-open mr-2 text-primary"></i>My Projects
+                        </h6>
+                        <a href="{% url 'project-list' %}" style="font-size:0.78rem; color:#5b6af0;">
+                            View all <i class="fas fa-arrow-right"></i>
+                        </a>
                     </div>
-                {% empty %}
-                    <div class="text-center py-3">
-                        <i class="fas fa-redo" style="font-size:1.3rem; color:#dde0e7;"></i>
-                        <p class="text-muted mt-2 mb-0" style="font-size:0.82rem;">No active sprints</p>
-                    </div>
-                {% endfor %}
-            </div>
-        </div>
-
-        <!-- My Role & Membership -->
-        <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
-            <div class="card-header bg-white border-0 pt-3 pb-0">
-                <h6 class="font-weight-bold mb-0">
-                    <i class="fas fa-id-badge mr-2 text-primary"></i>My Role
-                </h6>
-            </div>
-            <div class="card-body">
-                <div class="d-flex align-items-center mb-3" style="gap:12px;">
-                    {% if user.profile.image %}
-                        <img src="{{ user.profile.image.url }}" class="rounded-circle" width="48" height="48" style="object-fit:cover;">
-                    {% else %}
-                        <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:linear-gradient(135deg,#e85d8a,#5b6af0);color:white;font-weight:700;font-size:1rem;">
-                            {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                    <div class="card-body pt-2 pb-1">
+                        {% for project in recent_projects %}
+                        <a href="{% url 'project-detail' project.pk %}" class="d-flex align-items-center py-2 border-bottom text-decoration-none" style="gap:12px; color:inherit; transition:background 0.1s;">
+                            <div class="d-flex align-items-center justify-content-center font-weight-bold" style="width:38px;height:38px;border-radius:9px;background:#eef0fe;color:#5b6af0;font-size:0.95rem;flex-shrink:0;">
+                                {{ project.name|first|upper }}
+                            </div>
+                            <div style="flex:1; min-width:0;">
+                                <div class="font-weight-600" style="font-size:0.875rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ project.name }}
+                                </div>
+                                <small class="text-muted">
+                                    by {{ project.created_by.username }}
+                                    · {{ project.sprint_duration }}-day sprints
+                                    · {{ project.start_date }}
+                                </small>
+                            </div>
+                            <i class="fas fa-chevron-right text-muted" style="font-size:0.7rem;"></i>
+                        </a>
+                        {% empty %}
+                        <div class="text-center py-4">
+                            <i class="fas fa-folder-open" style="font-size:2rem; color:#dde0e7;"></i>
+                            <p class="text-muted mt-2 mb-3" style="font-size:0.875rem;">No projects yet</p>
+                            <a href="{% url 'project-create' %}" class="btn btn-primary btn-sm">
+                                <i class="fas fa-plus mr-1"></i> Create your first project
+                            </a>
                         </div>
-                    {% endif %}
-                    <div>
-                        <div class="font-weight-bold">{{ user.get_full_name|default:user.username }}</div>
-                        <span class="badge badge-primary" style="border-radius:20px;font-size:0.7rem;">
-                            {{ user.profile.get_role_display }}
-                        </span>
+                        {% endfor %}
                     </div>
                 </div>
 
-                <!-- Memberships -->
-                {% for membership in user_memberships %}
-                    <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
-                        <small>{{ membership.project.name }}</small>
-                        <span class="badge" style="background:#f4f5f7;color:#6b778c;border-radius:20px;font-size:0.65rem;">
-                            {{ membership.role }}
-                        </span>
+                <!-- My Assigned Tickets -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-ticket-alt mr-2 text-primary"></i>My Assigned Tickets
+                        </h6>
                     </div>
-                {% empty %}
-                    <small class="text-muted">Not a member of any project yet.</small>
-                {% endfor %}
+                    <div class="card-body pt-2 pb-1">
+                        {% for ticket in my_tickets %}
+                        <div class="d-flex align-items-center py-2 border-bottom" style="gap:10px;">
+
+                            <!-- Type badge -->
+                            {% if ticket.type == 'epic' %}
+                                <span class="badge" style="background:#f3e8ff;color:#7c3aed;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
+                                    <i class="fas fa-bolt"></i> epic
+                                </span>
+                            {% elif ticket.type == 'user_story' %}
+                                <span class="badge" style="background:#eef0fe;color:#5b6af0;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
+                                    <i class="fas fa-bookmark"></i> story
+                                </span>
+                            {% elif ticket.type == 'bug' %}
+                                <span class="badge" style="background:#fff0ee;color:#ff5630;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
+                                    <i class="fas fa-bug"></i> bug
+                                </span>
+                            {% else %}
+                                <span class="badge" style="background:#f4f5f7;color:#6b778c;border-radius:6px;font-size:0.68rem;min-width:52px;text-align:center;">
+                                    <i class="fas fa-tasks"></i> task
+                                </span>
+                            {% endif %}
+
+                            <div style="flex:1; min-width:0;">
+                                <div style="font-size:0.82rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                                    {{ ticket.description|truncatechars:70 }}
+                                </div>
+                                <small class="text-muted">{{ ticket.project.name }}</small>
+                            </div>
+
+                            <!-- Status badge -->
+                            {% if ticket.status == 'done' %}
+                                <span class="badge" style="background:#e6f7f0;color:#36b37e;border-radius:20px;font-size:0.68rem;">done</span>
+                            {% elif ticket.status == 'in_progress' %}
+                                <span class="badge" style="background:#fff7e6;color:#ffab00;border-radius:20px;font-size:0.68rem;">in progress</span>
+                            {% else %}
+                                <span class="badge" style="background:#f4f5f7;color:#6b778c;border-radius:20px;font-size:0.68rem;">todo</span>
+                            {% endif %}
+
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-3">
+                            <i class="fas fa-check-circle" style="font-size:1.5rem; color:#36b37e;"></i>
+                            <p class="text-muted mt-2 mb-0" style="font-size:0.85rem;">No tickets assigned to you</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Active Sprint Kanban mini -->
+                {% if active_sprints %}
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-th-large mr-2 text-primary"></i>
+                            Sprint Board – {{ active_sprints.0.name }}
+                        </h6>
+                        <a href="#" style="font-size:0.78rem; color:#5b6af0;">
+                            Full board <i class="fas fa-arrow-right"></i>
+                        </a>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-4">
+                                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#97a0af;margin-bottom:8px;">
+                                    To Do
+                                </div>
+                                <div style="background:#f4f5f7;border-radius:8px;padding:8px;min-height:60px;font-size:0.78rem;color:#6b778c;text-align:center;">
+                                    <i class="fas fa-inbox"></i><br>
+                                    <small>See full board</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#5b6af0;margin-bottom:8px;">
+                                    In Progress
+                                </div>
+                                <div style="background:#eef0fe;border-radius:8px;padding:8px;min-height:60px;font-size:0.78rem;color:#5b6af0;text-align:center;">
+                                    <i class="fas fa-spinner fa-spin"></i><br>
+                                    <small>Active tasks</small>
+                                </div>
+                            </div>
+                            <div class="col-4">
+                                <div style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#36b37e;margin-bottom:8px;">
+                                    Done
+                                </div>
+                                <div style="background:#e6f7f0;border-radius:8px;padding:8px;min-height:60px;font-size:0.78rem;color:#36b37e;text-align:center;">
+                                    <i class="fas fa-check"></i><br>
+                                    <small>Completed</small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+
+            </div>
+
+            <!-- RIGHT COLUMN -->
+            <div class="col-md-4">
+
+                <!-- Quick Actions -->
+                <div class="row mb-3 mx-0" style="gap:0;">
+                    <div class="col-6 pl-0 pr-1 mb-2">
+                        <a href="{% url 'project-create' %}" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
+                           onmouseover="this.style.borderColor='rgba(79,110,247,0.4)'; this.style.background='#fafbff'" onmouseout="this.style.background='white'">
+                            <i class="fas fa-plus-circle mb-1" style="font-size:1.1rem; color:#5b6af0;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">New Project</span>
+                        </a>
+                    </div>
+                    <div class="col-6 pr-0 pl-1 mb-2">
+                        <a href="{% url 'project-list'%}" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
+                           onmouseover="this.style.background='#f0fdf9'" onmouseout="this.style.background='white'">
+                            <i class="fas fa-ticket-alt mb-1" style="font-size:1.1rem; color:#0fbcb0;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Create Ticket</span>
+                        </a>
+                    </div>
+                    <div class="col-6 pl-0 pr-1">
+                        <a href="{% url 'project-list' %}" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
+                           onmouseover="this.style.background='#fffbf0'" onmouseout="this.style.background='white'">
+                            <i class="fas fa-redo mb-1" style="font-size:1.1rem; color:#f5a623;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">New Sprint</span>
+                        </a>
+                    </div>
+                    <div class="col-6 pr-0 pl-1">
+                        <a href="#" class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100" style="border-radius:10px; transition:all 0.15s;"
+                           onmouseover="this.style.background='#fff5f7'" onmouseout="this.style.background='white'">
+                            <i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Backlog</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Active Sprints -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-redo mr-2 text-primary"></i>Active Sprints
+                        </h6>
+                    </div>
+                    <div class="card-body pt-2 pb-1">
+                        {% for sprint in active_sprints %}
+                            <div class="py-2 border-bottom">
+                                <div class="font-weight-600 mb-1" style="font-size:0.875rem;">{{ sprint.name }}</div>
+                                <small class="text-muted d-block mb-2">
+                                    <i class="fas fa-folder mr-1"></i>
+                                    {{ sprint.project.name }}
+                                    &nbsp;·&nbsp;
+                                    {{ sprint.start_date }} → {{ sprint.end_date|default:"—" }}
+                                </small>
+                                <div style="height:4px;background:#f4f5f7;border-radius:2px;overflow:hidden;">
+                                    <div style="height:100%;width:50%;background:linear-gradient(90deg,#5b6af0,#0fbcb0);border-radius:2px;"></div>
+                                </div>
+                                <div class="d-flex justify-content-between mt-1">
+                                    <small class="text-muted">In progress</small>
+                                    <span class="badge" style="background:#e6f7f0;color:#36b37e;border-radius:20px;font-size:0.65rem;">
+                                        {{ sprint.status }}
+                                    </span>
+                                </div>
+                            </div>
+                        {% empty %}
+                            <div class="text-center py-3">
+                                <i class="fas fa-redo" style="font-size:1.3rem; color:#dde0e7;"></i>
+                                <p class="text-muted mt-2 mb-0" style="font-size:0.82rem;">No active sprints</p>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- My Role & Membership -->
+                <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                    <div class="card-header bg-white border-0 pt-3 pb-0">
+                        <h6 class="font-weight-bold mb-0">
+                            <i class="fas fa-id-badge mr-2 text-primary"></i>My Role
+                        </h6>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-3" style="gap:12px;">
+                            {% if user.profile.image %}
+                                <img src="{{ user.profile.image.url }}" class="rounded-circle" width="48" height="48" style="object-fit:cover;">
+                            {% else %}
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width:48px;height:48px;background:linear-gradient(135deg,#e85d8a,#5b6af0);color:white;font-weight:700;font-size:1rem;">
+                                    {{ user.first_name|first|upper }}{{ user.last_name|first|upper }}
+                                </div>
+                            {% endif %}
+                            <div>
+                                <div class="font-weight-bold">{{ user.get_full_name|default:user.username }}</div>
+                                <span class="badge badge-primary" style="border-radius:20px;font-size:0.7rem;">
+                                    {{ user.profile.get_role_display }}
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Memberships -->
+                        {% for membership in user_memberships %}
+                            <div class="d-flex justify-content-between align-items-center py-1 border-bottom">
+                                <small>{{ membership.project.name }}</small>
+                                <span class="badge" style="background:#f4f5f7;color:#6b778c;border-radius:20px;font-size:0.65rem;">
+                                    {{ membership.role }}
+                                </span>
+                            </div>
+                        {% empty %}
+                            <small class="text-muted">Not a member of any project yet.</small>
+                        {% endfor %}
+                    </div>
+                </div>
+
             </div>
         </div>
-
     </div>
-</div>
-
 {% endblock %}
