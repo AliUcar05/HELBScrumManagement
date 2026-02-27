@@ -167,6 +167,38 @@ class MembershipAddView(View):
             membership.save()
 
         return redirect("project-settings", pk=pk)
+    
+
+class MembershipDeleteView(LoginRequiredMixin, View):
+    def post(self, request, pk, membership_pk):
+        project = get_object_or_404(Project, pk=pk)
+        if project.created_by != request.user:
+            messages.error(request, "You are not allowed to remove members.")
+            return redirect("project-settings", pk=pk)
+        
+        from .models import Membership
+        membership = get_object_or_404(Membership, pk=membership_pk, project=project)
+        membership.delete()
+        messages.success(request, "Member removed successfully.")
+        return redirect("project-settings", pk=pk)
+
+
+class MembershipUpdateRoleView(LoginRequiredMixin, View):
+    def post(self, request, pk, membership_pk):
+        project = get_object_or_404(Project, pk=pk)
+        if project.created_by != request.user:
+            messages.error(request, "You are not allowed to change roles.")
+            return redirect("project-settings", pk=pk)
+        
+        from .models import Membership
+        membership = get_object_or_404(Membership, pk=membership_pk, project=project)
+        new_role = request.POST.get("role")
+        if new_role in ["admin", "contributor", "read-only"]:
+            membership.role = new_role
+            membership.save()
+            messages.success(request, "Role updated successfully.")
+        return redirect("project-settings", pk=pk)
+    
 #==========================================================================================================
 #                   BOARD CLASSES BASED VIEWS AND FUNCTIONS
 #==========================================================================================================

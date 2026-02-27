@@ -133,17 +133,26 @@
                                     </div>
                                 </td>
                                 <td>
-                                    <span class="badge
-                                        {% if m.role == 'admin' %}badge-danger
-                                        {% elif m.role == 'contributor' %}badge-primary
-                                        {% else %}badge-secondary{% endif %}">
-                                        {{ m.get_role_display }}
-                                    </span>
+                                    <form method="POST" action="{% url 'membership-update-role' object.pk m.pk %}">
+                                        {% csrf_token %}
+                                        <select name="role" class="form-control form-control-sm" onchange="this.form.submit()">
+                                            <option value="admin" {% if m.role == 'admin' %}selected{% endif %}>Admin</option>
+                                            <option value="contributor" {% if m.role == 'contributor' %}selected{% endif %}>Contributor</option>
+                                            <option value="read-only" {% if m.role == 'read-only' %}selected{% endif %}>Read-only</option>
+                                        </select>
+                                    </form>
                                 </td>
                                 <td class="text-right">
-                                    <a href="" class="btn btn-sm btn-outline-danger">
-                                        <i class="fas fa-times"></i>
-                                    </a>
+                                    <form method="POST" action="{% url 'membership-delete' object.pk m.pk %}">
+                                        {% csrf_token %}
+                                        <button 
+                                            type="submit" 
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Remove this member from the project"
+                                            aria-label="Remove this member from the project">
+                                            <i class="fas fa-times"></i>
+                                        </button>
+                                    </form>
                                 </td>
                             </tr>
                             {% empty %}

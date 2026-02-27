@@ -3,7 +3,9 @@ from django.urls import path
 from . import views
 from .views import (
     ProjectListView, ProjectDetailView, ProjectCreateView,
-    ProjectUpdateView, ProjectDeleteView, ProjectSettingsView, MembershipAddView
+    ProjectUpdateView, ProjectDeleteView, ProjectSettingsView, MembershipAddView,
+    MembershipDeleteView, MembershipUpdateRoleView
+
 )
 
 urlpatterns = [
@@ -17,6 +19,9 @@ urlpatterns = [
     path("projects/<int:pk>/board/", views.project_board, name="project-board"),
     path("projects/<int:pk>/update-modal/", views.ProjectUpdateModalView.as_view(), name="project-update-modal"),
     path("projects/<int:pk>/settings/",ProjectSettingsView.as_view(),name="project-settings"),
-    path("projects/<int:pk>/members/add/",MembershipAddView.as_view(),name="membership-add",)
+    path("projects/<int:pk>/members/add/",MembershipAddView.as_view(),name="membership-add"), 
+
+    path("projects/<int:pk>/members/<int:membership_pk>/delete/", MembershipDeleteView.as_view(), name="membership-delete"),
+    path("projects/<int:pk>/members/<int:membership_pk>/role/", MembershipUpdateRoleView.as_view(), name="membership-update-role"),
 
 ]
