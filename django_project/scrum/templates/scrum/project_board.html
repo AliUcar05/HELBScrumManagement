@@ -7,23 +7,18 @@
 
 {% block content %}
     <div class="wrapper">
-         <div class="sidebar" id="sidebar">
-             <div class="sidebar-header d-flex align-items-center gap-3">
+        <div class="sidebar" id="sidebar">
+            <div class="sidebar-header d-flex align-items-center gap-3">
                 <div class="project-avatar">
-
                     {% if project.image %}
-                        <img src="{{ project.image.url }}"
-                             class="project-cover"
-                             alt="{{ project.name }}">
+                        <img src="{{ project.image.url }}" class="project-cover" alt="{{ project.name }}">
                     {% else %}
                         <div class="project-fallback">
                             {{ project.code|first|upper }}
                         </div>
                     {% endif %}
 
-                    <img src="{{ project.project_type_image }}"
-                         class="project-type-badge"
-                         alt="{{ project.project_type }}">
+                    <img src="{{ project.project_type_image }}" class="project-type-badge" alt="{{ project.project_type }}">
                 </div>
 
                 <div class="project-info" style="margin-left: 10px">
@@ -32,6 +27,7 @@
                 </div>
             </div>
             <hr>
+            <p class="text-danger small px-3">DEBUG ROLE: "{{ user.profile.global_role }}"</p>
             <ul>
                 <li>
                     <a href="{% url 'project-board' pk=project.pk %}" class="btn btn-outline-secondary btn-sm {% if request.resolver_match.url_name == 'project-board' %}active{% endif %}">
@@ -68,15 +64,25 @@
                         <i class="fas fa-chart-line mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>Reports
                     </a>
                 </li>
-                {% if membership.can_manage %}
-                    <li>
-                        <a href="{% url 'project-settings' project.pk %}" class="btn btn-outline-secondary btn-sm">
-                            <i class="bi bi-gear me-1" style="font-size:1.1rem; color:#f05d7a;"></i>Settings
-                        </a>
-                    </li>
+                
+                {% if membership.can_manage and user.profile.global_role|lower != 'read-only' %}
+                <li>
+                    <a href="{% url 'project-settings' project.pk %}" class="btn btn-outline-secondary btn-sm">
+                        <i class="bi bi-gear me-1" style="font-size:1.1rem; color:#f05d7a;"></i>Settings
+                    </a>
+                </li>
+                {% endif %}
+
+                {% if user.profile.global_role|lower == 'member' or user.profile.global_role|lower == 'developer' or user.profile.global_role|lower == 'admin' %}
+                <hr>
+                <li>
+                    <a href="{% url 'manage-users' %}" class="btn btn-outline-warning btn-sm shadow-sm">
+                        <i class="fas fa-users-cog mb-1" style="font-size:1.1rem; color:#ffc107;"></i> Manage Users
+                    </a>
+                </li>
                 {% endif %}
             </ul>
-             <div class="sidebarBtn">
+            <div class="sidebarBtn">
                 <button id="toggleBtn">
                     <i class="fas fa-angle-double-left"></i>
                 </button>
@@ -84,7 +90,17 @@
         </div>
 
         <div class="main">
-           <!-- ==================== ACTIVE SPRINT ==================== -->
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                        {{ message }}
+                        <button type="button" class="close" data-dismiss="alert" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                {% endfor %}
+            {% endif %}
+
             {% if active_sprint %}
                 <div class="alert alert-success d-flex align-items-center gap-3 mb-4">
                     <i class="bi bi-lightning-charge-fill fs-4"></i>
@@ -103,25 +119,30 @@
                         </a>
                     </div>
                 </div>
-                {% else %}
+            {% else %}
                 <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
                     <i class="bi bi-calendar-x fs-4 text-muted"></i>
                     <div class="flex-grow-1">
                         <strong>No active sprint.</strong>
                         <small class="text-muted ms-2">Create and start a sprint to begin tracking work.</small>
                     </div>
-                    <a href="#" class="btn btn-outline-primary btn-sm" style="margin-left: 100px">
-                        <i class="bi bi-plus me-1"></i> Create Sprint
-                    </a>
+                    
+                    {% if user.profile.global_role|lower != 'read-only' %}
+                        <a href="#" class="btn btn-outline-primary btn-sm" style="margin-left: 100px">
+                            <i class="bi bi-plus me-1"></i> Create Sprint
+                        </a>
+                    {% endif %}
                 </div>
             {% endif %}
             <hr>
-            <div style="display:flex; gap:15px;overflow-x:auto;align-items:flex-start; padding-bottom: 20px;">
+
+            <div style="display:flex; gap:15px; overflow-x:auto; align-items:flex-start; padding-bottom: 20px;">
                 {% for column in columns %}
                     <div class="card p-3" style="min-width:420px; width:420px; min-height: 75vh; background:#f4f5f7; display:flex; flex-direction:column;">
                         <div class="d-flex align-items-center mb-3">
                             <h6 class="font-weight-bold mb-0">{{ column.name }}</h6>
                         </div>
+                        
                         {% for ticket in column.ticket_set.all %}
                             <div class="card p-2 mb-2 shadow-sm">
                                 {{ ticket.title }}
@@ -132,25 +153,29 @@
                             </div>
                         {% endfor %}
 
+                        {% if user.profile.global_role|lower != 'read-only' %}
                         <div class="pt-2 border-top mt-2">
                             <a href="#" class="text-muted text-decoration-none">
-                                + Add Issue
+                                <i class="bi bi-plus"></i> Add Issue
                             </a>
                         </div>
+                        {% endif %}
 
                     </div>
                 {% endfor %}
 
+                {% if user.profile.global_role|lower != 'read-only' %}
                 <div>
                     <a href="#" class="btn btn-outline-secondary" style="min-width:200px; height:60px; border-style:dashed;">
                         + Add Column
                     </a>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
+
     <script>
-        // toggle sidebar
         document.getElementById('toggleBtn').onclick = function()
         {
             document.getElementById('sidebar').classList.toggle('collapsed');

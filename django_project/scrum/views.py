@@ -40,7 +40,7 @@ def project_board(request, pk):
     return render(request, "scrum/project_board.html", context)
 
 #================================================
-#          PROJECTS CLASS BASED VIEWS
+#           PROJECTS CLASS BASED VIEWS
 #=================================================
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
@@ -73,25 +73,31 @@ class ProjectDetailView(LoginRequiredMixin, DetailView):
         context["membership"] = project.memberships.filter(user=self.request.user).first()
         return context
 
-class ProjectSettingsView(UpdateView):
+# SÉCURISÉ : Login requis + Test de rôle (pas de Read-only)
+class ProjectSettingsView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Project
     form_class = ProjectForm
     template_name = "scrum/project_settings.html"
 
+    def test_func(self):
+        # Bloque l'accès si l'utilisateur est en lecture seule
+        return self.request.user.profile.global_role.lower() != 'read-only'
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-
         project = self.object
-
         context["memberships"] = project.memberships.select_related("user")
         context["membership_form"] = MembershipForm()
-
         return context
 
-class ProjectCreateView(LoginRequiredMixin, CreateView):
+class ProjectCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Project
     form_class = ProjectForm
     template_name = "scrum/project_form.html"
+
+    def test_func(self):
+        # Seuls ceux qui ne sont pas 'read-only' peuvent créer des projets
+        return self.request.user.profile.global_role.lower() != 'read-only'
 
     def form_valid(self, form):
         form.instance.created_by = self.request.user
@@ -123,13 +129,15 @@ class ProjectUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     success_url = reverse_lazy("project-list")
 
     def test_func(self):
-        return self.get_object().created_by == self.request.user
+        # Créateur ET pas en lecture seule
+        return self.get_object().created_by == self.request.user and self.request.user.profile.global_role.lower() != 'read-only'
 
 class ProjectUpdateModalView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
-        if project.created_by != request.user:
+        # Sécurité ajoutée contre le rôle read-only
+        if project.created_by != request.user or request.user.profile.global_role.lower() == 'read-only':
             return JsonResponse({"error": "You are not allowed to edit this project."}, status=403)
 
         project.name = request.POST.get("name", project.name)
@@ -155,11 +163,15 @@ class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
 #==========================================================================================================
 #                   MEMBERSHIP CLASSES BASED VIEWS AND FUNCTIONS
 #==========================================================================================================
-class MembershipAddView(View):
+class MembershipAddView(LoginRequiredMixin, View):
 
     def post(self, request, pk):
-        project = get_object_or_404(Project, pk=pk)
+        # Sécurité : Bloquer si Read-only
+        if request.user.profile.global_role.lower() == 'read-only':
+            messages.error(request, "Lecture seule : ajout impossible.")
+            return redirect("project-settings", pk=pk)
 
+        project = get_object_or_404(Project, pk=pk)
         form = MembershipForm(request.POST)
         if form.is_valid():
             membership = form.save(commit=False)
@@ -172,7 +184,8 @@ class MembershipAddView(View):
 class MembershipDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk, membership_pk):
         project = get_object_or_404(Project, pk=pk)
-        if project.created_by != request.user:
+        # Sécurité : Créateur + pas Read-only
+        if project.created_by != request.user or request.user.profile.global_role.lower() == 'read-only':
             messages.error(request, "You are not allowed to remove members.")
             return redirect("project-settings", pk=pk)
         
@@ -186,7 +199,7 @@ class MembershipDeleteView(LoginRequiredMixin, View):
 class MembershipUpdateRoleView(LoginRequiredMixin, View):
     def post(self, request, pk, membership_pk):
         project = get_object_or_404(Project, pk=pk)
-        if project.created_by != request.user:
+        if project.created_by != request.user or request.user.profile.global_role.lower() == 'read-only':
             messages.error(request, "You are not allowed to change roles.")
             return redirect("project-settings", pk=pk)
         
