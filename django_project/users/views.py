@@ -58,3 +58,9 @@ def change_password(request):
     else:
         form = PasswordChangeForm(request.user)
     return render(request, 'users/change_password.html', {'form': form })
+
+@login_required
+def manage_users(request):
+    from django.contrib.auth.models import User
+    users = User.objects.all().select_related('profile')
+    return render(request, 'users/manage_users.html', {'users': users})

@@ -1,0 +1,33 @@
+{% extends "blog/base.html" %}
+{% block content %}
+<div class="content-section">
+    <h2>Manage Users</h2>
+    <hr>
+    <table class="table table-hover">
+        <thead class="thead-light">
+            <tr>
+                <th>Username</th>
+                <th>Email</th>
+                <th>Global Role</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td>
+                    <form method="POST" action="#">
+                        {% csrf_token %}
+                        <select name="role" class="form-control form-control-sm">
+                            <option value="admin" {% if u.profile.global_role == 'admin' %}selected{% endif %}>Admin</option>
+                            <option value="member" {% if u.profile.global_role == 'member' %}selected{% endif %}>Member</option>
+                        </select>
+                    </form>
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+{% endblock %}
