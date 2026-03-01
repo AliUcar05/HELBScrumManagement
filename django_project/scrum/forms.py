@@ -22,7 +22,6 @@ class ProjectForm(forms.ModelForm):
         ]
         widgets = {
             "image": forms.FileInput(),
-            "board_type": forms.Select(),
             "project_type": forms.Select(),
             "description": forms.Textarea(attrs={"rows": 3}),
             "start_date": forms.DateInput(attrs={"type": "date"}),
@@ -36,6 +35,7 @@ class ProjectForm(forms.ModelForm):
         self.fields["end_date"].input_formats = ["%Y-%m-%d", "%d/%m/%Y"]
         self.fields["name"].widget.attrs.update({"placeholder": "Project Name"})
         self.fields["code"].widget.attrs.update({"placeholder": "Project Code"})
+        self.fields["board_type"].disabled = True
 
 #===============================================
 #                   MEMBERSHIP FORM

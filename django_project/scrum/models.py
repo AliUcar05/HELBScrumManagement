@@ -23,11 +23,6 @@ class Project(models.Model):
        - board_type: scrum | kanban
     """
 
-    BOARD_TYPES = [
-        ("scrum", "Scrum"),
-        ("kanban", "Kanban"),
-    ]
-
     PROJECT_TYPES = [
         ("software", "Software"),
         ("marketing", "Marketing"),
@@ -48,7 +43,7 @@ class Project(models.Model):
 
     image = models.ImageField(
         upload_to="project_icons/",
-        default="project_icons/default.png",
+        default="project_icons/default.jpg",
         blank=True
     )
     name = models.CharField(max_length=200)
@@ -56,7 +51,7 @@ class Project(models.Model):
     description = models.TextField(blank=True)
 
     # --- Type ---
-    board_type = models.CharField(max_length=10, choices=BOARD_TYPES, default="scrum")
+    board_type = models.CharField(max_length=10, default="scrum")
     project_type = models.CharField(max_length=20, choices=PROJECT_TYPES, default="software")
 
     start_date = models.DateField()
@@ -110,17 +105,10 @@ class Project(models.Model):
     def active_sprint(self):
         return self.sprints.filter(status="active").first()
 
-    @property
-    def is_scrum(self):
-        return self.board_type == "scrum"
-
-    @property
-    def is_kanban(self):
-        return self.board_type == "kanban"
 
     @property
     def project_type_image(self):
-        path = self.PROJECT_TYPE_IMAGES.get(self.project_type,"project_types/default.png")
+        path = self.PROJECT_TYPE_IMAGES.get(self.project_type,"project_types/default.jpg")
         return f"{settings.MEDIA_URL}{path}"
 
     def save(self, *args, **kwargs):
