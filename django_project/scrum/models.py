@@ -43,11 +43,11 @@ class Project(models.Model):
 
     image = models.ImageField(
         upload_to="project_icons/",
-        default="project_icons/default.jpg",
+        default="project_icons/default.png",
         blank=True
     )
     name = models.CharField(max_length=200)
-    code = models.CharField(max_length=10,unique=True,help_text="Prefix used for ticket IDs (e.g. PROJ -> PROJ-1, PROJ-2 ...)")
+    code = models.CharField(default='PROJ', help_text='Prefix used for ticket IDs (e.g. PROJ -> PROJ-1, PROJ-2 ...)', max_length=10, unique=True)
     description = models.TextField(blank=True)
 
     # --- Type ---

@@ -2,148 +2,93 @@
 {% load crispy_forms_tags %}
 
 {% block content %}
-<div class="container mt-4" style="max-width: 1500px;">
-    <div class="mb-3">
-        <h2 class="font-weight-bold">
-            {% if object %}Update Project{% else %}New Project{% endif %}
-        </h2>
-        <p class="text-muted mb-0">Fill in the details below to {% if object %}update{% else %}create{% endif %} your project.</p>
+<div class="container mt-4" style="max-width: 1100px;">
+
+    <div class="mb-4">
+        {% if object %}
+            <h2 class="font-weight-bold mb-1">Update Project</h2>
+            <p class="text-muted mb-0">Modify your project information and settings.</p>
+        {% else %}
+            <h2 class="font-weight-bold mb-1">Create Project</h2>
+            <p class="text-muted mb-0">Create a new project workspace for your team.</p>
+        {% endif %}
     </div>
 
     <form method="POST" enctype="multipart/form-data">
         {% csrf_token %}
 
-        <div class="row">
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
+                    <i class="fas fa-info-circle mr-1"></i> Project Information
+                </h6>
 
-            <!-- ========== COLONNE GAUCHE ========== -->
-            <div class="col-md-8">
-
-                <!-- Identité -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-info-circle mr-1"></i> Project Identity
-                        </h6>
-                        <div class="form-row">
-                            <div class="col-sm-8">
-                                {{ form.name|as_crispy_field }}
-                            </div>
-                            <div class="col-sm-4">
-                                {{ form.code|as_crispy_field }}
-                            </div>
-                        </div>
-                        {{ form.description|as_crispy_field }}
-                        {{ form.image|as_crispy_field }}
-                    </div>
+                <div class="form-row">
+                    <div class="col-md-8">{{ form.name|as_crispy_field }}</div>
+                    <div class="col-md-4">{{ form.code|as_crispy_field }}</div>
                 </div>
 
-                <!-- Type & Board -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-th-large mr-1"></i> Board & Type
-                        </h6>
-                        <div class="form-row">
-                            <div class="col-sm-6">
-                                {{ form.board_type|as_crispy_field }}
-                            </div>
-                            <div class="col-sm-6">
-                                {{ form.project_type|as_crispy_field }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Dates -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-calendar-alt mr-1"></i> Timeline
-                        </h6>
-                        <div class="form-row">
-                            <div class="col-sm-6">
-                                {{ form.start_date|as_crispy_field }}
-                            </div>
-                            <div class="col-sm-6">
-                                {{ form.end_date|as_crispy_field }}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- ========== COLONNE DROITE ========== -->
-            <div class="col-md-4">
-
-                <!-- Sprint & Capacité -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-bolt mr-1"></i> Sprint Settings
-                        </h6>
-                        {{ form.effort_unit|as_crispy_field }}
-                        {{ form.sprint_duration|as_crispy_field }}
-                        {{ form.global_capacity|as_crispy_field }}
-                    </div>
-                </div>
-
-                <!-- Ticket ID preview -->
-                <div class="card border-0 shadow-sm mb-4 bg-light" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-muted font-weight-bold mb-2" style="font-size:.8rem;">
-                            <i class="fas fa-hashtag mr-1"></i> Ticket ID Preview
-                        </h6>
-                        <p class="text-muted small mb-2">Your tickets will be named:</p>
-                        <div class="d-flex" style="gap: 8px;">
-                            <span class="badge badge-primary" style="font-size:.9rem;" id="ticket-preview">PROJ-1</span>
-                            <span class="badge badge-secondary" style="font-size:.9rem;" id="ticket-preview-2">PROJ-2</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Actions -->
-                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <button class="btn btn-primary btn-block mb-2" type="submit">
-                            <i class="fas fa-check mr-1"></i>
-                            {% if object %}Save Changes{% else %}Create Project{% endif %}
-                        </button>
-                        <a class="btn btn-outline-secondary btn-block" href="{% url 'project-list' %}">
-                            <i class="fas fa-times mr-1"></i> Cancel
-                        </a>
-                        {% if object %}
-                        <hr class="my-2">
-                        <a href="{% url 'project-delete' object.pk %}"
-                           class="btn btn-outline-danger btn-block btn-sm">
-                            <i class="fas fa-trash mr-1"></i> Delete Project
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-
+                {{ form.description|as_crispy_field }}
+                {{ form.image|as_crispy_field }}
             </div>
         </div>
 
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
+                    <i class="fas fa-th-large mr-1"></i> Board & Type
+                </h6>
+
+                <div class="form-row">
+                    <div class="col-md-6">{{ form.board_type|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.project_type|as_crispy_field }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
+                    <i class="fas fa-calendar-alt mr-1"></i> Timeline
+                </h6>
+
+                <div class="form-row">
+                    <div class="col-md-6">{{ form.start_date|as_crispy_field }}</div>
+                    <div class="col-md-6">{{ form.end_date|as_crispy_field }}</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div class="card-body">
+                <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
+                    <i class="fas fa-bolt mr-1"></i> Sprint Settings
+                </h6>
+
+                {{ form.effort_unit|as_crispy_field }}
+                {{ form.sprint_duration|as_crispy_field }}
+            </div>
+        </div>
+
+        <div class="d-flex flex-wrap mb-5">
+            <button type="submit" class="btn btn-primary mr-2">
+                {% if object %}
+                    <i class="fas fa-save mr-1"></i> Update Project
+                {% else %}
+                    <i class="fas fa-plus mr-1"></i> Create Project
+                {% endif %}
+            </button>
+
+            {% if object %}
+                <a href="{% url 'project-detail' object.pk %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            {% else %}
+                <a href="{% url 'project-list' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-times mr-1"></i> Cancel
+                </a>
+            {% endif %}
+        </div>
     </form>
 </div>
-{% block extra_js %}
-<script>
-    const codeInput = document.querySelector('[name="code"]');
-    const preview1 = document.getElementById('ticket-preview');
-    const preview2 = document.getElementById('ticket-preview-2');
-
-    function updatePreview() {
-        const code = codeInput.value.toUpperCase().trim() || 'PROJ';
-        preview1.textContent = code + '-1';
-        preview2.textContent = code + '-2';
-        codeInput.value = codeInput.value.toUpperCase();
-    }
-
-    if (codeInput) {
-        codeInput.addEventListener('input', updatePreview);
-        updatePreview();
-    }
-</script>
-{% endblock extra_js %}
 {% endblock %}

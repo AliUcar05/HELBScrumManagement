@@ -5,33 +5,28 @@
 <div class="container mt-4" style="max-width: 1500px;">
 
     <div class="mb-3">
-        <h2 class="font-weight-bold">
-            Project Settings
-        </h2>
-        <p class="text-muted mb-0">{{ object.name }} — <span class="badge badge-secondary">{{ object.code }}</span></p>
+        <h2 class="font-weight-bold">Project Settings</h2>
+        <p class="text-muted mb-0">
+            {{ object.name }} — <span class="badge badge-secondary">{{ object.code }}</span>
+        </p>
     </div>
 
     <div class="row">
-
-        <!-- ========== COLONNE GAUCHE — Project Info ========== -->
         <div class="col-md-8">
-
-            <!-- Identité -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div id="project-info-section" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; scroll-margin-top: 90px;">
                 <div class="card-body">
                     <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
                         <i class="fas fa-info-circle mr-1"></i> Project Information
                     </h6>
+
                     <form method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
+
                         <div class="form-row">
-                            <div class="col-sm-8">
-                                {{ form.name|as_crispy_field }}
-                            </div>
-                            <div class="col-sm-4">
-                                {{ form.code|as_crispy_field }}
-                            </div>
+                            <div class="col-sm-8">{{ form.name|as_crispy_field }}</div>
+                            <div class="col-sm-4">{{ form.code|as_crispy_field }}</div>
                         </div>
+
                         {{ form.description|as_crispy_field }}
                         {{ form.image|as_crispy_field }}
 
@@ -39,24 +34,16 @@
                             <i class="fas fa-th-large mr-1"></i> Board & Type
                         </h6>
                         <div class="form-row">
-                            <div class="col-sm-6">
-                                {{ form.board_type|as_crispy_field }}
-                            </div>
-                            <div class="col-sm-6">
-                                {{ form.project_type|as_crispy_field }}
-                            </div>
+                            <div class="col-sm-6">{{ form.board_type|as_crispy_field }}</div>
+                            <div class="col-sm-6">{{ form.project_type|as_crispy_field }}</div>
                         </div>
 
                         <h6 class="text-uppercase text-muted font-weight-bold mt-4 mb-3" style="font-size:.75rem; letter-spacing:.08em;">
                             <i class="fas fa-calendar-alt mr-1"></i> Timeline
                         </h6>
                         <div class="form-row">
-                            <div class="col-sm-6">
-                                {{ form.start_date|as_crispy_field }}
-                            </div>
-                            <div class="col-sm-6">
-                                {{ form.end_date|as_crispy_field }}
-                            </div>
+                            <div class="col-sm-6">{{ form.start_date|as_crispy_field }}</div>
+                            <div class="col-sm-6">{{ form.end_date|as_crispy_field }}</div>
                         </div>
 
                         <h6 class="text-uppercase text-muted font-weight-bold mt-4 mb-3" style="font-size:.75rem; letter-spacing:.08em;">
@@ -64,7 +51,6 @@
                         </h6>
                         {{ form.effort_unit|as_crispy_field }}
                         {{ form.sprint_duration|as_crispy_field }}
-                        {{ form.global_capacity|as_crispy_field }}
 
                         <div class="mt-3">
                             <button class="btn btn-primary" type="submit">
@@ -77,30 +63,10 @@
                     </form>
                 </div>
             </div>
-
-            <!-- Danger Zone -->
-            <div class="card border-danger shadow-sm mb-4" style="border-radius: 12px;">
-                <div class="card-body">
-                    <h6 class="text-uppercase text-danger font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                        <i class="fas fa-exclamation-triangle mr-1"></i> Danger Zone
-                    </h6>
-                    <p class="text-muted small mb-3">
-                        Deleting this project will permanently remove all issues, sprints and the board.
-                        This action <strong>cannot be undone</strong>.
-                    </p>
-                    <a href="{% url 'project-delete' object.pk %}" class="btn btn-outline-danger btn-sm">
-                        <i class="fas fa-trash mr-1"></i> Delete this project
-                    </a>
-                </div>
-            </div>
-
         </div>
 
-        <!-- ========== COLONNE DROITE — Members ========== -->
         <div class="col-md-4">
-
-            <!-- Members list -->
-            <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
+            <div id="members-section" class="card border-0 shadow-sm mb-4" style="border-radius: 12px; scroll-margin-top: 90px;">
                 <div class="card-body">
                     <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
                         <i class="fas fa-users mr-1"></i> Project Members
@@ -118,20 +84,7 @@
                         <tbody>
                             {% for m in memberships %}
                             <tr>
-                                <td>
-                                    <div class="d-flex align-items-center">
-                                        <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2"
-                                             style="width:28px; height:28px; font-size:.75rem; font-weight:700; flex-shrink:0;">
-                                            {{ m.user.username|first|upper }}
-                                        </div>
-                                        <div>
-                                            <div style="font-size:.85rem; font-weight:600;">{{ m.user.username }}</div>
-                                            {% if m.capacity_per_sprint %}
-                                            <small class="text-muted">{{ m.capacity_per_sprint }} pts</small>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-                                </td>
+                                <td>{{ m.user.username }}</td>
                                 <td>
                                     <form method="POST" action="{% url 'membership-update-role' object.pk m.pk %}">
                                         {% csrf_token %}
@@ -145,11 +98,7 @@
                                 <td class="text-right">
                                     <form method="POST" action="{% url 'membership-delete' object.pk m.pk %}">
                                         {% csrf_token %}
-                                        <button 
-                                            type="submit" 
-                                            class="btn btn-sm btn-outline-danger"
-                                            title="Remove this member from the project"
-                                            aria-label="Remove this member from the project">
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
                                             <i class="fas fa-times"></i>
                                         </button>
                                     </form>
@@ -157,9 +106,7 @@
                             </tr>
                             {% empty %}
                             <tr>
-                                <td colspan="3" class="text-muted text-center py-3">
-                                    <i class="fas fa-user-slash"></i> No members yet
-                                </td>
+                                <td colspan="3" class="text-muted text-center py-3">No members yet</td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -167,22 +114,21 @@
                 </div>
             </div>
 
-            <!-- Add Member -->
-            <div class="card border-0 shadow-sm" style="border-radius: 12px;">
+            <div id="add-member-section" class="card border-0 shadow-sm" style="border-radius: 12px;">
                 <div class="card-body">
                     <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
                         <i class="fas fa-user-plus mr-1"></i> Add Member
                     </h6>
+
                     <form method="POST" action="{% url 'membership-add' object.pk %}">
                         {% csrf_token %}
                         {{ membership_form|crispy }}
-                        <button class="btn btn-success btn-block mt-2">
+                        <button class="btn btn-success btn-block mt-2" type="submit">
                             <i class="fas fa-plus mr-1"></i> Add Member
                         </button>
                     </form>
                 </div>
             </div>
-
         </div>
     </div>
 

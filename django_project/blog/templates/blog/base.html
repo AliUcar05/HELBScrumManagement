@@ -1,99 +1,131 @@
 {% load static %}
 <!DOCTYPE html>
 <html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-        <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-        <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
-        <title>ScrumManagement</title>
-    </head>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
-    <body>
-        <!-- ── NAVBAR ── -->
-        <header class="site-header">
-            <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
-                <div class="container-fluid px-3">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
 
-                    <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-                        <img src="{% static 'blog/images/logo.png' %}" width="50" class="mr-2" alt="Logo">
-                        ScrumManagement
-                    </a>
+    <title>ScrumManagement</title>
+</head>
 
-                    <button class="navbar-toggler" type="button"
-                            data-toggle="collapse" data-target="#navbarToggle">
-                        <span class="navbar-toggler-icon"></span>
-                    </button>
+<body>
+    <header class="site-header">
+        <nav class="navbar navbar-expand-md navbar-dark bg-steel fixed-top">
+            <div class="container-fluid px-3">
 
-                    <div class="collapse navbar-collapse" id="navbarToggle">
+                <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
+                    <img src="{% static 'blog/images/logo.png' %}" width="50" class="mr-2" alt="Logo">
+                    ScrumManagement
+                </a>
 
-                        <!-- Menu gauche -->
-                        <div class="navbar-nav mr-auto d-flex align-items-center">
-                            <!-- Projects button-->
-                            <li class="nav-item dropdown list-unstyled mr-2">
-                                <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown">
-                                    Projects
-                                </a>
-                                <ul class="dropdown-menu">
-                                    {% if current_project %}
-                                        <li class="px-3 py-2">
-                                            <small class="text-muted">CURRENT PROJECT</small>
-                                            <div class="font-weight-bold">{{ current_project.name }}</div>
-                                        </li>
-                                        <li><hr class="dropdown-divider"></li>
-                                    {% endif %}
-                                    <li><a class="px-3 py-2"><i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i> Software</a></li>
-                                    <li><a class="px-3 py-2"><i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i> Business</a></li>
+                <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggle">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarToggle">
+
+                    <div class="navbar-nav mr-auto d-flex align-items-center">
+                        <li class="nav-item dropdown list-unstyled mr-2">
+                            <a class="nav-link dropdown-toggle text-white" data-toggle="dropdown" href="#">
+                                Projects
+                            </a>
+                            <ul class="dropdown-menu">
+                                {% if current_project %}
+                                    <li class="px-3 py-2">
+                                        <small class="text-muted">CURRENT PROJECT</small>
+                                        <div class="font-weight-bold">{{ current_project.name }}</div>
+                                    </li>
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'project-list' %}">
-                                        View All Projects</a></li>
+                                {% endif %}
+
+                                <li>
+                                    <a class="dropdown-item" href="{% url 'project-list' %}">
+                                        View All Projects
+                                    </a>
+                                </li>
+
+                                {% if user.is_authenticated and user.profile.global_role|lower == 'admin' %}
                                     <li><hr class="dropdown-divider"></li>
-                                    <li><a class="dropdown-item" href="{% url 'project-create' %}">
-                                        <i class="fas fa-plus mr-1"></i> Create Project</a></li>
-                                </ul>
-                            </li>
+                                    <li>
+                                        <a class="dropdown-item" href="{% url 'project-create' %}">
+                                            <i class="fas fa-plus mr-1"></i> Create Project
+                                        </a>
+                                    </li>
+                                {% endif %}
+                            </ul>
+                        </li>
 
-                            <!-- Issues button-->
-                            <li class="nav-item mr-4">
-                                <a class="nav-link text-white" href="#">Issues</a>
-                            </li>
+                        <li class="nav-item mr-4">
+                            <a class="nav-link text-white" href="#">Issues</a>
+                        </li>
 
-                            <!-- Bords button-->
-                            <li class="nav-item mr-4">
-                                <a class="nav-link text-white" href="#">Bords</a>
-                            </li>
+                        <li class="nav-item mr-4">
+                            {% if current_project %}
+                                <a class="nav-link text-white" href="{% url 'project-board' current_project.pk %}">Boards</a>
+                            {% else %}
+                                <a class="nav-link text-white" href="#">Boards</a>
+                            {% endif %}
+                        </li>
 
-                            <!-- Plans button-->
-                            <li class="nav-item mr-4">
-                                <a class="nav-link text-white" href="#">Plans</a>
-                            </li>
+                        <li class="nav-item mr-4">
+                            <a class="nav-link text-white" href="#">Plans</a>
+                        </li>
 
-                            <!-- Create button-->
-                            <button class="btn btn-outline-primary px-4 py-2">created</button>
-                        </div>
+                        {% if user.is_authenticated and user.profile.global_role|lower == 'admin' %}
+                            <a href="{% url 'project-create' %}" class="btn btn-outline-primary px-4 py-2">
+                                Create
+                            </a>
+                        {% endif %}
+                    </div>
 
-                        <!-- Menu droite -->
-                        <div class="navbar-nav">
-                            {% if user.is_authenticated %}
+                    <div class="navbar-nav">
+                        {% if user.is_authenticated %}
                             <ul class="navbar-nav align-items-center">
                                 <li class="nav-item">
                                     <a class="nav-link" href="#"><i class="fas fa-search" style="font-size:1.4rem;"></i></a>
                                 </li>
+
                                 <li class="nav-item">
                                     <a class="nav-link" href="#"><i class="fas fa-bell" style="font-size:1.4rem;"></i></a>
                                 </li>
+
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#"><i class="fas fa-users" style="font-size:1.4rem;"></i></a>
+                                    {% if current_project and current_project.created_by_id == user.id %}
+                                        <a class="nav-link" href="{% url 'project-settings' current_project.pk %}#members-section" title="Project members">
+                                            <i class="fas fa-users" style="font-size:1.4rem;"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="nav-link disabled text-muted" href="#" tabindex="-1" aria-disabled="true" title="Project members">
+                                            <i class="fas fa-users" style="font-size:1.4rem;"></i>
+                                        </a>
+                                    {% endif %}
                                 </li>
+
                                 <li class="nav-item">
-                                    <a class="nav-link" href="#"><i class="fas fa-cog" style="font-size:1.4rem;"></i></a>
+                                    {% if current_project and current_project.created_by_id == user.id %}
+                                        <a class="nav-link" href="{% url 'project-settings' current_project.pk %}#project-info-section" title="Project settings">
+                                            <i class="fas fa-cog" style="font-size:1.4rem;"></i>
+                                        </a>
+                                    {% else %}
+                                        <a class="nav-link disabled text-muted" href="#" tabindex="-1" aria-disabled="true" title="Project settings">
+                                            <i class="fas fa-cog" style="font-size:1.4rem;"></i>
+                                        </a>
+                                    {% endif %}
                                 </li>
+
                                 <li class="nav-item dropdown ml-2">
                                     <a class="nav-link p-0" href="#" role="button" data-toggle="dropdown">
                                         {% if user.profile.image %}
-                                            <img src="{{ user.profile.image.url }}" class="rounded-circle"
-                                                 width="35" height="35" style="object-fit:cover;">
+                                            <img src="{{ user.profile.image.url }}"
+                                                 class="rounded-circle"
+                                                 width="35"
+                                                 height="35"
+                                                 style="object-fit:cover;"
+                                                 alt="Profile">
                                         {% else %}
                                             <div class="rounded-circle d-flex align-items-center justify-content-center"
                                                  style="width:35px;height:35px;background:#e85d8a;color:white;font-weight:bold;font-size:14px;">
@@ -101,57 +133,89 @@
                                             </div>
                                         {% endif %}
                                     </a>
+
                                     <ul class="dropdown-menu dropdown-menu-right">
                                         <li>
                                             <div class="px-3 py-2 text-muted" style="font-size:0.85rem;">
-                                                {{ user.get_full_name }}<br>
+                                                {{ user.get_full_name|default:user.username }}<br>
                                                 <small>{{ user.email }}</small>
                                             </div>
                                         </li>
+
                                         <li><hr class="dropdown-divider"></li>
-                                        <li><a class="dropdown-item" href="{% url 'profile' %}">
-                                            <i class="fas fa-user-circle mr-2"></i>Profile</a></li>
-                                        <li><a class="dropdown-item" href="#">
-                                            <i class="fas fa-cog mr-2"></i>Settings</a></li>
-                                        {% if user.profile.global_role == 'admin' %}
-                                        <li><a class="dropdown-item" href="{% url 'manage-users' %}">
-                                            <i class="fas fa-users-cog mr-2"></i>Manage Users</a></li>
-                                        {% endif %}
+
                                         <li>
-                                            <hr class="dropdown-divider"></li>
-                                        <form method="POST" action="{% url 'logout' %}">
-                                            {% csrf_token %}
-                                            <button type="submit" class="dropdown-item text-danger">
-                                                <i class="fas fa-sign-out-alt mr-2"></i>Logout
-                                            </button>
-                                        </form>
+                                            <a class="dropdown-item" href="{% url 'home' %}">
+                                                <i class="fas fa-home mr-2"></i>Dashboard
+                                            </a>
+                                        </li>
+
+                                        <li>
+                                            <a class="dropdown-item" href="{% url 'profile' %}">
+                                                <i class="fas fa-user-circle mr-2"></i>Profile
+                                            </a>
+                                        </li>
+
+                                        {% if current_project %}
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'project-board' current_project.pk %}">
+                                                    <i class="fas fa-th-large mr-2"></i>Current Project
+                                                </a>
+                                            </li>
+                                        {% endif %}
+
+                                        {% if user.profile.global_role|lower == 'admin' %}
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'manage-users' %}?next={{ request.get_full_path|urlencode }}">
+                                                    <i class="fas fa-users-cog mr-2"></i>Manage Users
+                                                </a>
+                                            </li>
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'create-user' %}?next={{ request.get_full_path|urlencode }}">
+                                                    <i class="fas fa-user-plus mr-2"></i>Create User
+                                                </a>
+                                            </li>
+                                        {% endif %}
+
+                                        <li><hr class="dropdown-divider"></li>
+
+                                        <li>
+                                            <form method="POST" action="{% url 'logout' %}" class="m-0">
+                                                {% csrf_token %}
+                                                <button type="submit" class="dropdown-item text-danger">
+                                                    <i class="fas fa-sign-out-alt mr-2"></i>Logout
+                                                </button>
+                                            </form>
+                                        </li>
                                     </ul>
                                 </li>
                             </ul>
-                            {% else %}
-                                <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
-                                <a class="nav-item nav-link" href="{% url 'register' %}">Register</a>
-                            {% endif %}
-                        </div>
+                        {% else %}
+                            <a class="nav-item nav-link" href="{% url 'login' %}">Login</a>
+                        {% endif %}
                     </div>
+
                 </div>
-            </nav>
-        </header>
-
-        <main role="main" >
-            <div class="container-fluid">
-                {% if messages %}
-                    {% for message in messages %}
-                        <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-                    {% endfor %}
-                {% endif %}
             </div>
-            {% block content %}{% endblock %}
-        </main>
+        </nav>
+    </header>
 
+    <main role="main" style="padding-top: 90px;">
+        <div class="container-fluid">
+            {% if messages %}
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }} mt-2">
+                        {{ message }}
+                    </div>
+                {% endfor %}
+            {% endif %}
+        </div>
 
-        <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
-    </body>
+        {% block content %}{% endblock %}
+    </main>
+
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"></script>
+</body>
 </html>

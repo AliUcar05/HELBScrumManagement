@@ -1,20 +1,24 @@
 {% extends "blog/base.html" %}
+
 {% block content %}
 <div class="content-section">
     <div class="d-flex justify-content-between align-items-center">
-        <h2><i class="fas fa-users-cog"></i> Manage Users</h2>
-        <a href="{% url 'home' %}" class="btn btn-outline-secondary btn-sm">Back to Dashboard</a>
-    </div>
-    <p class="text-muted">Update global user permissions. Changes take effect upon saving.</p>
-    <hr>
+        <div>
+            <h2><i class="fas fa-users-cog"></i> Manage Users</h2>
+            <p class="text-muted mb-0">Update global user permissions. Changes take effect upon saving.</p>
+        </div>
 
-    {% if messages %}
-        {% for message in messages %}
-            <div class="alert alert-{{ message.tags }} shadow-sm">
-                {{ message }}
-            </div>
-        {% endfor %}
-    {% endif %}
+        <div>
+            <a href="{% url 'create-user' %}?next={{ back_url|urlencode }}" class="btn btn-primary btn-sm mr-2">
+                <i class="fas fa-user-plus mr-1"></i> Create User
+            </a>
+            <a href="{{ back_url }}" class="btn btn-outline-secondary btn-sm">
+                <i class="fas fa-arrow-left mr-1"></i> Back
+            </a>
+        </div>
+    </div>
+
+    <hr>
 
     <table class="table table-hover border">
         <thead class="thead-light">
@@ -28,26 +32,55 @@
         <tbody>
             {% for u in users %}
             <tr>
-                <td class="align-middle"><strong>{{ u.username }}</strong></td>
+                <td class="align-middle">
+                    <strong>{{ u.username }}</strong>
+                    {% if u == user %}
+                        <span class="badge badge-secondary ml-1">You</span>
+                    {% endif %}
+                </td>
                 <td class="align-middle">{{ u.email }}</td>
                 <td class="align-middle">
                     <form method="POST" action="{% url 'manage-users' %}" class="form-inline">
                         {% csrf_token %}
-                        
                         <input type="hidden" name="user_id" value="{{ u.id }}">
-                        
+                        <input type="hidden" name="next" value="{{ back_url }}">
+
                         <select name="new_role" class="form-control form-control-sm mr-2">
                             <option value="admin" {% if u.profile.global_role|lower == 'admin' %}selected{% endif %}>Admin</option>
-                            <option value="developer" {% if u.profile.global_role|lower == 'developer' %}selected{% endif %}>Developer</option>
                             <option value="member" {% if u.profile.global_role|lower == 'member' %}selected{% endif %}>Member</option>
                             <option value="read-only" {% if u.profile.global_role|lower == 'read-only' %}selected{% endif %}>Read-only</option>
                         </select>
                 </td>
+
                 <td class="text-center align-middle">
-                        <button type="submit" class="btn btn-success btn-sm">
+                        <button type="submit" class="btn btn-success btn-sm mr-2">
                             <i class="fas fa-save"></i> Update
                         </button>
-                    </form> </td>
+                    </form>
+
+                    {% if u != user %}
+                        <form method="POST"
+                              action="{% url 'delete-user' u.id %}"
+                              class="d-inline"
+                              onsubmit="return confirm('Delete user {{ u.username }}?');">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ back_url }}">
+                            <button type="submit" class="btn btn-danger btn-sm">
+                                <i class="fas fa-trash-alt"></i> Delete
+                            </button>
+                        </form>
+                    {% else %}
+                        <button type="button" class="btn btn-secondary btn-sm" disabled>
+                            <i class="fas fa-trash-alt"></i> Delete
+                        </button>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-muted py-4">
+                    No users found.
+                </td>
             </tr>
             {% endfor %}
         </tbody>
