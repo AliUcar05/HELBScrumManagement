@@ -4,8 +4,12 @@ from . import views
 from .views import (
     ProjectListView, ProjectDetailView, ProjectCreateView,
     ProjectUpdateView, ProjectDeleteView, ProjectSettingsView, MembershipAddView,
-    MembershipDeleteView, MembershipUpdateRoleView
+    MembershipDeleteView, MembershipUpdateRoleView,
 
+    TicketCreateView,
+    TicketUpdateView,
+    TicketDetailView,
+    TicketDeleteView, TicketListView
 )
 
 urlpatterns = [
@@ -23,5 +27,18 @@ urlpatterns = [
 
     path("projects/<int:pk>/members/<int:membership_pk>/delete/", MembershipDeleteView.as_view(), name="membership-delete"),
     path("projects/<int:pk>/members/<int:membership_pk>/role/", MembershipUpdateRoleView.as_view(), name="membership-update-role"),
+
+    # URLS SIDEBAR PROJECT BOARD
+    path('projects/<int:pk>/active-sprint/', views.active_sprint, name='project-active-sprint'),
+    path('projects/<int:pk>/report/', views.project_report, name='project-report'),
+    path("projects/<int:pk>/settings/", ProjectSettingsView.as_view(), name="project-settings"),
+
+    # TICKET ISSUES URL
+    path('projects/<int:pk>/ticket/create/',TicketCreateView.as_view(),name='ticket-create'),
+    path("projects/<int:pk>/backlog/",TicketListView.as_view(), name="product-backlog"),
+    path('projects/<int:pk>/ticket/detail/<int:ticket_pk>/',TicketDetailView.as_view(),name='ticket-detail'),
+    path('projects/<int:pk>/ticket/update/<int:ticket_pk>/edit/',TicketUpdateView.as_view(),name='ticket-update'),
+    path('projects/<int:pk>/ticket/delete/<int:ticket_pk>/delete/',TicketDeleteView.as_view(),name='ticket-delete'),
+
 
 ]

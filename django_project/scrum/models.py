@@ -108,7 +108,7 @@ class Project(models.Model):
 
     @property
     def project_type_image(self):
-        path = self.PROJECT_TYPE_IMAGES.get(self.project_type,"project_types/default.jpg")
+        path = self.PROJECT_TYPE_IMAGES.get(self.project_type,"project_types/default.png")
         return f"{settings.MEDIA_URL}{path}"
 
     def save(self, *args, **kwargs):
