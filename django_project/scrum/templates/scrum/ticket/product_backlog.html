@@ -1,0 +1,99 @@
+{% extends 'scrum/project_board.html' %}
+{% load static %}
+{% block project_content %}
+    <link rel="stylesheet" href="{% static 'scrum/css/backlog.css' %}">
+    <div class="backlog-container">
+       <div class="backlog-header">
+            <div>
+                <h2 class="backlog-title">Product Backlog</h2>
+                <span class="backlog-count">{{ tickets|length }} issue{% if tickets|length != 1 %}s{% endif %}</span>
+            </div>
+            {% if can_create %}
+            <button class="bl-btn bl-btn--primary"
+                    data-toggle="modal" data-target="#globalCreateTicketModal">
+                <i class="fas fa-plus mr-1"></i> Add Issue
+            </button>
+            {% endif %}
+       </div>
+
+        <div class="card">
+            <div class="card-body p-0">
+
+                <table class="bl-table">
+                    <thead>
+                        <tr>
+                            <th class="bl-col-id">Key</th>
+                            <th class="bl-col-type">Type</th>
+                            <th class="bl-col-title">Summary</th>
+                            <th>Priority</th>
+                            <th>Assignee</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    {% for ticket in tickets %}
+                        <tr class="bl-row">
+
+                            <td class="bl-key">
+                                <a href="{% url 'ticket-detail' project.pk ticket.pk %}">
+                                    {{ project.code }}-{{ ticket.id }}
+                                </a>
+                            </td>
+
+                            <td class="bl-type">
+                                {% if ticket.type == "bug" %}
+                                    <span class="type-bug">Bug</span>
+                                {% elif ticket.type == "user story" %}
+                                    <span class="type-story">User Story</span>
+                                {% elif ticket.type == "task" %}
+                                    <span class="type-task">Task</span>
+                                {% elif ticket.type == "epic" %}
+                                    <span class="type-epic">Epic</span>
+                                {% endif %}
+                            </td>
+
+                            <td class="bl-title">
+                                {{ ticket.title }}
+                            </td>
+
+                            <td>
+                                <span class="priority priority-{{ ticket.priority }}">
+                                    {{ ticket.get_priority_display }}
+                                </span>
+                            </td>
+
+                            <td class="bl-assignee">
+                                {% if ticket.assignee %}
+                                    <div class="bl-user">
+                                        <div class="bl-avatar">
+                                            {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
+                                        </div>
+                                        {{ ticket.assignee.get_full_name|default:ticket.assignee.username }}
+                                    </div>
+                                {% else %}
+                                    <span class="bl-unassigned">Unassigned</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                <span class="status status-{{ ticket.status }}">
+                                    {{ ticket.get_status_display }}
+                                </span>
+                            </td>
+
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="6" class="bl-empty">
+                                No issues in backlog
+                            </td>
+                        </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+    </div>
+{% endblock %}

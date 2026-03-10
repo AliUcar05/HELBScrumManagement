@@ -7,8 +7,8 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from .forms import ProjectForm, MembershipForm
-from .models import Project, Membership
+from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm
+from .models import Project, Membership, Ticket
 
 
 def project_queryset_for(user):
@@ -25,14 +25,41 @@ def user_can_access_project(user, project):
     )
 
 
+def get_membership_role(user, project):
+    m = project.memberships.filter(user=user).first()
+    return m.role.lower() if m else None
+
+def is_project_admin(user, project):
+    if project.created_by_id == user.id:
+        return True
+    return get_membership_role(user, project) == "admin"
+
+def is_contributor_or_admin(user, project):
+    if project.created_by_id == user.id:
+        return True
+    return get_membership_role(user, project) in ("admin", "contributor")
+
+
 @login_required
 def project_board(request, pk):
     project = get_object_or_404(Project, pk=pk)
+    request.session["current_project_id"] = project.id
+    return redirect('project-active-sprint', pk=pk)
 
-    if not user_can_access_project(request.user, project):
-        messages.error(request, "You are not allowed to access this project.")
-        return redirect("home")
+def project_report(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    membership = project.memberships.filter(user=request.user).first()
 
+    context = {
+        "project": project,
+        "membership": membership,
+    }
+    return render(request,"scrum/project_report.html",context)
+
+
+@login_required
+def active_sprint(request, pk):
+    project = get_object_or_404(Project, pk=pk)
     request.session["current_project_id"] = project.id
 
     board = getattr(project, "board", None)
@@ -43,14 +70,20 @@ def project_board(request, pk):
     columns = board.columns.all().order_by("order")
     membership = project.memberships.filter(user=request.user).first()
 
+    # Sprint actif
+    active_sprint = project.sprints.filter(status='active').first()
+
     context = {
         "project": project,
         "board": board,
         "columns": columns,
         "membership": membership,
-        "active_sprint": project.active_sprint,
+        "active_sprint": active_sprint,
     }
-    return render(request, "scrum/project_board.html", context)
+    return render(request, "scrum/sprint/active_sprint.html", context)
+
+
+
 
 
 class ProjectListView(LoginRequiredMixin, ListView):
@@ -231,3 +264,184 @@ class MembershipUpdateRoleView(LoginRequiredMixin, View):
             messages.error(request, "Invalid role.")
 
         return redirect("project-settings", pk=pk)
+
+
+
+#TICKET LOGIC 
+class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Ticket
+    form_class = TicketForm
+
+    def test_func(self):
+        project = get_object_or_404(Project, pk=self.kwargs["pk"])
+        return is_contributor_or_admin(self.request.user, project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You don't have permission to create issues.")
+        return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        project = get_object_or_404(Project, pk=self.kwargs["pk"])
+
+        form.fields["assignee"].queryset = project.members.all()
+        form.fields["parent"].queryset = project.tickets.all()
+
+        return form
+
+    def form_valid(self, form):
+        project = get_object_or_404(Project, pk=self.kwargs["pk"])
+
+        form.instance.project = project
+        form.instance.requester = self.request.user
+        form.instance.status = "todo"
+
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            self.object = form.save()
+            return JsonResponse({
+                "success": True,
+                "ticket_id": self.object.pk
+            })
+
+        messages.success(self.request, f'Issue "{form.instance.title}" created.')
+
+        return super().form_valid(form)
+
+    def get_success_url(self):
+        return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
+
+class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Ticket
+    template_name = "scrum/ticket/product_backlog.html"  # ← vérifie ce chemin
+    context_object_name = "tickets"
+
+    def test_func(self):
+        project = get_object_or_404(Project, pk=self.kwargs["pk"])
+        return user_can_access_project(self.request.user, project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You don't have access to this project.")
+        return redirect("project-list")
+
+    def get_queryset(self):
+        self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
+        self.request.session["current_project_id"] = self.project.id  # ← important pour le modal
+        return Ticket.objects.filter(project=self.project).select_related(
+            "assignee", "assignee__profile", "parent"
+        ).order_by("backlog_order", "created_at")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.project
+        context["membership"] = self.project.memberships.filter(user=self.request.user).first()
+        context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
+        context["can_delete"] = is_project_admin(self.request.user, self.project)
+        return context
+
+class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
+    model = Ticket
+    context_object_name = "ticket"
+    pk_url_kwarg = "ticket_pk"
+
+    def test_func(self):
+        ticket = self.get_object()
+        return user_can_access_project(self.request.user, ticket.project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You don't have access to this project.")
+        return redirect("project-list")
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        ticket = self.object
+        project = ticket.project
+        self.request.session["current_project_id"] = project.id
+
+        # Pre-fill edit form for the modal
+        edit_form = TicketEditForm(instance=ticket)
+        edit_form.fields["assignee"].queryset = project.members.all()
+        edit_form.fields["parent"].queryset = project.tickets.exclude(pk=ticket.pk)
+
+        context["project"] = project
+        context["children"] = ticket.children.all()
+        context["comments"] = ticket.comments.select_related("author").order_by("created_at")
+        context["can_edit"] = is_contributor_or_admin(self.request.user, project)
+        context["can_delete"] = is_project_admin(self.request.user, project)
+        context["edit_form"] = edit_form
+        context["membership"] = project.memberships.filter(user=self.request.user).first()
+        return context
+
+class TicketUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Ticket
+    form_class = TicketEditForm
+    template_name = "scrum/ticket/ticket_form.html"
+    pk_url_kwarg = "ticket_pk"
+
+    def test_func(self):
+        ticket = self.get_object()
+        return is_contributor_or_admin(self.request.user, ticket.project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You don't have permission to edit this issue.")
+        return redirect("project-backlog", pk=self.kwargs["pk"])
+
+    def get_form(self, form_class=None):
+        form = super().get_form(form_class)
+        project = self.get_object().project
+        form.fields["assignee"].queryset = project.members.all()
+        form.fields["parent"].queryset = project.tickets.exclude(pk=self.object.pk)
+        return form
+
+    def form_valid(self, form):
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            self.object = form.save()
+            return JsonResponse({"success": True})
+        messages.success(self.request, f'Issue "{self.object.title}" updated.')
+        return super().form_valid(form)
+
+    def form_invalid(self, form):
+        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "errors": form.errors}, status=400)
+        return super().form_invalid(form)
+
+    def get_success_url(self):
+        return reverse("ticket-detail", kwargs={
+            "pk": self.kwargs["pk"],
+            "ticket_pk": self.object.pk,
+        })
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.object.project
+        context["form_title"] = "Edit Issue"
+        context["submit_label"] = "Save Changes"
+        return context
+
+class TicketDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Ticket
+    template_name = "scrum/ticket/ticket_confirm_delete.html"
+    pk_url_kwarg = "ticket_pk"
+
+    def test_func(self):
+        ticket = self.get_object()
+        return is_contributor_or_admin(self.request.user, ticket.project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "Only project contributor and admins can delete issues.")
+        return redirect("ticket-detail", pk=self.kwargs["pk"], ticket_pk=self.kwargs["ticket_pk"])
+
+    def delete(self, request, *args, **kwargs):
+        ticket = self.get_object()
+        # Detach children instead of cascade-deleting them
+        ticket.children.update(parent=None)
+        messages.success(request, f'Issue "{ticket.title}" deleted.')
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = self.object.project
+        return context
+

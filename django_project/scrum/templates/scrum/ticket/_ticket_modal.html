@@ -1,0 +1,315 @@
+{% load static %}
+{% load crispy_forms_tags %}
+{% if user.is_authenticated %}
+
+    <link rel="stylesheet" href="{% static 'scrum/css/ticket_modal.css' %}">
+
+    <div class="modal fade" id="globalCreateTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content tm-content">
+
+                <div class="tm-header">
+                    <h4 class="tm-title">Create Issue</h4>
+                    <button type="button" class="tm-close" data-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="tm-divider"></div>
+
+                <div class="card border-0">
+                    <div class="card-body">
+                        {% if ticket_form and current_project %}
+                            <form method="POST" action="{% url 'ticket-create' current_project.pk %}" enctype="multipart/form-data">
+                                {% csrf_token %}
+
+                                <div class="tm-drawer-body">
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tm-label-crispy">Project <span class="tm-required">*</span></label>
+                                                <div class="tm-readonly-input">
+                                                    {% if current_project.image %}
+                                                        <img src="{{ current_project.image.url }}" class="tm-project-img" alt="{{ current_project.name }}">
+                                                    {% else %}
+                                                        <span class="tm-project-square"></span>
+                                                    {% endif %}
+                                                    {{ current_project.name }}
+                                                    <span class="tm-project-code">({{ current_project.code }})</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            {{ ticket_form.type|as_crispy_field }}
+                                        </div>
+                                    </div>
+
+                                    <hr class="tm-hr">
+
+                                    <div class="row">
+                                        <div class="col-12">
+                                            {{ ticket_form.title|as_crispy_field }}
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <label class="tm-label-crispy">Description</label>
+                                                <div class="tm-editor">
+                                                    <div class="tm-editor-toolbar">
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('bold')" title="Bold"><b>B</b></button>
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('italic')" title="Italic"><i>I</i></button>
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('underline')" title="Underline"><u>U</u></button>
+                                                        <div class="tm-tb-sep"></div>
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('insertUnorderedList')" title="Bullet list">
+                                                            <i class="fas fa-list-ul"></i>
+                                                        </button>
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('insertOrderedList')" title="Numbered list">
+                                                            <i class="fas fa-list-ol"></i>
+                                                        </button>
+                                                        <div class="tm-tb-sep"></div>
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('formatBlock', 'blockquote')" title="Quote">
+                                                            <i class="fas fa-quote-right"></i>
+                                                        </button>
+                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('formatBlock', 'pre')" title="Code">
+                                                            <i class="fas fa-code"></i>
+                                                        </button>
+                                                    </div>
+                                                    <div class="tm-editor-area"
+                                                         id="descriptionEditor"
+                                                         contenteditable="true"
+                                                         data-placeholder="Add a description…"></div>
+                                                </div>
+                                                <input type="hidden" name="description" id="descriptionHidden">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12">
+                                            <div class="form-group">
+                                                <label class="tm-label-crispy">Attachment</label>
+                                                <div class="tm-dropzone" id="tmDropzone">
+                                                    <i class="fas fa-cloud-upload-alt tm-dropzone-icon"></i>
+                                                    <span class="tm-dropzone-text">
+                                                        Drop files to attach, or <label for="attachmentInput" class="tm-dropzone-browse">browse</label>
+                                                    </span>
+                                                    <input type="file" name="attachments" id="attachmentInput" multiple style="display:none;">
+                                                </div>
+                                                <div class="tm-file-list" id="tmFileList"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tm-label-crispy">Reporter</label>
+                                                <div class="tm-readonly-input tm-readonly-input--user">
+                                                    <div class="tm-avatar">
+                                                        {% if request.user.profile.image %}
+                                                            <img src="{{ request.user.profile.image.url }}" alt="{{ request.user.username }}">
+                                                        {% else %}
+                                                            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                                                        {% endif %}
+                                                    </div>
+                                                    <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="form-group">
+                                                <label class="tm-label-crispy">Assignee</label>
+                                                <input type="hidden" name="assignee" id="assigneeValue">
+                                                <div class="tm-user-select" id="assigneeDropdown">
+                                                    <div class="tm-user-select__trigger" onclick="toggleAssigneeDropdown()">
+                                                        <div class="tm-avatar tm-avatar--placeholder" id="assigneeAvatar">
+                                                            <i class="fas fa-user"></i>
+                                                        </div>
+                                                        <span id="assigneeLabel">— Unassigned —</span>
+                                                        <i class="fas fa-chevron-down tm-user-select__arrow"></i>
+                                                    </div>
+                                                    <div class="tm-user-select__menu" id="assigneeMenu">
+                                                        <div class="tm-user-option" data-value="" data-name="— Unassigned —" onclick="selectAssignee(this)">
+                                                            <div class="tm-avatar tm-avatar--placeholder"><i class="fas fa-user"></i></div>
+                                                            <span>— Unassigned —</span>
+                                                        </div>
+                                                        {% for member in ticket_form.fields.assignee.queryset %}
+                                                            <div class="tm-user-option"
+                                                                 data-value="{{ member.pk }}"
+                                                                 data-name="{{ member.get_full_name|default:member.username }}"
+                                                                 data-img="{% if member.profile.image %}{{ member.profile.image.url }}{% endif %}"
+                                                                 data-initials="{{ member.first_name|first|upper }}{{ member.last_name|first|upper }}"
+                                                                 onclick="selectAssignee(this)">
+                                                                <div class="tm-avatar">
+                                                                    {% if member.profile.image %}
+                                                                        <img src="{{ member.profile.image.url }}" alt="{{ member.username }}">
+                                                                    {% else %}
+                                                                        {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
+                                                                    {% endif %}
+                                                                </div>
+                                                                <span>{{ member.get_full_name|default:member.username }}</span>
+                                                            </div>
+                                                        {% endfor %}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">{{ ticket_form.priority|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ ticket_form.status|as_crispy_field }}</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">{{ ticket_form.story_points|as_crispy_field }}</div>
+                                        <div class="col-md-6">{{ ticket_form.due_date|as_crispy_field }}</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12">{{ ticket_form.labels|as_crispy_field }}</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-12">{{ ticket_form.parent|as_crispy_field }}</div>
+                                    </div>
+
+                                </div>
+
+                                <div class="tm-drawer-footer">
+                                    <label class="tm-create-another">
+                                        <input type="checkbox" name="create_another"> Create another
+                                    </label>
+                                    <div class="tm-footer-actions">
+                                        <button type="button" class="tm-btn tm-btn--ghost" data-dismiss="modal">Cancel</button>
+                                        <button type="submit" class="tm-btn tm-btn--primary" onclick="syncDescription()">Create</button>
+                                    </div>
+                                </div>
+
+                            </form>
+                        {% else %}
+                            <div class="tm-empty-state">
+                                <p class="tm-empty-title">No project selected</p>
+                                <a href="{% url 'project-list' %}" class="tm-btn tm-btn--primary mt-3">View Projects</a>
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function tmFormat(cmd, val)
+        {
+            document.getElementById('descriptionEditor').focus();
+            document.execCommand(cmd, false, val || null);
+        }
+
+        function syncDescription()
+        {
+            document.getElementById('descriptionHidden').value = document.getElementById('descriptionEditor').innerHTML;
+        }
+
+        // Sync aussi au submit du form
+        document.addEventListener('DOMContentLoaded', function ()
+        {
+            var form = document.querySelector('#globalCreateTicketModal form');
+
+            if (form)
+            {
+                form.addEventListener('submit', syncDescription);
+            }
+
+            /* ---- Placeholder pour l'éditeur ---- */
+            var editor = document.getElementById('descriptionEditor');
+            if (editor)
+            {
+                editor.addEventListener('focus', function() {
+                    if (this.innerHTML === '') this.classList.add('focused');
+                });
+                editor.addEventListener('blur', function() {
+                    this.classList.remove('focused');
+                });
+            }
+
+            /* ---- Drop zone ---- */
+            var dropzone = document.getElementById('tmDropzone');
+            var fileInput = document.getElementById('attachmentInput');
+            var fileList  = document.getElementById('tmFileList');
+
+            if (dropzone) {
+                dropzone.addEventListener('dragover', function(e) {
+                    e.preventDefault();
+                    dropzone.classList.add('tm-dropzone--active');
+                });
+                dropzone.addEventListener('dragleave', function() {
+                    dropzone.classList.remove('tm-dropzone--active');
+                });
+                dropzone.addEventListener('drop', function(e) {
+                    e.preventDefault();
+                    dropzone.classList.remove('tm-dropzone--active');
+                    handleFiles(e.dataTransfer.files);
+                });
+                dropzone.addEventListener('click', function(e) {
+                    if (e.target.tagName !== 'LABEL' && e.target.tagName !== 'INPUT') {
+                        fileInput.click();
+                    }
+                });
+                fileInput.addEventListener('change', function() {
+                    handleFiles(this.files);
+                });
+            }
+
+            function handleFiles(files) {
+                fileList.innerHTML = '';
+                Array.from(files).forEach(function(file) {
+                    var item = document.createElement('div');
+                    item.className = 'tm-file-item';
+                    var icon = file.type.startsWith('image/') ? '🖼️' : '📄';
+                    item.innerHTML = icon + ' <span>' + file.name + '</span>'
+                        + '<small>' + (file.size / 1024).toFixed(1) + ' KB</small>';
+                    fileList.appendChild(item);
+                });
+            }
+        });
+
+        /* ---- Assignee dropdown ---- */
+        function toggleAssigneeDropdown() {
+            document.getElementById('assigneeMenu').classList.toggle('tm-user-select__menu--open');
+            document.getElementById('assigneeDropdown').classList.toggle('tm-user-select--open');
+        }
+        function selectAssignee(el) {
+            var value    = el.dataset.value;
+            var name     = el.dataset.name;
+            var img      = el.dataset.img;
+            var initials = el.dataset.initials || '';
+            document.getElementById('assigneeValue').value = value;
+            var avatar = document.getElementById('assigneeAvatar');
+            var label  = document.getElementById('assigneeLabel');
+            if (!value) {
+                avatar.innerHTML = '<i class="fas fa-user"></i>';
+                avatar.className = 'tm-avatar tm-avatar--placeholder';
+            } else if (img) {
+                avatar.innerHTML = '<img src="' + img + '" alt="' + name + '">';
+                avatar.className = 'tm-avatar';
+            } else {
+                avatar.innerHTML = initials;
+                avatar.className = 'tm-avatar';
+            }
+            label.textContent = name;
+            document.getElementById('assigneeMenu').classList.remove('tm-user-select__menu--open');
+            document.getElementById('assigneeDropdown').classList.remove('tm-user-select--open');
+        }
+        document.addEventListener('click', function(e) {
+            var dd = document.getElementById('assigneeDropdown');
+            if (dd && !dd.contains(e.target)) {
+                document.getElementById('assigneeMenu').classList.remove('tm-user-select__menu--open');
+                dd.classList.remove('tm-user-select--open');
+            }
+        });
+    </script>
+{% endif %}

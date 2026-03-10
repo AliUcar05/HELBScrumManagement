@@ -123,7 +123,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='project',
             name='image',
-            field=models.ImageField(blank=True, default='project_icons/default.jpg', upload_to='project_icons/'),
+            field=models.ImageField(blank=True, default='project_icons/default.png', upload_to='project_icons/'),
         ),
         migrations.AddField(
             model_name='project',
