@@ -9,9 +9,7 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 
 from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm
 from .models import Project, Membership, Ticket
-import json
-from datetime import date as date_type
-from django.contrib.auth import get_user_model
+
 
 def project_queryset_for(user):
     return (

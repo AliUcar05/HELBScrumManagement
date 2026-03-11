@@ -34,7 +34,7 @@
                             </a>
                         </li>
                         <li>
-                            <a href="{% url 'product-backlog' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-backlog' %}active{% endif %}">
+                            <a href="{% url 'product-backlog' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'product-backlog' %}active{% endif %}">
                                 <i class="fas fa-server"></i>
                                 <span>Backlog</span>
                             </a>
@@ -80,13 +80,13 @@
                         {% endif %}
 
                         {% if user.profile.global_role|lower == 'member' or user.profile.global_role|lower == 'developer' or user.profile.global_role|lower == 'admin' %}
-                        <hr>
-                        <li>
-                            <a href="{% url 'manage-users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage-users' %}active{% endif %}">
-                                <i class="fas fa-users-cog"></i>
-                                <span>Manage Users</span>
-                            </a>
-                        </li>
+                            <hr>
+                            <li>
+                                <a href="{% url 'manage-users' %}" class="sidebar-link {% if request.resolver_match.url_name == 'manage-users' %}active{% endif %}">
+                                    <i class="fas fa-users-cog"></i>
+                                    <span>Manage Users</span>
+                                </a>
+                            </li>
                         {% endif %}
                     </ul>
                  </div>

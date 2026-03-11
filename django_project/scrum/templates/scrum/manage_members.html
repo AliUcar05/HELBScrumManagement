@@ -1,12 +1,16 @@
-{% extends "blog/base.html" %}
+{% extends "scrum/project_board.html" %}
 {% load crispy_forms_tags %}
-{% block content %}
-    <h2>Add Members to {{ project.name }}</h2>
-    <form method="POST">
-      {% csrf_token %}
-      {% for user in users %}
 
-      {% endfor %}
-      <button type="submit" class="btn btn-primary">Add Members</button>
-    </form>
-{% endblock %}
+{% block project_content %}
+    <div class="container mt-4" style="max-width: 1500px;">
+        <h2>Add Members to {{ project.name }}</h2>
+        <form method="POST">
+          {% csrf_token %}
+          {% for user in users %}
+
+          {% endfor %}
+          <button type="submit" class="btn btn-primary">Add Members</button>
+        </form>
+    </div>
+
+{% endblock project_content%}
