@@ -3,7 +3,7 @@
   <component name="FacetManager">
     <facet type="django" name="Django">
       <configuration>
-        <option name="rootFolder" value="$MODULE_DIR$/django_project" />
+        <option name="rootFolder" value="$MODULE_DIR$" />
         <option name="settingsModule" value="django_project/settings.py" />
         <option name="manageScript" value="$MODULE_DIR$/django_project/manage.py" />
         <option name="environment" value="&lt;map/&gt;" />
@@ -17,19 +17,7 @@
       <sourceFolder url="file://$MODULE_DIR$/django_project" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/.venv" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.11 (ScrumManagement) (2)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.11 (scrum)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-  <component name="PyDocumentationSettings">
-    <option name="format" value="PLAIN" />
-    <option name="myDocStringFormat" value="Plain" />
-  </component>
-  <component name="TemplatesService">
-    <option name="TEMPLATE_CONFIGURATION" value="Django" />
-    <option name="TEMPLATE_FOLDERS">
-      <list>
-        <option value="$MODULE_DIR$/django_project/scrum/templates" />
-      </list>
-    </option>
   </component>
 </module>

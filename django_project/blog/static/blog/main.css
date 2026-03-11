@@ -446,3 +446,34 @@ a.article-title:hover {
 
 /* ===== MEDIA QUERIES ===== */
 
+/* Amélioration responsive des formulaires */
+@media (max-width: 768px) {
+    .form-row {
+        flex-direction: column;
+    }
+
+    .form-row > [class*="col-"] {
+        width: 100%;
+        margin-bottom: 1rem;
+    }
+
+    .modal-dialog {
+        margin: 0.5rem;
+    }
+
+    .sidebar {
+        width: 56px !important;
+    }
+
+    .sidebar:not(.collapsed) {
+        width: 250px !important;
+    }
+
+    .main {
+        margin-left: 56px !important;
+    }
+
+    .sidebar.collapsed + .main {
+        margin-left: 56px !important;
+    }
+}

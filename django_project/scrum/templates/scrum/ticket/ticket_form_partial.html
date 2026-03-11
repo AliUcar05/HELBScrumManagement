@@ -1,0 +1,83 @@
+{% load crispy_forms_tags %}
+
+<form method="POST" action="{{ request.path }}" id="editTicketForm">
+    {% csrf_token %}
+
+    <div class="tm-drawer-body" style="max-height: 60vh; overflow-y: auto; padding-right: 10px;">
+        <div class="row">
+            <div class="col-md-6">{{ form.type|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.status|as_crispy_field }}</div>
+        </div>
+
+        <hr class="tm-hr">
+
+        <div class="row">
+            <div class="col-12">{{ form.title|as_crispy_field }}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">{{ form.description|as_crispy_field }}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">{{ form.priority|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.story_points|as_crispy_field }}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">{{ form.assignee|as_crispy_field }}</div>
+            <div class="col-md-6">{{ form.due_date|as_crispy_field }}</div>
+        </div>
+
+        <div class="row">
+            <div class="col-12">{{ form.parent|as_crispy_field }}</div>
+        </div>
+    </div>
+
+    <div class="tm-drawer-footer" style="border-top: 1px solid #e9e9e9; padding-top: 15px; margin-top: 15px;">
+        <div class="tm-footer-actions d-flex justify-content-end gap-2">
+            <button type="button" class="tm-btn tm-btn--ghost" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="tm-btn tm-btn--primary">Save Changes</button>
+        </div>
+    </div>
+</form>
+
+<script>
+    document.getElementById('editTicketForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const formData = new FormData(this);
+
+        fetch(this.action, {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'X-CSRFToken': formData.get('csrfmiddlewaretoken')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                // Fermer le modal
+                const modal = document.getElementById('editTicketModal');
+                if (modal) {
+                    $(modal).modal('hide');
+                }
+                // Recharger les détails du drawer si ouvert
+                if (typeof loadTicketDetails === 'function' && currentTicketId) {
+                    loadTicketDetails(currentTicketId);
+                } else {
+                    location.reload();
+                }
+            } else {
+                // Afficher les erreurs
+                alert('Error saving changes: ' + JSON.stringify(data.errors));
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error saving changes');
+        });
+    });
+</script>

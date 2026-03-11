@@ -9,7 +9,9 @@ from django.views.generic import ListView, DetailView, CreateView, UpdateView, D
 
 from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm
 from .models import Project, Membership, Ticket
-
+import json
+from datetime import date as date_type
+from django.contrib.auth import get_user_model
 
 def project_queryset_for(user):
     return (
@@ -273,8 +275,7 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     form_class = TicketForm
 
     def test_func(self):
-        project = get_object_or_404(Project, pk=self.kwargs["pk"])
-        return is_contributor_or_admin(self.request.user, project)
+        return is_contributor_or_admin(self.request.user,get_object_or_404(Project, pk=self.kwargs["pk"]))
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have permission to create issues.")
@@ -283,41 +284,32 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         project = get_object_or_404(Project, pk=self.kwargs["pk"])
-
         form.fields["assignee"].queryset = project.members.all()
         form.fields["parent"].queryset = project.tickets.all()
-
         return form
 
     def form_valid(self, form):
         project = get_object_or_404(Project, pk=self.kwargs["pk"])
-
         form.instance.project = project
         form.instance.requester = self.request.user
         form.instance.status = "todo"
-
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
             self.object = form.save()
-            return JsonResponse({
-                "success": True,
-                "ticket_id": self.object.pk
-            })
-
+            return JsonResponse({"success": True, "ticket_id": self.object.pk})
         messages.success(self.request, f'Issue "{form.instance.title}" created.')
-
         return super().form_valid(form)
 
     def get_success_url(self):
         return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
 
+
 class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Ticket
-    template_name = "scrum/ticket/product_backlog.html"  # ← vérifie ce chemin
+    template_name = "scrum/ticket/product_backlog.html"
     context_object_name = "tickets"
 
     def test_func(self):
-        project = get_object_or_404(Project, pk=self.kwargs["pk"])
-        return user_can_access_project(self.request.user, project)
+        return user_can_access_project(self.request.user,get_object_or_404(Project, pk=self.kwargs["pk"]))
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have access to this project.")
@@ -325,18 +317,34 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_queryset(self):
         self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
-        self.request.session["current_project_id"] = self.project.id  # ← important pour le modal
-        return Ticket.objects.filter(project=self.project).select_related(
-            "assignee", "assignee__profile", "parent"
-        ).order_by("backlog_order", "created_at")
+        self.request.session["current_project_id"] = self.project.id
+        return Ticket.objects.filter(project=self.project).select_related("assignee", "assignee__profile", "parent").order_by("backlog_order", "created_at")
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project"] = self.project
+        context["project"]    = self.project
         context["membership"] = self.project.memberships.filter(user=self.request.user).first()
         context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
         context["can_delete"] = is_project_admin(self.request.user, self.project)
+
+        sprints = self.project.sprints.all().order_by('-created_at')
+
+        for sprint in sprints:
+            tickets = sprint.tickets.all()
+            sprint.total_issues      = tickets.count()
+            sprint.completed_issues  = tickets.filter(status='done').count()
+            sprint.completion_percentage = (
+                int((sprint.completed_issues / sprint.total_issues) * 100)
+                if sprint.total_issues else 0
+            )
+            if sprint.status == 'active' and sprint.end_date:
+                from datetime import date
+                today = date.today()
+                sprint.days_remaining = max((sprint.end_date - today).days, 0)
+        context["sprints"] = sprints
         return context
+
+
 
 class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     model = Ticket
@@ -344,59 +352,72 @@ class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
     pk_url_kwarg = "ticket_pk"
 
     def test_func(self):
-        ticket = self.get_object()
-        return user_can_access_project(self.request.user, ticket.project)
+        return user_can_access_project(self.request.user, self.get_object().project)
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have access to this project.")
         return redirect("project-list")
 
+    def get_template_names(self):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest' or self.request.GET.get('drawer'):
+            return ['scrum/ticket/ticket_drawer.html']
+        return ['scrum/ticket/ticket_form_partial.html']
+
+    def get(self, request, *args, **kwargs):
+        # drawer=1 → charge le partial, sinon redirige
+        if not request.GET.get('drawer') and not request.headers.get('x-requested-with'):
+            ticket = self.get_object()
+            return redirect(reverse("product-backlog", kwargs={"pk": ticket.project.pk}))
+        return super().get(request, *args, **kwargs)
+
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        ticket = self.object
+        ticket  = self.object
         project = ticket.project
         self.request.session["current_project_id"] = project.id
-
-        # Pre-fill edit form for the modal
         edit_form = TicketEditForm(instance=ticket)
         edit_form.fields["assignee"].queryset = project.members.all()
-        edit_form.fields["parent"].queryset = project.tickets.exclude(pk=ticket.pk)
-
-        context["project"] = project
-        context["children"] = ticket.children.all()
-        context["comments"] = ticket.comments.select_related("author").order_by("created_at")
-        context["can_edit"] = is_contributor_or_admin(self.request.user, project)
-        context["can_delete"] = is_project_admin(self.request.user, project)
-        context["edit_form"] = edit_form
-        context["membership"] = project.memberships.filter(user=self.request.user).first()
+        edit_form.fields["parent"].queryset   = project.tickets.exclude(pk=ticket.pk)
+        context.update({
+            "project":   project,
+            "children":  Ticket.objects.filter(parent=ticket),
+            "comments":  ticket.comments.select_related("author").order_by("created_at"),
+            "can_edit":  is_contributor_or_admin(self.request.user, project),
+            "can_delete": is_project_admin(self.request.user, project),
+            "edit_form": edit_form,
+            "membership": project.memberships.filter(user=self.request.user).first(),
+        })
         return context
 
 class TicketUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
     model = Ticket
     form_class = TicketEditForm
-    template_name = "scrum/ticket/ticket_form.html"
     pk_url_kwarg = "ticket_pk"
 
     def test_func(self):
-        ticket = self.get_object()
-        return is_contributor_or_admin(self.request.user, ticket.project)
+        return is_contributor_or_admin(self.request.user, self.get_object().project)
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have permission to edit this issue.")
-        return redirect("project-backlog", pk=self.kwargs["pk"])
+        return redirect("product-backlog", pk=self.kwargs["pk"])
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
         project = self.get_object().project
         form.fields["assignee"].queryset = project.members.all()
-        form.fields["parent"].queryset = project.tickets.exclude(pk=self.object.pk)
+        form.fields["parent"].queryset   = project.tickets.exclude(pk=self.object.pk)
         return form
+
+    def get_template_names(self):
+        if self.request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            return ['scrum/ticket/ticket_form_partial.html']
+        return ['scrum/ticket/ticket_form.html']
 
     def form_valid(self, form):
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
             self.object = form.save()
             return JsonResponse({"success": True})
-        messages.success(self.request, f'Issue "{self.object.title}" updated.')
+        messages.success(self.request, f'Issue "{form.instance.title}" updated.')
         return super().form_valid(form)
 
     def form_invalid(self, form):
@@ -405,43 +426,165 @@ class TicketUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return super().form_invalid(form)
 
     def get_success_url(self):
-        return reverse("ticket-detail", kwargs={
-            "pk": self.kwargs["pk"],
-            "ticket_pk": self.object.pk,
-        })
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        context["project"] = self.object.project
-        context["form_title"] = "Edit Issue"
-        context["submit_label"] = "Save Changes"
-        return context
-
-class TicketDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
-    model = Ticket
-    template_name = "scrum/ticket/ticket_confirm_delete.html"
-    pk_url_kwarg = "ticket_pk"
-
-    def test_func(self):
-        ticket = self.get_object()
-        return is_contributor_or_admin(self.request.user, ticket.project)
-
-    def handle_no_permission(self):
-        messages.error(self.request, "Only project contributor and admins can delete issues.")
-        return redirect("ticket-detail", pk=self.kwargs["pk"], ticket_pk=self.kwargs["ticket_pk"])
-
-    def delete(self, request, *args, **kwargs):
-        ticket = self.get_object()
-        # Detach children instead of cascade-deleting them
-        ticket.children.update(parent=None)
-        messages.success(request, f'Issue "{ticket.title}" deleted.')
-        return super().delete(request, *args, **kwargs)
-
-    def get_success_url(self):
         return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context["project"] = self.object.project
         return context
+
+
+class TicketDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
+    model = Ticket
+    pk_url_kwarg = "ticket_pk"
+
+    def test_func(self):
+        return is_contributor_or_admin(self.request.user, self.get_object().project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "Only contributors and admins can delete issues.")
+        return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def delete(self, request, *args, **kwargs):
+        ticket = self.get_object()
+        Ticket.objects.filter(parent=ticket).update(parent=None)
+        messages.success(request, f'Issue "{ticket.title}" deleted.')
+        return super().delete(request, *args, **kwargs)
+
+    def get_success_url(self):
+        return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
+
+
+
+class TicketFieldUpdateView(LoginRequiredMixin, View):
+    """
+    POST /projects/<pk>/ticket/detail/<ticket_pk>/update-field/
+    Body : JSON  { "field": "status", "value": "done" }
+    """
+
+    ALLOWED_FIELDS = {
+        'title', 'description', 'status', 'priority', 'type',
+        'assignee', 'story_points', 'start_date', 'due_date', 'labels',
+    }
+
+    def post(self, request, pk, ticket_pk):
+        ticket = get_object_or_404(Ticket, pk=ticket_pk, project__pk=pk)
+
+        if not is_contributor_or_admin(request.user, ticket.project):
+            return JsonResponse({'success': False, 'error': 'Permission denied'}, status=403)
+
+        try:
+            data = json.loads(request.body)
+        except (json.JSONDecodeError, ValueError):
+            return JsonResponse({'success': False, 'error': 'Invalid JSON'}, status=400)
+
+        field = data.get('field', '').strip()
+        value = data.get('value', '')
+
+        if field not in self.ALLOWED_FIELDS:
+            return JsonResponse({'success': False, 'error': f'Field "{field}" not editable'}, status=400)
+
+        try:
+            if field == 'assignee':
+                if not value:
+                    ticket.assignee = None
+                else:
+                    User = get_user_model()
+                    ticket.assignee = get_object_or_404(User, pk=int(value))
+
+            elif field == 'story_points':
+                ticket.story_points = int(value) if value not in ('', None) else None
+
+            elif field in ('start_date', 'due_date'):
+                setattr(ticket, field, date_type.fromisoformat(value) if value else None)
+
+            else:
+                setattr(ticket, field, value)
+
+            ticket.save(update_fields=[field, 'updated_at'])
+            return JsonResponse({'success': True})
+
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
