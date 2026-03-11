@@ -9,7 +9,7 @@ from .views import (
     TicketCreateView,
     TicketUpdateView,
     TicketDetailView,
-    TicketDeleteView, TicketListView, TicketFieldUpdateView
+    TicketDeleteView, TicketListView
 )
 
 urlpatterns = [
