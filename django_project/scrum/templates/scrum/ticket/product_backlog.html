@@ -2,98 +2,126 @@
 {% load static %}
 {% block project_content %}
     <link rel="stylesheet" href="{% static 'scrum/css/backlog.css' %}">
-    <div class="backlog-container">
-       <div class="backlog-header">
-            <div>
-                <h2 class="backlog-title">Product Backlog</h2>
-                <span class="backlog-count">{{ tickets|length }} issue{% if tickets|length != 1 %}s{% endif %}</span>
+    <link rel="stylesheet" href="{% static 'scrum/css/issue-drawer.css' %}">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <div class="backlog-layout">
+        <div class="backlog-main" id="backlogMain">
+            <div class="backlog-container">
+
+                 <div class="backlog-section">
+                     <div class="backlog-header">
+                        <div class="backlog-title">
+                            <h2>Backlog</h2>
+                            <span class="backlog-count">{{ tickets|length }} issues</span>
+                        </div>
+
+                         <div class="backlog-actions">
+                            {% if can_create %}
+                                <button class="btn btn-dark" data-toggle="modal" data-target="#globalCreateTicketModal">Create Issue</button>
+                            {% endif %}
+                         </div>
+                     </div>
+
+                     <div class="table-container">
+                         <table>
+                             <thead>
+                                <tr>
+                                    <th style="width: 30px;"></th>
+                                    <th style="width: 30px;"></th>
+                                    <th>Type</th>
+                                    <th>Key</th>
+                                    <th>Title</th>
+                                    <th>Priority</th>
+                                    <th>Estimate</th>
+                                    <th>Assignee</th>
+                                    <th>Epic Link</th>
+                                    <th style="width: 40px;"></th>
+                                </tr>
+                             </thead>
+                             <tbody id="backlog-tbody">
+                                {% for ticket in tickets %}
+                                    {% include 'scrum/ticket/ticket_row.html' with ticket=ticket %}
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="11" class="empty-state" >
+                                            <i class="fas fa-clipboard-list"></i>
+                                            <p>No issues in backlog</p>
+                                            <button class="btn btn-primary" data-toggle="modal" data-target="#globalCreateTicketModal">
+                                                Create your first issue
+                                            </button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                             </tbody>
+                         </table>
+                     </div>
+                 </div>
             </div>
-            {% if can_create %}
-            <button class="bl-btn bl-btn--primary"
-                    data-toggle="modal" data-target="#globalCreateTicketModal">
-                <i class="fas fa-plus mr-1"></i> Add Issue
-            </button>
-            {% endif %}
-       </div>
+        </div>
+        <div class="tdr-overlay" id="tdrOverlay" onclick="closeTicketDrawer()"></div>
 
-        <div class="card">
-            <div class="card-body p-0">
+        <div class="ticket-drawer" id="ticketDrawer">
+            <div class="tdr-loading" id="tdrLoading">
+                <i class="fas fa-spinner fa-spin"></i>
+            </div>
+            <div id="tdrContent"></div>
+        </div>
+    </div>
 
-                <table class="bl-table">
-                    <thead>
-                        <tr>
-                            <th class="bl-col-id">Key</th>
-                            <th class="bl-col-type">Type</th>
-                            <th class="bl-col-title">Summary</th>
-                            <th>Priority</th>
-                            <th>Assignee</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
+    <!-- Modal Confirmation Delete -->
+   <div class="modal fade" id="deleteTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered" style="max-width: 420px;">
+            <div class="modal-content" style="border-radius: 8px; border: none;">
+                <div class="modal-body p-4">
+                    <h5 style="font-weight: 700; color: #172b4d; margin-bottom: 8px;">
+                        Delete issue?
+                    </h5>
+                    <p style="color: #6b778c; font-size: 14px;">
+                        <strong id="deleteTicketKey" style="color: #172b4d;"></strong> —
+                        <span id="deleteTicketTitle"></span>
+                    </p>
+                    <p style="color: #6b778c; font-size: 13px;">
+                        This action is irreversible. Child issues will be detached but not deleted.
+                    </p>
 
-                    <tbody>
-                    {% for ticket in tickets %}
-                        <tr class="bl-row">
+                    <form id="deleteTicketForm" method="POST" action="">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-end mt-4" style="gap: 8px;">
+                            <button type="button" class="btn btn-secondary btn-sm" data-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                        </div>
+                    </form>
 
-                            <td class="bl-key">
-                                <a href="{% url 'ticket-detail' project.pk ticket.pk %}">
-                                    {{ project.code }}-{{ ticket.id }}
-                                </a>
-                            </td>
-
-                            <td class="bl-type">
-                                {% if ticket.type == "bug" %}
-                                    <span class="type-bug">Bug</span>
-                                {% elif ticket.type == "user story" %}
-                                    <span class="type-story">User Story</span>
-                                {% elif ticket.type == "task" %}
-                                    <span class="type-task">Task</span>
-                                {% elif ticket.type == "epic" %}
-                                    <span class="type-epic">Epic</span>
-                                {% endif %}
-                            </td>
-
-                            <td class="bl-title">
-                                {{ ticket.title }}
-                            </td>
-
-                            <td>
-                                <span class="priority priority-{{ ticket.priority }}">
-                                    {{ ticket.get_priority_display }}
-                                </span>
-                            </td>
-
-                            <td class="bl-assignee">
-                                {% if ticket.assignee %}
-                                    <div class="bl-user">
-                                        <div class="bl-avatar">
-                                            {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
-                                        </div>
-                                        {{ ticket.assignee.get_full_name|default:ticket.assignee.username }}
-                                    </div>
-                                {% else %}
-                                    <span class="bl-unassigned">Unassigned</span>
-                                {% endif %}
-                            </td>
-
-                            <td>
-                                <span class="status status-{{ ticket.status }}">
-                                    {{ ticket.get_status_display }}
-                                </span>
-                            </td>
-
-                        </tr>
-                    {% empty %}
-                        <tr>
-                            <td colspan="6" class="bl-empty">
-                                No issues in backlog
-                            </td>
-                        </tr>
-                    {% endfor %}
-                    </tbody>
-                </table>
-
+                </div>
             </div>
         </div>
     </div>
-{% endblock %}
+
+    <!-- Modal Edit Ticket -->
+    <div class="modal fade" id="editTicketModal" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content" style="border-radius: 8px; border: none;">
+                <div class="modal-header" style="border-bottom: 1px solid #dfe1e6; padding: 16px 20px;">
+                    <h5 class="modal-title" style="font-weight: 700; color: #172b4d;">
+                        Edit Issue — <span id="editTicketKey"></span>
+                    </h5>
+                    <button type="button" class="close" data-dismiss="modal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+                <div class="modal-body p-4">
+                    <div id="editTicketFormContainer">
+                        <div class="text-center py-4">
+                            <i class="fas fa-spinner fa-spin" style="color: #6b778c; font-size: 24px;"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="{% static 'scrum/js/backlog.js' %}"></script>
+    <script src="{% static 'scrum/js/issue-drawer.js' %}"></script>
+{% endblock project_content %}

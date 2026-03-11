@@ -1,0 +1,112 @@
+{% load static %}
+<tr class="ticket-row" data-ticket-id="{{ ticket.id }}" data-ticket-order="{{ ticket.backlog_order|default:forloop.counter }}"
+    draggable="true" onclick="openTicketDrawer({{ ticket.id }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1')">
+
+    <!-- Drag handle -->
+    <td class="drag-handle" onclick="event.stopPropagation();" style="width: 30px;">
+        <i class="fas fa-grip-vertical" style="color: #999; cursor: grab;"></i>
+    </td>
+
+    <!-- Expand/collapse toggle -->
+    <td style="width: 30px;">
+        <span class="ticket-toggle" style="cursor: pointer;">
+            <i class="fas fa-chevron-right" style="color: #999; transition: transform 0.2s;"></i>
+        </span>
+    </td>
+    <td>
+        <span class="type-badge type-{{ ticket.type }}">
+            {% if ticket.type == "bug" %}
+                <i class="fas fa-bug"></i> Bug
+            {% elif ticket.type == "user story" %}
+                <i class="fas fa-book-open"></i> Story
+            {% elif ticket.type == "task" %}
+                <i class="fas fa-check-square"></i> Task
+            {% elif ticket.type == "epic" %}
+                <i class="fas fa-layer-group"></i> Epic
+            {% endif %}
+        </span>
+    </td>
+    <td><a href="{% url 'ticket-detail' project.pk ticket.pk %}" class="issue-key">{{ project.code }}-{{ ticket.id }}</a></td>
+    <td class="ticket-title">
+        {{ ticket.title }}
+        {% if ticket.subtasks_count > 0 %}
+            <span class="subtask-badge">
+                <i class="fas fa-level-down-alt"></i> {{ ticket.subtasks_count }}
+            </span>
+        {% endif %}
+    </td>
+    <td>
+        <span class="priority priority-{{ ticket.priority }}">
+            {% if ticket.priority == "highest" %}
+                <i class="fas fa-arrow-up"></i> Highest
+            {% elif ticket.priority == "high" %}
+                <i class="fas fa-arrow-up"></i> High
+            {% elif ticket.priority == "medium" %}
+                <i class="fas fa-minus"></i> Medium
+            {% elif ticket.priority == "low" %}
+                <i class="fas fa-arrow-down"></i> Low
+            {% endif %}
+        </span>
+    </td>
+    <td>
+        {% if ticket.story_points %}
+            <span class="estimate">{{ ticket.story_points }}</span>
+        {% else %}
+            <span class="estimate estimate-empty">-</span>
+        {% endif %}
+    </td>
+    <td>
+        <div class="assignee">
+            {% if ticket.assignee %}
+                {% if ticket.assignee.profile.image %}
+                    <img src="{{ ticket.assignee.profile.image.url }}" class="avatar" alt="{{ ticket.assignee.username }}" title="{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}">
+                {% else %}
+                    <div class="avatar" title="{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}" style="background-color: #{% cycle '0052cc' '36b37e' 'ff8b3e' 'de350b' '5243aa' %}">
+                        {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
+                    </div>
+                {% endif %}
+            {% else %}
+                <div class="avatar avatar-unassigned" title="Unassigned"><i class="fas fa-user"></i></div>
+            {% endif %}
+        </div>
+    </td>
+    <td>
+        {% if ticket.parent %}
+            <a href="#" class="epic-link" data-ticket-id="{{ ticket.parent.id }}" onclick="return scrollToTicket({{ ticket.parent.id }})">
+                <i class="fas fa-layer-group"></i>{{ ticket.parent.title|truncatechars:15 }}</a>
+        {% endif %}
+    </td>
+    <td>
+        {% if ticket.sprint %}
+            <span class="sprint-badge">{{ ticket.sprint.name }}</span>
+        {% endif %}
+    </td>
+
+    <!-- Actions -->
+    <td style="width: 40px;" onclick="event.stopPropagation();">
+        <div class="actions-menu">
+            <button class="actions-btn" onclick="openDropdown(event, this)">
+                <i class="fas fa-ellipsis-h"></i>
+            </button>
+            <div class="dropdown-menu dropdown-menu-right">
+                <a class="dropdown-item" href="#"
+                   onclick="openEditModal({{ ticket.id }}, '{{ project.code }}-{{ ticket.id }}', '{% url 'ticket-update' project.pk ticket.pk %}'); return false;">
+                    <i class="fas fa-edit mr-2"></i>Edit
+                </a>
+                <a class="dropdown-item" href="{% url 'ticket-detail' project.pk ticket.pk %}">
+                    <i class="fas fa-eye mr-2"></i>View Details
+                </a>
+                <a class="dropdown-item" href="#" onclick="showQuickEdit({{ ticket.id }})">
+                    <i class="fas fa-bolt mr-2"></i>Quick Edit
+                </a>
+                <div class="dropdown-divider"></div>
+                <a class="dropdown-item" href="#" onclick="moveToSprint({{ ticket.id }})">
+                    <i class="fas fa-redo-alt mr-2"></i>Move to Sprint
+                </a>
+                <a class="dropdown-item text-danger" onclick="openDeleteModal({{ ticket.id }}, '{{ project.code }}-{{ ticket.id }}', '{{ ticket.title|escapejs }}', '{% url 'ticket-delete' project.pk ticket.pk %}'); return false;">
+                    <i class="fas fa-trash mr-2"></i>Delete
+                </a>
+            </div>
+        </div>
+    </td>
+</tr>

@@ -69,6 +69,7 @@ class TicketForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.fields["title"].widget.attrs.update({"placeholder": "What needs to be done?"})
         self.fields["title"].required = True
         self.fields["description"].required = False
         self.fields["story_points"].required = False
