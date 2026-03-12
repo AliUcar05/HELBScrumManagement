@@ -9,7 +9,7 @@ from .views import (
     TicketCreateView,
     TicketUpdateView,
     TicketDetailView,
-    TicketDeleteView, TicketListView
+    TicketDeleteView, TicketListView, TicketReorderView
 )
 
 urlpatterns = [
@@ -38,5 +38,6 @@ urlpatterns = [
     path('projects/<int:pk>/ticket/detail/<int:ticket_pk>/',TicketDetailView.as_view(),name='ticket-detail'),
     path('projects/<int:pk>/ticket/update/<int:ticket_pk>/edit/',TicketUpdateView.as_view(),name='ticket-update'),
     path('projects/<int:pk>/ticket/delete/<int:ticket_pk>/delete/',TicketDeleteView.as_view(),name='ticket-delete'),
+    path('projects/<int:pk>/ticket/<int:ticket_pk>/reorder/<str:direction>/', TicketReorderView.as_view(), name='ticket-reorder'),
 
 ]

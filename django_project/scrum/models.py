@@ -1,4 +1,5 @@
 from django.conf import settings
+import os
 from django.db import models
 from django.utils import timezone
 from PIL import Image
@@ -114,12 +115,19 @@ class Project(models.Model):
     def save(self, *args, **kwargs):
         super().save(*args, **kwargs)
 
-        img = Image.open(self.image.path)
+        image_path = getattr(self.image, "path", None)
+        if not image_path or not os.path.exists(image_path):
+            return
+
+        try:
+            img = Image.open(image_path)
+        except (FileNotFoundError, OSError):
+            return
 
         if img.height > 300 or img.width > 300:
             output_size = (300, 300)
             img.thumbnail(output_size)
-            img.save(self.image.path)
+            img.save(image_path)
 
 
 #================================================

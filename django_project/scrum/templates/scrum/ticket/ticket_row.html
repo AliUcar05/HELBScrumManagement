@@ -1,17 +1,31 @@
 {% load static %}
 <tr class="ticket-row" data-ticket-id="{{ ticket.id }}" data-ticket-order="{{ ticket.backlog_order|default:forloop.counter }}"
-    draggable="true" onclick="openTicketDrawer({{ ticket.id }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1')">
+    onclick="openTicketDrawer({{ ticket.id }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1')">
 
-    <!-- Drag handle -->
-    <td class="drag-handle" onclick="event.stopPropagation();" style="width: 30px;">
-        <i class="fas fa-grip-vertical" style="color: #999; cursor: grab;"></i>
+    <td class="reorder-cell" onclick="event.stopPropagation();">
+        {% if can_reorder and not forloop.first %}
+            <form method="post" action="{% url 'ticket-reorder' project.pk ticket.pk 'up' %}" class="reorder-form">
+                {% csrf_token %}
+                <button type="submit" class="reorder-btn" title="Move up" aria-label="Move {{ ticket.ticket_id }} up">
+                    <i class="fas fa-arrow-up"></i>
+                </button>
+            </form>
+        {% else %}
+            <span class="reorder-placeholder"></span>
+        {% endif %}
     </td>
 
-    <!-- Expand/collapse toggle -->
-    <td style="width: 30px;">
-        <span class="ticket-toggle" style="cursor: pointer;">
-            <i class="fas fa-chevron-right" style="color: #999; transition: transform 0.2s;"></i>
-        </span>
+    <td class="reorder-cell" onclick="event.stopPropagation();">
+        {% if can_reorder and not forloop.last %}
+            <form method="post" action="{% url 'ticket-reorder' project.pk ticket.pk 'down' %}" class="reorder-form">
+                {% csrf_token %}
+                <button type="submit" class="reorder-btn" title="Move down" aria-label="Move {{ ticket.ticket_id }} down">
+                    <i class="fas fa-arrow-down"></i>
+                </button>
+            </form>
+        {% else %}
+            <span class="reorder-placeholder"></span>
+        {% endif %}
     </td>
     <td>
         <span class="type-badge type-{{ ticket.type }}">
@@ -89,13 +103,16 @@
                 <i class="fas fa-ellipsis-h"></i>
             </button>
             <div class="dropdown-menu dropdown-menu-right">
+                {% if can_reorder %}
                 <a class="dropdown-item" href="#"
                    onclick="openEditModal({{ ticket.id }}, '{{ project.code }}-{{ ticket.id }}', '{% url 'ticket-update' project.pk ticket.pk %}'); return false;">
                     <i class="fas fa-edit mr-2"></i>Edit
                 </a>
+                {% endif %}
                 <a class="dropdown-item" href="{% url 'ticket-detail' project.pk ticket.pk %}">
                     <i class="fas fa-eye mr-2"></i>View Details
                 </a>
+                {% if can_reorder %}
                 <a class="dropdown-item" href="#" onclick="showQuickEdit({{ ticket.id }})">
                     <i class="fas fa-bolt mr-2"></i>Quick Edit
                 </a>
@@ -103,9 +120,12 @@
                 <a class="dropdown-item" href="#" onclick="moveToSprint({{ ticket.id }})">
                     <i class="fas fa-redo-alt mr-2"></i>Move to Sprint
                 </a>
+                {% endif %}
+                {% if can_delete %}
                 <a class="dropdown-item text-danger" onclick="openDeleteModal({{ ticket.id }}, '{{ project.code }}-{{ ticket.id }}', '{{ ticket.title|escapejs }}', '{% url 'ticket-delete' project.pk ticket.pk %}'); return false;">
                     <i class="fas fa-trash mr-2"></i>Delete
                 </a>
+                {% endif %}
             </div>
         </div>
     </td>

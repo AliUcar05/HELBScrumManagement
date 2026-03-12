@@ -2,6 +2,8 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
 from django.http import JsonResponse
+from django.db import transaction
+from django.db.models import Max
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
@@ -38,6 +40,24 @@ def is_contributor_or_admin(user, project):
     if project.created_by_id == user.id:
         return True
     return get_membership_role(user, project) in ("admin", "contributor")
+
+
+def normalize_backlog_order(project):
+    tickets = list(
+        Ticket.objects.filter(project=project)
+        .order_by("backlog_order", "created_at", "pk")
+    )
+
+    tickets_to_update = []
+    for index, ticket in enumerate(tickets, start=1):
+        if ticket.backlog_order != index:
+            ticket.backlog_order = index
+            tickets_to_update.append(ticket)
+
+    if tickets_to_update:
+        Ticket.objects.bulk_update(tickets_to_update, ["backlog_order"])
+
+    return tickets
 
 
 @login_required
@@ -291,6 +311,8 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         form.instance.project = project
         form.instance.requester = self.request.user
         form.instance.status = "todo"
+        max_order = Ticket.objects.filter(project=project).aggregate(max_order=Max("backlog_order"))["max_order"] or 0
+        form.instance.backlog_order = max_order + 1
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
             self.object = form.save()
             return JsonResponse({"success": True, "ticket_id": self.object.pk})
@@ -316,6 +338,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     def get_queryset(self):
         self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
         self.request.session["current_project_id"] = self.project.id
+        normalize_backlog_order(self.project)
         return Ticket.objects.filter(project=self.project).select_related("assignee", "assignee__profile", "parent").order_by("backlog_order", "created_at")
 
     def get_context_data(self, **kwargs):
@@ -324,6 +347,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context["membership"] = self.project.memberships.filter(user=self.request.user).first()
         context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
         context["can_delete"] = is_project_admin(self.request.user, self.project)
+        context["can_reorder"] = is_contributor_or_admin(self.request.user, self.project)
 
         sprints = self.project.sprints.all().order_by('-created_at')
 
@@ -452,6 +476,38 @@ class TicketDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
     def get_success_url(self):
         return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
 
+
+class TicketReorderView(LoginRequiredMixin, View):
+    def post(self, request, pk, ticket_pk, direction):
+        project = get_object_or_404(Project, pk=pk)
+
+        if not is_contributor_or_admin(request.user, project):
+            messages.error(request, "Only project admins and contributors can reorder the backlog.")
+            return redirect("product-backlog", pk=pk)
+
+        if direction not in ("up", "down"):
+            messages.error(request, "Invalid reorder action.")
+            return redirect("product-backlog", pk=pk)
+
+        with transaction.atomic():
+            tickets = normalize_backlog_order(project)
+            current_ticket = get_object_or_404(Ticket, pk=ticket_pk, project=project)
+
+            current_index = next((index for index, ticket in enumerate(tickets) if ticket.pk == current_ticket.pk), None)
+            if current_index is None:
+                messages.error(request, "Issue not found in backlog.")
+                return redirect("product-backlog", pk=pk)
+
+            swap_index = current_index - 1 if direction == "up" else current_index + 1
+
+            if swap_index < 0 or swap_index >= len(tickets):
+                return redirect("product-backlog", pk=pk)
+
+            swap_ticket = tickets[swap_index]
+            current_ticket.backlog_order, swap_ticket.backlog_order = swap_ticket.backlog_order, current_ticket.backlog_order
+            Ticket.objects.bulk_update([current_ticket, swap_ticket], ["backlog_order"])
+
+        return redirect("product-backlog", pk=pk)
 
 
 
