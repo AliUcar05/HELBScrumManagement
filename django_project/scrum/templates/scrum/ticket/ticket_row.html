@@ -30,13 +30,13 @@
     <td>
         <span class="type-badge type-{{ ticket.type }}">
             {% if ticket.type == "bug" %}
-                <i class="fas fa-bug"></i> Bug
+                <i class="fas fa-bug" style="color:#de350b;"></i>
             {% elif ticket.type == "user story" %}
-                <i class="fas fa-book-open"></i> Story
+                <i class="fas fa-bookmark" style="color:#36b37e;"></i>
             {% elif ticket.type == "task" %}
-                <i class="fas fa-check-square"></i> Task
+                <i class="fas fa-check-square" style="color:#42526e;"></i>
             {% elif ticket.type == "epic" %}
-                <i class="fas fa-layer-group"></i> Epic
+                <i class="fas fa-bolt" style="color:#5243aa;"></i>
             {% endif %}
         </span>
     </td>
@@ -49,18 +49,46 @@
             </span>
         {% endif %}
     </td>
-    <td>
-        <span class="priority priority-{{ ticket.priority }}">
-            {% if ticket.priority == "highest" %}
-                <i class="fas fa-arrow-up"></i> Highest
-            {% elif ticket.priority == "high" %}
-                <i class="fas fa-arrow-up"></i> High
-            {% elif ticket.priority == "medium" %}
-                <i class="fas fa-minus"></i> Medium
-            {% elif ticket.priority == "low" %}
-                <i class="fas fa-arrow-down"></i> Low
-            {% endif %}
-        </span>
+    <td class="col-priority">
+        {% if ticket.priority == "highest" %}
+            <span class="iprio" title="Highest">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 2 L12 8 H9.5 V14 H6.5 V8 H4 Z" fill="#C9372C"/>
+                </svg>
+            </span>
+        {% elif ticket.priority == "high" %}
+            <span class="iprio" title="High">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 3 L12 9 H9.5 V13 H6.5 V9 H4 Z" fill="#E2521D"/>
+                </svg>
+            </span>
+        {% elif ticket.priority == "medium" %}
+            <span class="iprio" title="Medium">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="2" y="4.5" width="12" height="2.8" rx="1.4" fill="#E97F33"/>
+                    <rect x="2" y="9"   width="12" height="2.8" rx="1.4" fill="#E97F33"/>
+                </svg>
+            </span>
+        {% elif ticket.priority == "low" %}
+            <span class="iprio" title="Low">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 14 L4 8 H6.5 V3 H9.5 V8 H12 Z" fill="#2684FF"/>
+                </svg>
+            </span>
+        {% elif ticket.priority == "lowest" %}
+            <span class="iprio" title="Lowest">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <path d="M8 14 L4 8 H6.5 V2 H9.5 V8 H12 Z" fill="#8993A5"/>
+                </svg>
+            </span>
+        {% else %}
+            <span class="iprio" title="Medium">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                    <rect x="2" y="4.5" width="12" height="2.8" rx="1.4" fill="#E97F33"/>
+                    <rect x="2" y="9"   width="12" height="2.8" rx="1.4" fill="#E97F33"/>
+                </svg>
+            </span>
+        {% endif %}
     </td>
     <td>
         {% if ticket.story_points %}

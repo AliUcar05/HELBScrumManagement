@@ -291,13 +291,36 @@ class MembershipUpdateRoleView(LoginRequiredMixin, View):
 class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Ticket
     form_class = TicketForm
+    template_name = "scrum/ticket/ticket_form.html"  # ← ajoute cette ligne
 
     def test_func(self):
-        return is_contributor_or_admin(self.request.user,get_object_or_404(Project, pk=self.kwargs["pk"]))
+        return is_contributor_or_admin(self.request.user, get_object_or_404(Project, pk=self.kwargs["pk"]))
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have permission to create issues.")
         return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def get_initial(self):
+        def get_initial(self):
+            initial = super().get_initial()
+            title = self.request.GET.get('title', '').strip()
+            ticket_type = self.request.GET.get('type', '').strip().lower()
+
+            if title:
+                initial['title'] = title
+
+            TYPE_MAP = {
+                'story': 'user story',
+                'user_story': 'user story',
+                'bug': 'bug',
+                'task': 'task',
+                'epic': 'epic',
+            }
+            mapped = TYPE_MAP.get(ticket_type)
+            if mapped:
+                initial['type'] = mapped
+
+            return initial
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -306,13 +329,16 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         form.fields["parent"].queryset = project.tickets.all()
         return form
 
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = get_object_or_404(Project, pk=self.kwargs["pk"])
+        return context
+
     def form_valid(self, form):
         project = get_object_or_404(Project, pk=self.kwargs["pk"])
         form.instance.project = project
         form.instance.requester = self.request.user
         form.instance.status = "todo"
-        max_order = Ticket.objects.filter(project=project).aggregate(max_order=Max("backlog_order"))["max_order"] or 0
-        form.instance.backlog_order = max_order + 1
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
             self.object = form.save()
             return JsonResponse({"success": True, "ticket_id": self.object.pk})
@@ -321,7 +347,6 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
     def get_success_url(self):
         return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
-
 
 class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     model = Ticket
@@ -508,6 +533,44 @@ class TicketReorderView(LoginRequiredMixin, View):
             Ticket.objects.bulk_update([current_ticket, swap_ticket], ["backlog_order"])
 
         return redirect("product-backlog", pk=pk)
+
+@login_required
+def quick_create_ticket(request, pk):
+    """Création rapide depuis le backlog inline row."""
+    project = get_object_or_404(Project, pk=pk)
+
+    if not is_contributor_or_admin(request.user, project):
+        messages.error(request, "You don't have permission to create issues.")
+        return redirect("product-backlog", pk=pk)
+
+    title = request.GET.get('title', '').strip()
+    ticket_type = request.GET.get('type', 'user story').strip().lower()
+
+    # Mapper les valeurs du JS vers les choices du modèle
+    TYPE_MAP = {
+        'story':      'user story',
+        'user_story': 'user story',
+        'user story': 'user story',
+        'bug':        'bug',
+        'task':       'task',
+        'epic':       'epic',
+    }
+    ticket_type = TYPE_MAP.get(ticket_type, 'user story')
+
+    if not title:
+        messages.error(request, "Title is required.")
+        return redirect("product-backlog", pk=pk)
+
+    ticket = Ticket.objects.create(
+        project=project,
+        title=title,
+        type=ticket_type,       # ← champ correct dans le modèle
+        status='todo',
+        requester=request.user,
+    )
+    messages.success(request, f'Issue "{ticket.title}" created.')
+    return redirect("product-backlog", pk=pk)
+
 
 
 

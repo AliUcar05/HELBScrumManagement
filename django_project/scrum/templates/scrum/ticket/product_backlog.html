@@ -8,6 +8,61 @@
     <div class="backlog-layout">
         <div class="backlog-main" id="backlogMain">
             <div class="backlog-container">
+                 <div class="sprints-section">
+                    <div class="sprints-header">
+                        <h2>Sprints</h2>
+                        <button class="btn btn-dark" data-toggle="modal" data-target="#createSprintModal">
+                            <i class="fas fa-plus mr-1"></i> Create Sprint
+                        </button>
+                    </div>
+
+                    <div class="sprints-grid">
+                        {% for sprint in sprints %}
+                        <div class="sprint-card {% if sprint.status == 'active' %}active{% endif %}">
+                            <div class="sprint-header">
+                                <h3>{{ sprint.name }}</h3>
+                                <span class="sprint-badge {% if sprint.status == 'active' %}active{% endif %}">
+                                    {% if sprint.status == 'active' %}
+                                        Active
+                                    {% elif sprint.status == 'planned' %}
+                                        Planned
+                                    {% else %}
+                                        Closed
+                                    {% endif %}
+                                </span>
+                            </div>
+
+                            <div class="progress-container">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: {{ sprint.completion_percentage|default:0 }}%;"></div>
+                                </div>
+                                <div class="progress-stats">
+                                    <span>{{ sprint.completed_issues|default:0 }}/{{ sprint.total_issues|default:0 }} issues</span>
+                                    <span>{{ sprint.completion_percentage|default:0 }}%</span>
+                                </div>
+                            </div>
+
+                            <div class="sprint-meta">
+                                {% if sprint.start_date and sprint.end_date %}
+                                    <span><i class="far fa-calendar-alt"></i> {{ sprint.start_date|date:"M d" }} - {{ sprint.end_date|date:"M d" }}</span>
+                                {% endif %}
+
+                                {% if sprint.status == 'active' and sprint.days_remaining %}
+                                    <span><i class="far fa-clock"></i> {{ sprint.days_remaining }} days left</span>
+                                {% elif sprint.status == 'planned' %}
+                                    <span><i class="fas fa-hourglass-start"></i> Not started</span>
+                                {% elif sprint.status == 'closed' %}
+                                    <span><i class="fas fa-check-circle"></i> Completed</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="empty-sprints">
+                            <p>No sprints yet. Create your first sprint!</p>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
 
                  <div class="backlog-section">
                      <div class="backlog-header">
@@ -54,6 +109,61 @@
                                         </td>
                                     </tr>
                                 {% endfor %}
+                              <tr class="create-issue-trigger-row" id="createIssueTriggerRow">
+                                    <td></td>
+                                    <td></td>
+                                    <td colspan="9">
+                                        <button class="create-issue-trigger-btn" onclick="showInlineCreate()">
+                                            <i class="fas fa-plus"></i> Create issue
+                                        </button>
+                                    </td>
+                                </tr>
+
+                                <!-- Ligne inline create (expanded, cachée par défaut) -->
+                                <tr class="create-issue-inline-row" id="createIssueInlineRow" style="display: none;">
+                                    <td></td>
+                                    <td style="vertical-align: top; padding-top: 10px; position: relative;">
+                                        <!-- Bouton type -->
+                                        <div class="inline-type-selector" id="inlineTypeSelector" onclick="toggleTypePicker(event)" title="Story">
+                                            <i class="fas fa-bookmark" style="color:#36b37e;font-size:16px;"></i>
+                                        </div>
+
+                                        <!-- Dropdown type picker -->
+                                        <div class="type-picker hidden" id="typePicker">
+                                            <div class="type-picker-item" onclick="selectType('story')">
+                                                <i class="fas fa-bookmark" style="color:#36b37e;"></i> Story
+                                            </div>
+                                            <div class="type-picker-item" onclick="selectType('bug')">
+                                                <i class="fas fa-bug" style="color:#de350b;"></i> Bug
+                                            </div>
+                                            <div class="type-picker-item" onclick="selectType('task')">
+                                                <i class="fas fa-check-square" style="color:#42526e;"></i> Task
+                                            </div>
+                                            <div class="type-picker-item" onclick="selectType('epic')">
+                                                <i class="fas fa-bolt" style="color:#5243aa;"></i> Epic
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td colspan="9">
+                                        <input
+                                            type="text"
+                                            class="inline-create-input"
+                                            id="inlineCreateInput"
+                                            placeholder="What needs to be done?"
+                                            onkeydown="handleInlineCreateKey(event)"
+                                        >
+                                        <div class="inline-create-footer">
+                                            <span class="inline-create-label">
+                                                New <strong id="inlineTypeLabel">Story</strong> in <strong>Backlog</strong>
+                                                <i class="fas fa-chevron-down" style="font-size:10px;margin-left:2px;color:#5e6c84;"></i>
+                                            </span>
+                                            <div class="inline-create-actions">
+                                                <button class="btn-link-blue" onclick="quickCreateIssue()">Open in dialog</button>
+                                                <button class="btn-link-cancel" onclick="hideInlineCreate()">Cancel</button>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
                              </tbody>
                          </table>
                      </div>
@@ -125,4 +235,7 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="{% static 'scrum/js/backlog.js' %}"></script>
     <script src="{% static 'scrum/js/issue-drawer.js' %}"></script>
+    <script>
+        const TICKET_CREATE_URL = "{% url 'ticket-quick-create' project.pk %}";
+    </script>
 {% endblock project_content %}

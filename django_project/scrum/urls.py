@@ -34,6 +34,7 @@ urlpatterns = [
 
     # TICKET ISSUES URL
     path('projects/<int:pk>/ticket/create/',TicketCreateView.as_view(),name='ticket-create'),
+    path('projects/<int:pk>/ticket/quick-create/', views.quick_create_ticket, name='ticket-quick-create'),
     path("projects/<int:pk>/backlog/",TicketListView.as_view(), name="product-backlog"),
     path('projects/<int:pk>/ticket/detail/<int:ticket_pk>/',TicketDetailView.as_view(),name='ticket-detail'),
     path('projects/<int:pk>/ticket/update/<int:ticket_pk>/edit/',TicketUpdateView.as_view(),name='ticket-update'),
