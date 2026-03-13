@@ -885,3 +885,254 @@ tr:hover {
 .btn-danger:hover {
     background: #bf2600;
 }
+
+/* ===== EMPTY STATE AVEC COLONNES VISIBLES ===== */
+.empty-state-row td {
+    padding: 20px 12px;
+    border-bottom: 1px solid #f0f0f0;
+    color: #999;
+    vertical-align: middle;
+    height: 60px;
+}
+
+.empty-state-row .title-cell {
+    color: #6b778c;
+    font-style: italic;
+}
+
+.empty-state-row .title-cell .empty-message {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.empty-state-row .title-cell .empty-message i {
+    font-size: 16px;
+    color: #c1c7d0;
+}
+
+.placeholder-icon {
+    color: #c1c7d0;
+    font-size: 14px;
+    display: inline-block;
+    width: 20px;
+    text-align: center;
+}
+
+/* Ligne du bouton Create */
+.empty-state-action-row td {
+    padding: 30px 12px;
+    text-align: center;
+    background: #fafbfc;
+    border-top: 1px dashed #dfe1e6;
+}
+
+.empty-state-action-row .btn-primary {
+    background: #0052cc;
+    color: white;
+    border: none;
+    padding: 8px 20px;
+    font-size: 14px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: 500;
+}
+
+.empty-state-action-row .btn-primary:hover {
+    background: #0747a6;
+}
+
+/* Style pour les cellules vides */
+.drag-handle-cell,
+.toggle-cell,
+.actions-cell {
+    background: #fafbfc;
+}
+
+/* Forcer l'affichage de toutes les colonnes */
+.type-cell,
+.key-cell,
+.title-cell,
+.priority-cell,
+.estimate-cell,
+.assignee-cell,
+.epic-cell {
+    min-width: 0;
+}
+
+/* ===== CREATE ISSUE TRIGGER ROW ===== */
+.create-issue-trigger-row td {
+    padding: 10px 8px;
+    border-top: 1px solid #dfe1e6;
+    background: white;
+}
+
+.create-issue-trigger-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: #42526e;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    padding: 4px 8px;
+    border-radius: 4px;
+    transition: background 0.1s, color 0.1s;
+}
+
+.create-issue-trigger-btn:hover {
+    background: #ebf2ff;
+    color: #0052cc;
+}
+
+.create-issue-trigger-btn i {
+    font-size: 13px;
+}
+
+/* ===== INLINE CREATE ROW ===== */
+.create-issue-inline-row td {
+    padding: 8px 8px;
+    border-top: 1px solid #dfe1e6;
+    background: white;
+    vertical-align: top;
+}
+
+.inline-type-selector {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    margin-top: 8px;
+}
+
+.inline-type-selector:hover {
+    background: #f0f0f0;
+}
+
+.inline-create-input {
+    width: 100%;
+    padding: 7px 12px;
+    border: 2px solid #0052cc;
+    border-radius: 4px;
+    font-size: 14px;
+    color: #172b4d;
+    outline: none;
+    box-shadow: 0 0 0 2px rgba(0, 82, 204, 0.15);
+    box-sizing: border-box;
+}
+
+.inline-create-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding: 0 2px;
+}
+
+.inline-create-label {
+    font-size: 13px;
+    color: #5e6c84;
+}
+
+.inline-create-label strong {
+    color: #172b4d;
+    font-weight: 600;
+}
+
+.inline-create-actions {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-link-blue {
+    background: transparent;
+    border: none;
+    color: #0052cc;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    font-weight: 500;
+}
+
+.btn-link-blue:hover {
+    text-decoration: underline;
+}
+
+.btn-link-cancel {
+    background: transparent;
+    border: none;
+    color: #0052cc;
+    font-size: 13px;
+    cursor: pointer;
+    padding: 0;
+    font-weight: 500;
+}
+
+.btn-link-cancel:hover {
+    text-decoration: underline;
+}
+
+/* ===== TYPE PICKER DROPDOWN ===== */
+.table-container {
+    overflow: visible !important;
+}
+
+.type-picker {
+    position: fixed;
+    background: white;
+    border: 1px solid #dfe1e6;
+    border-radius: 6px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.18);
+    z-index: 99999;
+    min-width: 140px;
+    padding: 4px 0;
+}
+
+.type-picker.hidden {
+    display: none;
+}
+
+.type-picker-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    font-size: 13px;
+    color: #172b4d;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.type-picker-item:hover {
+    background: #f4f5f7;
+}
+
+.type-picker-item i {
+    width: 14px;
+    text-align: center;
+    font-size: 13px;
+}
+/* Le bouton type selector doit être cliquable et positionné */
+.inline-type-selector {
+    width: 28px;
+    height: 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    border-radius: 4px;
+    border: 1px solid #dfe1e6;
+    background: white;
+    margin-top: 6px;
+    transition: background 0.1s;
+}
+
+.inline-type-selector:hover {
+    background: #f4f5f7;
+}
