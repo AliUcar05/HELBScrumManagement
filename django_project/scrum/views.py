@@ -364,7 +364,22 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
         self.request.session["current_project_id"] = self.project.id
         normalize_backlog_order(self.project)
-        return Ticket.objects.filter(project=self.project).select_related("assignee", "assignee__profile", "parent").order_by("backlog_order", "created_at")
+        
+        qs = Ticket.objects.filter(project=self.project).select_related("assignee", "assignee__profile", "parent").order_by("backlog_order", "created_at")
+        
+        # Filtres GET
+        type_filter = self.request.GET.get("type", "")
+        priority_filter = self.request.GET.get("priority", "")
+        status_filter = self.request.GET.get("status", "")
+        
+        if type_filter:
+            qs = qs.filter(type=type_filter)
+        if priority_filter:
+            qs = qs.filter(priority=priority_filter)
+        if status_filter:
+            qs = qs.filter(status=status_filter)
+        
+        return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -373,6 +388,14 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
         context["can_delete"] = is_project_admin(self.request.user, self.project)
         context["can_reorder"] = is_contributor_or_admin(self.request.user, self.project)
+        context["filter_type"] = self.request.GET.get("type", "")
+        context["filter_priority"] = self.request.GET.get("priority", "")
+        context["filter_status"] = self.request.GET.get("status", "")
+        context["active_filters"] = any([
+            context["filter_type"],
+            context["filter_priority"],
+            context["filter_status"]
+        ])
 
         sprints = self.project.sprints.all().order_by('-created_at')
 

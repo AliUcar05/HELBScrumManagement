@@ -3,24 +3,98 @@
 {% block project_content %}
     <link rel="stylesheet" href="{% static 'scrum/css/backlog.css' %}">
     <link rel="stylesheet" href="{% static 'scrum/css/issue-drawer.css' %}">
+        <style>
+    .backlog-filter-bar {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 0 14px 0;
+        flex-wrap: wrap;
+    }
+    .filter-select {
+        padding: 6px 10px;
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        font-size: 13px;
+        background: #fff;
+        cursor: pointer;
+        color: #333;
+        min-width: 130px;
+    }
+    .filter-select:focus {
+        outline: none;
+        border-color: #0052cc;
+    }
+    .btn-clear-filters {
+        padding: 6px 12px;
+        background: #ffebe6;
+        color: #de350b;
+        border: 1px solid #ffbdad;
+        border-radius: 6px;
+        font-size: 13px;
+        text-decoration: none;
+        font-weight: 600;
+    }
+    .btn-clear-filters:hover {
+        background: #ffbdad;
+        color: #de350b;
+        text-decoration: none;
+    }
+    </style>
 
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
     <div class="backlog-layout">
         <div class="backlog-main" id="backlogMain">
             <div class="backlog-container">
                  <div class="backlog-section">
-                     <div class="backlog-header">
-                        <div class="backlog-title">
-                            <h2>Backlog</h2>
-                            <span class="backlog-count">{{ tickets|length }} issues</span>
-                        </div>
 
-                         <div class="backlog-actions">
-                            {% if can_create %}
-                                <button class="btn btn-dark" data-toggle="modal" data-target="#globalCreateTicketModal">Create Issue</button>
-                            {% endif %}
-                         </div>
-                     </div>
+
+                <div class="backlog-header">
+                    <div class="backlog-title">
+                        <h2>Backlog</h2>
+                        <span class="backlog-count">{{ tickets|length }} issues</span>
+                    </div>
+                    <div class="backlog-actions">
+                        {% if can_create %}
+                            <button class="btn btn-dark" data-toggle="modal" data-target="#globalCreateTicketModal">Create Issue</button>
+                        {% endif %}
+                    </div>
+                </div>
+
+                <!-- FILTER BAR -->
+                <form method="GET" class="backlog-filter-bar" id="filterBar">
+                    <select name="type" class="filter-select" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        <option value="epic" {% if filter_type == "epic" %}selected{% endif %}>Epic</option>
+                        <option value="user story" {% if filter_type == "user story" %}selected{% endif %}>Story</option>
+                        <option value="task" {% if filter_type == "task" %}selected{% endif %}>Task</option>
+                        <option value="bug" {% if filter_type == "bug" %}selected{% endif %}>Bug</option>
+                    </select>
+
+                    <select name="priority" class="filter-select" onchange="this.form.submit()">
+                        <option value="">All Priorities</option>
+                        <option value="highest" {% if filter_priority == "highest" %}selected{% endif %}>Highest</option>
+                        <option value="high" {% if filter_priority == "high" %}selected{% endif %}>High</option>
+                        <option value="medium" {% if filter_priority == "medium" %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if filter_priority == "low" %}selected{% endif %}>Low</option>
+                        <option value="lowest" {% if filter_priority == "lowest" %}selected{% endif %}>Lowest</option>
+                    </select>
+
+                    <select name="status" class="filter-select" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="todo" {% if filter_status == "todo" %}selected{% endif %}>To Do</option>
+                        <option value="in_progress" {% if filter_status == "in_progress" %}selected{% endif %}>In Progress</option>
+                        <option value="in_review" {% if filter_status == "in_review" %}selected{% endif %}>In Review</option>
+                        <option value="done" {% if filter_status == "done" %}selected{% endif %}>Done</option>
+                        <option value="blocked" {% if filter_status == "blocked" %}selected{% endif %}>Blocked</option>
+                    </select>
+
+                    {% if active_filters %}
+                        <a href="{% url 'product-backlog' project.pk %}" class="btn-clear-filters">
+                            <i class="fas fa-times"></i> Clear Filters
+                        </a>
+                    {% endif %}
+                </form>
 
                      <div class="table-container">
                          <table>
