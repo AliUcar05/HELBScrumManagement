@@ -39,12 +39,39 @@
             </div>
 
             {% if user.profile.global_role|lower != 'read-only' %}
-                <a href="#" class="btn btn-outline-primary btn-sm" style="margin-left: 100px">
+                <a href="{% url 'sprint-create' project.pk %}" class="btn btn-outline-primary btn-sm" style="margin-left: 100px">
                     <i class="bi bi-plus me-1"></i> Create Sprint
                 </a>
             {% endif %}
         </div>
     {% endif %}
+
+
+    <!-- PLANNED SPRINTS -->
+    {% if planned_sprints %}
+    <div class="mb-4">
+        <h5 class="font-weight-bold mb-3">Planned Sprints</h5>
+        {% for sprint in planned_sprints %}
+        <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px;">
+            <div class="card-body d-flex align-items-center justify-content-between">
+                <div>
+                    <h6 class="font-weight-bold mb-1">{{ sprint.name }}</h6>
+                    {% if sprint.goals %}
+                        <small class="text-muted">{{ sprint.goals }}</small><br>
+                    {% endif %}
+                    <small class="text-muted">
+                        {{ sprint.start_date }} → {{ sprint.end_date|default:"No end date" }}
+                    </small>
+                </div>
+                <div class="d-flex gap-2">
+                    <span class="badge badge-warning text-dark">Planned</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
     <hr>
 
     <div style="display:flex; gap:15px; overflow-x:auto; align-items:flex-start; padding-bottom: 20px;">

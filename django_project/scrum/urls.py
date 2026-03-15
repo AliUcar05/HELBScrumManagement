@@ -5,6 +5,7 @@ from .views import (
     ProjectListView, ProjectDetailView, ProjectCreateView,
     ProjectUpdateView, ProjectDeleteView, ProjectSettingsView, MembershipAddView,
     MembershipDeleteView, MembershipUpdateRoleView,
+    SprintCreateView,
 
     TicketCreateView,
     TicketUpdateView,
@@ -40,5 +41,9 @@ urlpatterns = [
     path('projects/<int:pk>/ticket/update/<int:ticket_pk>/edit/',TicketUpdateView.as_view(),name='ticket-update'),
     path('projects/<int:pk>/ticket/delete/<int:ticket_pk>/delete/',TicketDeleteView.as_view(),name='ticket-delete'),
     path('projects/<int:pk>/ticket/<int:ticket_pk>/reorder/<str:direction>/', TicketReorderView.as_view(), name='ticket-reorder'),
+
+    # SPRINT 
+    path("projects/<int:pk>/sprints/create/", SprintCreateView.as_view(), name="sprint-create"),
+
 
 ]

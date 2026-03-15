@@ -9,8 +9,9 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm
+from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm, SprintForm
 from .models import Project, Membership, Ticket
+from .models import Project, Membership, Ticket, Sprint
 
 
 def project_queryset_for(user):
@@ -99,6 +100,8 @@ def active_sprint(request, pk):
         "columns": columns,
         "membership": membership,
         "active_sprint": active_sprint,
+        "planned_sprints": project.sprints.filter(status="planned").order_by("start_date"),
+
     }
     return render(request, "scrum/sprint/active_sprint.html", context)
 
@@ -593,6 +596,33 @@ def quick_create_ticket(request, pk):
     )
     messages.success(request, f'Issue "{ticket.title}" created.')
     return redirect("product-backlog", pk=pk)
+
+class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
+    model = Sprint
+    form_class = SprintForm
+    template_name = "scrum/sprint/sprint_form.html"
+
+    def test_func(self):
+        project = get_object_or_404(Project, pk=self.kwargs["pk"])
+        return is_contributor_or_admin(self.request.user, project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "Only contributors and admins can create sprints.")
+        return redirect("project-active-sprint", pk=self.kwargs["pk"])
+
+    def form_valid(self, form):
+        project = get_object_or_404(Project, pk=self.kwargs["pk"])
+        form.instance.project = project
+        messages.success(self.request, f'Sprint "{form.instance.name}" created successfully!')
+        return super().form_valid(form)
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"] = get_object_or_404(Project, pk=self.kwargs["pk"])
+        return context
+
+    def get_success_url(self):
+        return reverse("project-active-sprint", kwargs={"pk": self.kwargs["pk"]})
 
 
 

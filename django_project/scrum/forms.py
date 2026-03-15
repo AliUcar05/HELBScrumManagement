@@ -2,6 +2,7 @@ from django import forms
 
 from .models import Project, Membership, Ticket
 
+from .models import Project, Membership, Ticket, Sprint
 
 class ProjectForm(forms.ModelForm):
     class Meta:
@@ -85,3 +86,22 @@ class TicketForm(forms.ModelForm):
 class TicketEditForm(TicketForm):
     class Meta(TicketForm.Meta):
         fields = TicketForm.Meta.fields + ["status"]
+
+class SprintForm(forms.ModelForm):
+    class Meta:
+        model = Sprint
+        fields = ["name", "goals", "start_date", "end_date", "sprint_capacity"]
+        widgets = {
+            "goals": forms.Textarea(attrs={"rows": 3, "placeholder": "Sprint goal…"}),
+            "start_date": forms.DateInput(attrs={"type": "date"}),
+            "end_date": forms.DateInput(attrs={"type": "date"}),
+            "sprint_capacity": forms.NumberInput(attrs={"min": 0, "placeholder": "e.g. 40"}),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields["name"].widget.attrs.update({"placeholder": "Sprint 1…"})
+        self.fields["name"].required = True
+        self.fields["goals"].required = False
+        self.fields["end_date"].required = False
+        self.fields["sprint_capacity"].required = False
