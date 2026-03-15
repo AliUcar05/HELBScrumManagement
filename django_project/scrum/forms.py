@@ -1,6 +1,6 @@
 from django import forms
 
-from .models import Project, Membership, Ticket
+from .models import Project, Membership, Ticket, Comment
 
 from .models import Project, Membership, Ticket, Sprint
 
@@ -82,7 +82,6 @@ class TicketForm(forms.ModelForm):
         self.fields["assignee"].empty_label = "— Unassigned —"
 
 
-
 class TicketEditForm(TicketForm):
     class Meta(TicketForm.Meta):
         fields = TicketForm.Meta.fields + ["status"]
@@ -105,3 +104,26 @@ class SprintForm(forms.ModelForm):
         self.fields["goals"].required = False
         self.fields["end_date"].required = False
         self.fields["sprint_capacity"].required = False
+
+##################comment ticket###########
+class CommentForm(forms.ModelForm):
+    """
+    Formulaire pour la gestion des commentaires sur les tickets.
+    """
+    class Meta:
+        model = Comment
+        fields = ['content']
+        labels = {
+            'content': '',
+        }
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ajouter un commentaire ou une réponse...',
+                'rows': 3,
+                'style': 'resize: none;'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CommentForm, self).__init__(*args, **kwargs)

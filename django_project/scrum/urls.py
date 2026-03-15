@@ -45,5 +45,9 @@ urlpatterns = [
     # SPRINT 
     path("projects/<int:pk>/sprints/create/", SprintCreateView.as_view(), name="sprint-create"),
 
+    #TICKET COMMENTS
+    path('ticket/<int:ticket_pk>/comment/add/', views.add_comment, name='add_comment'),
+    path('comment/<int:comment_pk>/edit/', views.edit_comment, name='edit_comment'),
+    path('comment/<int:comment_pk>/delete/', views.delete_comment, name='delete_comment'),
 
 ]

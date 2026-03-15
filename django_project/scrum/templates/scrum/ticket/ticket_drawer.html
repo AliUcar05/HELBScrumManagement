@@ -2,7 +2,6 @@
 
 <div class="tdr-inner" id="tdrInner" data-ticket-id="{{ ticket.id }}" data-project-id="{{ project.id }}">
 
-    <!-- Header -->
     <div class="tdr-header">
         <div class="tdr-header-left">
             <span class="tdr-key">{{ project.code }}-{{ ticket.id }}</span>
@@ -26,7 +25,6 @@
         </div>
     </div>
 
-    <!-- Title éditable -->
     <div class="tdr-title-section">
         <div class="tdr-title-container">
             <h2 class="tdr-title" id="tdrTitle">{{ ticket.title }}</h2>
@@ -42,10 +40,8 @@
         </div>
     </div>
 
-    <!-- Body -->
-    <div class="tdr-body">
+    <div class="tdr-body" style="max-height: 55vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px; padding-bottom: 20px;">
 
-        <!-- Meta grid édition inline -->
         <div class="tdr-meta-grid">
             <div class="tdr-meta-item">
                 <span class="tdr-meta-label">Priority</span>
@@ -136,7 +132,6 @@
 
         <div class="tdr-divider"></div>
 
-        <!-- Description éditable -->
         <div class="tdr-section">
             <div class="tdr-section-header">
                 <h4 class="tdr-section-title">Description</h4>
@@ -153,7 +148,6 @@
             </div>
         </div>
 
-        <!-- Child issues -->
         {% if children %}
         <div class="tdr-section">
             <h4 class="tdr-section-title">Child Issues <span class="tdr-count">{{ children|length }}</span></h4>
@@ -169,13 +163,32 @@
         </div>
         {% endif %}
 
-        <!-- Comments -->
-        <div class="tdr-section">
-            <h4 class="tdr-section-title">Comments</h4>
+        <div class="tdr-section" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h4 class="tdr-section-title" style="margin: 0; text-transform: uppercase; font-size: 13px; color: #6b778c;">Comments</h4>
+                
+                <button id="btnShowForm" onclick="document.getElementById('formBoite').style.display='block'; this.style.display='none'; setTimeout(function(){ document.querySelector('#formBoite textarea').focus(); document.querySelector('.tdr-body').scrollTop = document.querySelector('.tdr-body').scrollHeight; }, 100);" style="background-color: #0052cc; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 14px;">
+                    + Add a comment
+                </button>
+            </div>
+
+            <div id="formBoite" style="display: none; background: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #dfe1e6; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
+                <form action="{% url 'add_comment' ticket.pk %}" method="POST">
+                    {% csrf_token %}
+                    <div style="margin-bottom: 10px;">
+                        {{ comment_form.content }}
+                    </div>
+                    <div style="text-align: right; margin-top: 10px;">
+                        <button type="button" onclick="document.getElementById('formBoite').style.display='none'; document.getElementById('btnShowForm').style.display='block';" style="background: none; border: none; color: #42526e; cursor: pointer; margin-right: 15px; font-weight: 500;">Cancel</button>
+                        <button type="submit" style="background-color: #0052cc; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: 500;">Save</button>
+                    </div>
+                </form>
+            </div>
+
             <div class="tdr-comments">
                 {% for comment in comments %}
-                <div class="tdr-comment">
-                    <div class="tdr-comment-header">
+                <div class="tdr-comment" style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">
+                    <div class="tdr-comment-header" style="display: flex; align-items: center; margin-bottom: 0.5rem;">
                         <div class="tdr-user">
                             {% if comment.author.profile.image %}
                                 <img src="{{ comment.author.profile.image.url }}" class="tdr-avatar tdr-avatar--sm" alt="">
@@ -185,29 +198,28 @@
                                 </div>
                             {% endif %}
                             <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                            <span class="tdr-comment-date" style="font-size: 0.85em; color: #6b778c; margin-left: 10px;">{{ comment.created_at|date:"M d, Y H:i" }}</span>
                         </div>
-                        <span class="tdr-comment-date">{{ comment.created_at|date:"M d, Y" }}</span>
                     </div>
-                    <p class="tdr-comment-body">{{ comment.content }}</p>
+                    
+                    <p class="tdr-comment-body" style="white-space: pre-wrap; margin: 0 0 5px 35px;">{{ comment.content }}</p>
+
+                    {% if comment.author == request.user %}
+                    <div class="tdr-comment-actions-bottom" style="margin-left: 35px; font-size: 0.85em;">
+                        <a href="{% url 'edit_comment' comment.pk %}" style="color: #6b778c; margin-right: 15px; text-decoration: none; font-weight: 500;">Edit</a>
+                        <a href="{% url 'delete_comment' comment.pk %}" onclick="return confirm('Delete this comment?');" style="color: #de350b; text-decoration: none; font-weight: 500;">Delete</a>
+                    </div>
+                    {% endif %}
                 </div>
                 {% empty %}
-                <p class="tdr-empty-text">No comments yet.</p>
+                <p class="tdr-empty-text" style="margin-left: 35px; font-style: italic; color: #6b778c;">No comments yet.</p>
                 {% endfor %}
             </div>
-
-            <!-- Add comment -->
-            {% if can_edit %}
-            <div class="tdr-add-comment">
-                <textarea placeholder="Add a comment..." id="newComment"></textarea>
-                <button class="tdr-add-comment-btn" onclick="addComment({{ ticket.id }})">Send</button>
-            </div>
-            {% endif %}
         </div>
 
     </div>
 </div>
 
-<!-- Template pour l'édition inline -->
 <script type="text/template" id="editFieldTemplate">
     <div class="tdr-edit-field">
         <div class="tdr-edit-input"></div>
