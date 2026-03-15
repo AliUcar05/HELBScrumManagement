@@ -1,7 +1,7 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponseForbidden
 from django.db import transaction
 from django.db.models import Max
 from django.shortcuts import get_object_or_404, redirect, render
@@ -9,8 +9,10 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm
-from .models import Project, Membership, Ticket
+# IMPORT DES FORMULAIRES (CommentForm ajouté)
+from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm, CommentForm
+# IMPORT DES MODÈLES (Comment ajouté)
+from .models import Project, Membership, Ticket, Comment
 
 
 def project_queryset_for(user):
@@ -291,7 +293,7 @@ class MembershipUpdateRoleView(LoginRequiredMixin, View):
 class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Ticket
     form_class = TicketForm
-    template_name = "scrum/ticket/ticket_form.html"  # ← ajoute cette ligne
+    template_name = "scrum/ticket/ticket_form.html"
 
     def test_func(self):
         return is_contributor_or_admin(self.request.user, get_object_or_404(Project, pk=self.kwargs["pk"]))
@@ -301,26 +303,25 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return redirect("product-backlog", pk=self.kwargs["pk"])
 
     def get_initial(self):
-        def get_initial(self):
-            initial = super().get_initial()
-            title = self.request.GET.get('title', '').strip()
-            ticket_type = self.request.GET.get('type', '').strip().lower()
+        initial = super().get_initial()
+        title = self.request.GET.get('title', '').strip()
+        ticket_type = self.request.GET.get('type', '').strip().lower()
 
-            if title:
-                initial['title'] = title
+        if title:
+            initial['title'] = title
 
-            TYPE_MAP = {
-                'story': 'user story',
-                'user_story': 'user story',
-                'bug': 'bug',
-                'task': 'task',
-                'epic': 'epic',
-            }
-            mapped = TYPE_MAP.get(ticket_type)
-            if mapped:
-                initial['type'] = mapped
+        TYPE_MAP = {
+            'story': 'user story',
+            'user_story': 'user story',
+            'bug': 'bug',
+            'task': 'task',
+            'epic': 'epic',
+        }
+        mapped = TYPE_MAP.get(ticket_type)
+        if mapped:
+            initial['type'] = mapped
 
-            return initial
+        return initial
 
     def get_form(self, form_class=None):
         form = super().get_form(form_class)
@@ -434,7 +435,6 @@ class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         return ['scrum/ticket/ticket_form_partial.html']
 
     def get(self, request, *args, **kwargs):
-        # drawer=1 → charge le partial, sinon redirige
         if not request.GET.get('drawer') and not request.headers.get('x-requested-with'):
             ticket = self.get_object()
             return redirect(reverse("product-backlog", kwargs={"pk": ticket.project.pk}))
@@ -448,10 +448,12 @@ class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
         edit_form = TicketEditForm(instance=ticket)
         edit_form.fields["assignee"].queryset = project.members.all()
         edit_form.fields["parent"].queryset   = project.tickets.exclude(pk=ticket.pk)
+        
         context.update({
             "project":   project,
             "children":  Ticket.objects.filter(parent=ticket),
             "comments":  ticket.comments.select_related("author").order_by("created_at"),
+            "comment_form": CommentForm(), # <-- J'AI AJOUTÉ CECI POUR LE FORMULAIRE DE CRÉATION DE COMMENTAIRE
             "can_edit":  is_contributor_or_admin(self.request.user, project),
             "can_delete": is_project_admin(self.request.user, project),
             "edit_form": edit_form,
@@ -559,7 +561,6 @@ class TicketReorderView(LoginRequiredMixin, View):
 
 @login_required
 def quick_create_ticket(request, pk):
-    """Création rapide depuis le backlog inline row."""
     project = get_object_or_404(Project, pk=pk)
 
     if not is_contributor_or_admin(request.user, project):
@@ -569,7 +570,6 @@ def quick_create_ticket(request, pk):
     title = request.GET.get('title', '').strip()
     ticket_type = request.GET.get('type', 'user story').strip().lower()
 
-    # Mapper les valeurs du JS vers les choices du modèle
     TYPE_MAP = {
         'story':      'user story',
         'user_story': 'user story',
@@ -587,7 +587,7 @@ def quick_create_ticket(request, pk):
     ticket = Ticket.objects.create(
         project=project,
         title=title,
-        type=ticket_type,       # ← champ correct dans le modèle
+        type=ticket_type,
         status='todo',
         requester=request.user,
     )
@@ -595,39 +595,58 @@ def quick_create_ticket(request, pk):
     return redirect("product-backlog", pk=pk)
 
 
+##################comment ticket###########
 
+@login_required
+def add_comment(request, ticket_pk):
+    """Permet d'ajouter un commentaire à un ticket spécifique."""
+    ticket = get_object_or_404(Ticket, pk=ticket_pk)
+    
+    if request.method == "POST":
+        form = CommentForm(request.POST)
+        if form.is_valid():
+            comment = form.save(commit=False)
+            comment.ticket = ticket
+            comment.author = request.user
+            comment.save()
+            messages.success(request, "Commentaire ajouté.")
+            
+    # Redirige vers la page d'où vient l'utilisateur (utile car tes tickets sont dans des "drawers")
+    return redirect(request.META.get('HTTP_REFERER', reverse('product-backlog', kwargs={'pk': ticket.project.pk})))
 
+@login_required
+def edit_comment(request, comment_pk):
+    """Permet à l'auteur de modifier son propre commentaire."""
+    comment = get_object_or_404(Comment, pk=comment_pk)
+    
+    # Vérification de sécurité : seul l'auteur peut modifier
+    if comment.author != request.user:
+        messages.error(request, "Vous ne pouvez modifier que vos propres commentaires.")
+        return redirect(request.META.get('HTTP_REFERER', reverse('product-backlog', kwargs={'pk': comment.ticket.project.pk})))
 
+    if request.method == "POST":
+        form = CommentForm(request.POST, instance=comment)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Commentaire mis à jour.")
+            return redirect(request.META.get('HTTP_REFERER', reverse('product-backlog', kwargs={'pk': comment.ticket.project.pk})))
+    else:
+        form = CommentForm(instance=comment)
+    
+    # Si on arrive ici, c'est un "GET", on retourne donc un petit template avec le formulaire de modification
+    context = {'form': form, 'comment': comment, 'project': comment.ticket.project}
+    return render(request, 'scrum/ticket/edit_comment.html', context)
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+@login_required
+def delete_comment(request, comment_pk):
+    """Permet à l'auteur de supprimer son propre commentaire."""
+    comment = get_object_or_404(Comment, pk=comment_pk)
+    
+    # Vérification de sécurité : seul l'auteur peut supprimer
+    if comment.author != request.user:
+        messages.error(request, "Vous ne pouvez supprimer que vos propres commentaires.")
+    else:
+        comment.delete()
+        messages.success(request, "Commentaire supprimé.")
+        
+    return redirect(request.META.get('HTTP_REFERER', reverse('product-backlog', kwargs={'pk': comment.ticket.project.pk})))

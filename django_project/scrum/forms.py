@@ -1,6 +1,7 @@
 from django import forms
 
-from .models import Project, Membership, Ticket
+# N'oublie pas d'importer le modèle Comment ici !
+from .models import Project, Membership, Ticket, Comment
 
 
 class ProjectForm(forms.ModelForm):
@@ -81,7 +82,30 @@ class TicketForm(forms.ModelForm):
         self.fields["assignee"].empty_label = "— Unassigned —"
 
 
-
 class TicketEditForm(TicketForm):
     class Meta(TicketForm.Meta):
         fields = TicketForm.Meta.fields + ["status"]
+
+
+##################comment ticket###########
+class CommentForm(forms.ModelForm):
+    """
+    Formulaire pour la gestion des commentaires sur les tickets.
+    """
+    class Meta:
+        model = Comment
+        fields = ['content']
+        labels = {
+            'content': '',
+        }
+        widgets = {
+            'content': forms.Textarea(attrs={
+                'class': 'form-control',
+                'placeholder': 'Ajouter un commentaire ou une réponse...',
+                'rows': 3,
+                'style': 'resize: none;'
+            }),
+        }
+
+    def __init__(self, *args, **kwargs):
+        super(CommentForm, self).__init__(*args, **kwargs)
