@@ -28,17 +28,23 @@
         {% endif %}
     </td>
     <td>
-        <span class="type-badge type-{{ ticket.type }}">
-            {% if ticket.type == "bug" %}
-                <i class="fas fa-bug" style="color:#de350b;"></i>
-            {% elif ticket.type == "user story" %}
-                <i class="fas fa-bookmark" style="color:#36b37e;"></i>
-            {% elif ticket.type == "task" %}
-                <i class="fas fa-check-square" style="color:#42526e;"></i>
-            {% elif ticket.type == "epic" %}
-                <i class="fas fa-bolt" style="color:#5243aa;"></i>
-            {% endif %}
-        </span>
+        {% if ticket.type == "bug" %}
+            <span class="type-badge" style="background:#FFEBE6;color:#de350b;border:1px solid #FFBDAD;" title="Bug">
+                <i class="fas fa-bug"></i> Bug
+            </span>
+        {% elif ticket.type == "user story" %}
+            <span class="type-badge" style="background:#E3FCEF;color:#006644;border:1px solid #ABF5D1;" title="Story">
+                <i class="fas fa-bookmark"></i> Story
+            </span>
+        {% elif ticket.type == "task" %}
+            <span class="type-badge" style="background:#DEEBFF;color:#0747A6;border:1px solid #B3D4FF;" title="Task">
+                <i class="fas fa-check-square"></i> Task
+            </span>
+        {% elif ticket.type == "epic" %}
+            <span class="type-badge" style="background:#EAE6FF;color:#403294;border:1px solid #C0B6F2;" title="Epic">
+                <i class="fas fa-bolt"></i> Epic
+            </span>
+        {% endif %}
     </td>
     <td><a href="{% url 'ticket-detail' project.pk ticket.pk %}" class="issue-key">{{ project.code }}-{{ ticket.id }}</a></td>
     <td class="ticket-title">

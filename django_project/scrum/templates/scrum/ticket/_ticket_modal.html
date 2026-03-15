@@ -2,7 +2,40 @@
 {% load crispy_forms_tags %}
 {% if user.is_authenticated %}
 
+
+
     <link rel="stylesheet" href="{% static 'scrum/css/ticket_modal.css' %}">
+        <style>
+    .type-selector {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+    }
+    .type-option {
+        cursor: pointer;
+        border-radius: 4px;
+        padding: 2px;
+        border: 2px solid transparent;
+        transition: border-color 0.15s;
+    }
+    .type-option:hover {
+        border-color: #aaa;
+    }
+    .type-option--selected {
+        border-color: #0052cc !important;
+    }
+    .type-badge {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        padding: 3px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 600;
+        white-space: nowrap;
+    }
+    </style>
+
 
     <div class="modal fade" id="globalCreateTicketModal" tabindex="-1">
         <div class="modal-dialog modal-lg modal-dialog-centered">
@@ -40,7 +73,32 @@
                                             </div>
                                         </div>
                                         <div class="col-md-6">
-                                            {{ ticket_form.type|as_crispy_field }}
+                                            <div class="form-group">
+                                                <label class="tm-label-crispy">Type <span class="tm-required">*</span></label>
+                                                <div class="type-selector" id="typeSelectorModal">
+                                                    <div class="type-option" data-value="user story" onclick="selectTicketType(this)">
+                                                        <span style="background:#E3FCEF;color:#006644;border:1px solid #ABF5D1;" class="type-badge">
+                                                            <i class="fas fa-bookmark"></i> Story
+                                                        </span>
+                                                    </div>
+                                                    <div class="type-option" data-value="task" onclick="selectTicketType(this)">
+                                                        <span style="background:#DEEBFF;color:#0747A6;border:1px solid #B3D4FF;" class="type-badge">
+                                                            <i class="fas fa-check-square"></i> Task
+                                                        </span>
+                                                    </div>
+                                                    <div class="type-option" data-value="bug" onclick="selectTicketType(this)">
+                                                        <span style="background:#FFEBE6;color:#de350b;border:1px solid #FFBDAD;" class="type-badge">
+                                                            <i class="fas fa-bug"></i> Bug
+                                                        </span>
+                                                    </div>
+                                                    <div class="type-option" data-value="epic" onclick="selectTicketType(this)">
+                                                        <span style="background:#EAE6FF;color:#403294;border:1px solid #C0B6F2;" class="type-badge">
+                                                            <i class="fas fa-bolt"></i> Epic
+                                                        </span>
+                                                    </div>
+                                                </div>
+                                                <input type="hidden" name="type" id="typeValueModal" value="user story">
+                                            </div>
                                         </div>
                                     </div>
 
@@ -173,7 +231,17 @@
                                     </div>
 
                                     <div class="row">
-                                        <div class="col-12">{{ ticket_form.parent|as_crispy_field }}</div>
+                                        <div class="col-12">
+                                                <label class="tm-label-crispy">Parent</label>
+                                                <select name="parent" id="id_parent" class="form-control">
+                                                    <option value="">— None —</option>
+                                                    {% for ticket in ticket_form.fields.parent.queryset %}
+                                                        <option value="{{ ticket.pk }}" data-type="{{ ticket.type }}">
+                                                            {{ ticket.ticket_id }} - {{ ticket.title }}
+                                                        </option>
+                                                    {% endfor %}
+                                                </select>
+                                        </div>
                                     </div>
 
                                 </div>
@@ -311,5 +379,59 @@
                 dd.classList.remove('tm-user-select--open');
             }
         });
+
+        // Type selector
+        function selectTicketType(el) {
+            document.querySelectorAll('#typeSelectorModal .type-option').forEach(function(opt) {
+                opt.classList.remove('type-option--selected');
+            });
+            el.classList.add('type-option--selected');
+            var val = el.dataset.value;
+            document.getElementById('typeValueModal').value = val;
+
+            var parentField = document.querySelector('select[name="parent"]');
+            if (!parentField) return;
+
+            var parentGroup = parentField.closest('.form-group') || parentField.parentElement;
+
+            if (val === 'bug' || val === 'epic') {
+                // Bloquer complètement
+                parentField.value = '';
+                parentField.disabled = true;
+                parentGroup.style.opacity = '0.4';
+                parentGroup.title = val === 'bug' ? 'Bugs cannot have a parent' : 'Epics cannot have a parent';
+
+            } else if (val === 'user story') {
+                // Story → seulement les Epics
+                parentField.disabled = false;
+                parentGroup.style.opacity = '1';
+                parentGroup.title = 'Parent must be an Epic';
+                filterParentOptions(parentField, ['epic']);
+
+            } else if (val === 'task') {
+                // Task → Epics et Stories
+                parentField.disabled = false;
+                parentGroup.style.opacity = '1';
+                parentGroup.title = 'Parent must be an Epic or a Story';
+                filterParentOptions(parentField, ['epic', 'user story']);
+            }
+        }
+
+        function filterParentOptions(selectEl, allowedTypes) {
+            Array.from(selectEl.options).forEach(function(option) {
+                if (option.value === '') {
+                    // Garder l'option "None"
+                    option.style.display = '';
+                    return;
+                }
+                var optionType = option.dataset.type ? option.dataset.type.toLowerCase() : '';
+                option.style.display = allowedTypes.includes(optionType) ? '' : 'none';
+            });
+            // Reset la valeur si l'option sélectionnée est maintenant cachée
+            var selected = selectEl.options[selectEl.selectedIndex];
+            if (selected && selected.style.display === 'none') {
+                selectEl.value = '';
+            }
+        }
     </script>
 {% endif %}
