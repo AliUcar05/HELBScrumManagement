@@ -50,7 +50,6 @@ class TicketForm(forms.ModelForm):
             "description",
             "type",
             "priority",
-            "status",
             "story_points",
             "assignee",
             "parent",
@@ -80,8 +79,6 @@ class TicketForm(forms.ModelForm):
         self.fields["due_date"].required = False
         self.fields["parent"].empty_label = "— None —"
         self.fields["assignee"].empty_label = "— Unassigned —"
-
-        self.fields["status"].initial = "todo"
 
 
 
