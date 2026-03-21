@@ -1,0 +1,634 @@
+/* =============================================
+   BACKLOG LAYOUT
+   ============================================= */
+
+.backlog-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 0;
+}
+
+.backlog-main {
+    flex: 1;
+    min-width: 0;
+}
+
+/* =============================================
+   EPIC TAB — vertical label on left edge
+   ============================================= */
+
+.epic-tab-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .1em;
+    color: #6b778c;
+    background: #f4f5f7;
+    padding: 16px 7px;
+    cursor: pointer;
+    border-right: 1px solid #dfe1e6;
+    flex-shrink: 0;
+    user-select: none;
+    transition: background .15s, color .15s;
+}
+
+.epic-tab-label:hover {
+    background: #ebecf0;
+    color: #172b4d;
+}
+
+.epic-tab-label.active {
+    background: #fff;
+    color: #0052cc;
+    border-right-color: transparent;
+}
+
+/* =============================================
+   EPIC PANEL — slides open
+   ============================================= */
+
+.epic-panel {
+    width: 0;
+    overflow: hidden;
+    transition: width .2s ease;
+    flex-shrink: 0;
+    background: #fff;
+    border-right: 1px solid #dfe1e6;
+    min-height: calc(100vh - 140px);
+}
+
+.epic-panel.open {
+    width: 260px;
+}
+
+.epic-panel-inner {
+    width: 260px;
+    display: flex;
+    flex-direction: column;
+    min-height: calc(100vh - 140px);
+}
+
+/* Panel header */
+.epic-panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 14px;
+    border-bottom: 1px solid #dfe1e6;
+    flex-shrink: 0;
+}
+
+.epic-panel-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .07em;
+    color: #6b778c;
+}
+
+.epic-panel-header-actions {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+}
+
+.epic-panel-btn {
+    width: 26px;
+    height: 26px;
+    border: none;
+    background: transparent;
+    color: #6b778c;
+    border-radius: 3px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    transition: background .1s, color .1s;
+}
+
+.epic-panel-btn:hover {
+    background: #ebecf0;
+    color: #172b4d;
+}
+
+/* Panel body */
+.epic-panel-body {
+    flex: 1;
+    overflow-y: auto;
+    scrollbar-width: thin;
+}
+
+.epic-panel-body::-webkit-scrollbar { width: 4px; }
+.epic-panel-body::-webkit-scrollbar-thumb { background: #dfe1e6; border-radius: 2px; }
+
+/* "All issues" row */
+.epic-all-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #172b4d;
+    text-decoration: none;
+    border-bottom: 1px solid #f0f0f0;
+    transition: background .1s;
+}
+
+.epic-all-row:hover {
+    background: #f4f5f7;
+    color: #172b4d;
+    text-decoration: none;
+}
+
+.epic-all-row.active {
+    color: #0052cc;
+    font-weight: 600;
+}
+
+/* "Issues without epics" row */
+.epic-no-epic-row {
+    display: flex;
+    align-items: center;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: #172b4d;
+    text-decoration: none;
+    border-top: 1px solid #f0f0f0;
+    transition: background .1s;
+}
+
+.epic-no-epic-row:hover {
+    background: #f4f5f7;
+    color: #172b4d;
+    text-decoration: none;
+}
+
+/* Empty message */
+.epic-empty-msg {
+    padding: 16px;
+    font-size: 13px;
+    color: #97a0af;
+    margin: 0;
+}
+
+/* Panel footer */
+.epic-panel-footer {
+    border-top: 1px solid #dfe1e6;
+    padding: 10px 14px;
+    flex-shrink: 0;
+}
+
+.epic-panel-create-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 13px;
+    color: #0052cc;
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    font-family: inherit;
+    font-weight: 500;
+}
+
+.epic-panel-create-btn:hover {
+    text-decoration: underline;
+}
+
+/* =============================================
+   EPIC ITEM
+   ============================================= */
+
+.epic-item {
+    border-bottom: 1px solid #f0f0f0;
+    position: relative;
+}
+
+/* Color stripe on right edge */
+.epic-item::after {
+    content: '';
+    position: absolute;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    width: 4px;
+    background: var(--epic-color, #5243aa);
+}
+
+/* Epic header row */
+.epic-item-header {
+    display: flex;
+    align-items: center;
+    padding: 8px 16px 4px 10px;
+    cursor: pointer;
+    gap: 6px;
+    transition: background .1s;
+}
+
+.epic-item-header:hover {
+    background: #f4f5f7;
+}
+
+.epic-item-header.active {
+    background: #e8f0fe;
+}
+
+/* Chevron */
+.epic-item-chevron {
+    font-size: 10px;
+    color: #6b778c;
+    width: 14px;
+    flex-shrink: 0;
+    transition: transform .15s;
+}
+
+.epic-item-chevron.open {
+    transform: rotate(90deg);
+}
+
+/* Epic name */
+.epic-item-name {
+    flex: 1;
+    font-size: 13px;
+    color: #172b4d;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    min-width: 0;
+}
+
+.epic-item-header.active .epic-item-name {
+    color: #0052cc;
+}
+
+/* Three-dot menu button */
+.epic-item-menu-btn {
+    width: 22px;
+    height: 22px;
+    border: none;
+    background: transparent;
+    color: #97a0af;
+    border-radius: 3px;
+    cursor: pointer;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    flex-shrink: 0;
+    transition: background .1s, color .1s;
+}
+
+.epic-item-header:hover .epic-item-menu-btn {
+    display: flex;
+}
+
+.epic-item-menu-btn:hover {
+    background: #dfe1e6;
+    color: #172b4d;
+}
+
+/* Progress bar */
+.epic-item-progress {
+    height: 3px;
+    background: #ebecf0;
+    margin: 2px 16px 4px 10px;
+    border-radius: 2px;
+    overflow: hidden;
+}
+
+.epic-item-progress-fill {
+    height: 100%;
+    width: 0%;
+    border-radius: 2px;
+    background: var(--epic-color, #5243aa);
+    transition: width .3s;
+}
+
+/* Collapsible body */
+.epic-item-body {
+    display: none;
+    padding: 8px 16px 10px 26px;
+    background: #fafbfc;
+    border-top: 1px solid #f0f0f0;
+}
+
+.epic-item-body.open {
+    display: block;
+}
+
+/* Epic ticket link inside body */
+.epic-item-link {
+    font-size: 12px;
+    color: #0052cc;
+    font-weight: 500;
+    display: block;
+    margin-bottom: 8px;
+    text-decoration: none;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.epic-item-link:hover {
+    text-decoration: underline;
+}
+
+/* Stats rows */
+.epic-stat-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 3px 0;
+    font-size: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.epic-stat-row:last-of-type {
+    border-bottom: none;
+}
+
+.epic-stat-label {
+    color: #6b778c;
+}
+
+.epic-stat-badge {
+    background: #ebecf0;
+    color: #42526e;
+    border-radius: 10px;
+    padding: 1px 7px;
+    font-size: 11px;
+    font-weight: 700;
+    min-width: 22px;
+    text-align: center;
+}
+
+/* Create issue in epic link */
+.epic-create-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 12px;
+    color: #0052cc;
+    text-decoration: none;
+    margin-top: 8px;
+    cursor: pointer;
+    background: none;
+    border: none;
+    padding: 0;
+    font-family: inherit;
+}
+
+.epic-create-link:hover {
+    text-decoration: underline;
+}
+
+/* =============================================
+   EPIC DROPDOWN MENU
+   ============================================= */
+
+.epic-item-dropdown {
+    display: none;
+    position: absolute;
+    right: 8px;
+    top: 30px;
+    background: #fff;
+    border: 1px solid #dfe1e6;
+    border-radius: 5px;
+    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    z-index: 9999;
+    min-width: 165px;
+    padding: 4px 0;
+}
+
+.epic-item-dropdown.open {
+    display: block;
+}
+
+.epic-dd-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    width: 100%;
+    padding: 7px 12px;
+    font-size: 12px;
+    color: #172b4d;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    text-decoration: none;
+    transition: background .1s;
+}
+
+.epic-dd-item:hover {
+    background: #f4f5f7;
+    color: #172b4d;
+    text-decoration: none;
+}
+
+.epic-dd-item--danger {
+    color: #de350b;
+}
+
+.epic-dd-item--danger:hover {
+    background: #ffebe6;
+    color: #de350b;
+}
+
+.epic-dd-sep {
+    height: 1px;
+    background: #dfe1e6;
+    margin: 4px 0;
+}
+
+/* =============================================
+   EPIC FILTER BANNER (above backlog table)
+   ============================================= */
+
+.epic-filter-banner {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    margin-bottom: 12px;
+    border-radius: 4px;
+    border-left: 4px solid var(--epic-color, #5243aa);
+    background: #f0eeff;
+    font-size: 13px;
+    font-weight: 500;
+}
+
+.epic-filter-count {
+    color: #6b778c;
+    font-weight: 400;
+}
+
+.epic-filter-banner-clear {
+    margin-left: auto;
+    font-size: 12px;
+    color: #42526e;
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    opacity: .8;
+}
+
+.epic-filter-banner-clear:hover {
+    opacity: 1;
+    text-decoration: none;
+    color: #172b4d;
+}
+
+/* =============================================
+   SPRINT ROW — remove button + drag handle
+   ============================================= */
+
+.spt-remove-btn {
+    background: none;
+    border: none;
+    color: #c1c7d0;
+    cursor: pointer;
+    padding: 2px 4px;
+    border-radius: 3px;
+    font-size: 11px;
+    line-height: 1;
+    transition: color .1s;
+}
+
+.spt-remove-btn:hover {
+    color: #de350b;
+}
+
+.drag-handle {
+    color: #c1c7d0;
+    font-size: 11px;
+    padding: 0 2px;
+    opacity: 0;
+    cursor: grab;
+    transition: opacity .1s;
+}
+
+.spt-row:hover .drag-handle {
+    opacity: 1;
+}
+
+/* =============================================
+   MODAL SHARED STYLES
+   ============================================= */
+
+.bl-modal-content {
+    border-radius: 8px;
+    border: none;
+    box-shadow: 0 8px 32px rgba(9,30,66,.18);
+}
+
+.bl-modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #dfe1e6;
+    padding: 14px 20px;
+}
+
+.bl-modal-title {
+    font-weight: 700;
+    color: #172b4d;
+    font-size: 15px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+/* Edit sprint modal fields */
+.esm-field {
+    margin-bottom: 14px;
+}
+
+.esm-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .04em;
+    color: #6b778c;
+    margin-bottom: 5px;
+}
+
+.esm-required {
+    color: #de350b;
+}
+
+.esm-capacity-input {
+    max-width: 160px;
+}
+
+/* Sprint goal prompt */
+.sgp-intro {
+    font-size: 13px;
+    color: #6b778c;
+    margin-bottom: 14px;
+}
+
+/* Move to sprint modal */
+.mts-ticket-label {
+    font-size: 13px;
+    color: #6b778c;
+    margin-bottom: 12px;
+}
+
+.mts-sprint-btn {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    padding: 10px 12px;
+    margin-bottom: 4px;
+    background: #f4f5f7;
+    border: 1px solid #dfe1e6;
+    border-radius: 6px;
+    cursor: pointer;
+    text-align: left;
+    font-size: 13px;
+    transition: background .1s, border-color .1s;
+}
+
+.mts-sprint-btn:hover {
+    background: #deebff;
+    border-color: #b3d4ff;
+}
+
+.mts-sprint-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.mts-sprint-dot--active  { background: #36b37e; }
+.mts-sprint-dot--planned { background: #dfe1e6; }
+
+.mts-sprint-name  { flex: 1; font-weight: 600; color: #172b4d; }
+.mts-sprint-count { font-size: 11px; color: #6b778c; }
+
+.mts-sprint-badge {
+    font-size: 10px;
+    font-weight: 700;
+    padding: 1px 6px;
+    background: #e3fcef;
+    color: #006644;
+    border-radius: 3px;
+}
+
+.mts-empty-msg {
+    color: #97a0af;
+    font-size: 13px;
+    text-align: center;
+    padding: 16px;
+    margin: 0;
+}

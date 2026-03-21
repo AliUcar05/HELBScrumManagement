@@ -10,7 +10,7 @@ from .views import (
     TicketCreateView,
     TicketUpdateView,
     TicketDetailView,
-    TicketDeleteView, TicketListView, TicketReorderView, SprintDeleteView, ProjectIssuesView
+    TicketDeleteView, TicketListView, TicketReorderView, SprintDeleteView, ProjectIssuesView, SprintUpdateView
 )
 
 urlpatterns = [
@@ -53,9 +53,11 @@ urlpatterns = [
 
     # SPRINT 
     path("projects/<int:pk>/sprints/create/", SprintCreateView.as_view(), name="sprint-create"),
+    path("projects/<int:pk>/sprints/<int:sprint_pk>/update/",SprintUpdateView.as_view(),name="sprint-update"),
     path("projects/<int:pk>/sprints/<int:sprint_pk>/delete/", SprintDeleteView.as_view(), name="sprint-delete"),
     path("projects/<int:pk>/sprints/<int:sprint_pk>/start/",    views.sprint_start,    name="sprint-start"),
     path("projects/<int:pk>/sprints/<int:sprint_pk>/complete/", views.sprint_complete, name="sprint-complete"),
+    path("projects/<int:pk>/ticket/remove-from-sprint/", views.ticket_remove_from_sprint,name="ticket-remove-from-sprint"),
 
     #TICKET COMMENTS
     path('ticket/<int:ticket_pk>/comment/add/', views.add_comment, name='add_comment'),

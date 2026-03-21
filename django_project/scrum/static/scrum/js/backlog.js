@@ -197,3 +197,30 @@ function moveToSprint(ticketId) {
         $('#moveToSprintModal').modal('show');
     }
 }
+
+
+function doRemoveFromSprint(ticketId) {
+    if (!confirm('Move this ticket back to the backlog?')) return;
+
+    // Créer un formulaire pour envoyer la requête POST
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/projects/' + PROJECT_PK + '/ticket/remove-from-sprint/';
+
+    // Ajouter CSRF token
+    var csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = CSRF_TOKEN;
+    form.appendChild(csrfInput);
+
+    // Ajouter ticket_id
+    var ticketInput = document.createElement('input');
+    ticketInput.type = 'hidden';
+    ticketInput.name = 'ticket_id';
+    ticketInput.value = ticketId;
+    form.appendChild(ticketInput);
+
+    document.body.appendChild(form);
+    form.submit();
+}
