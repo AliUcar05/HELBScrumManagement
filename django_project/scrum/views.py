@@ -8,6 +8,7 @@ from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from .utils import log_activity
 
 from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm, SprintForm
 from .models import Project, Membership, Ticket
@@ -83,6 +84,31 @@ def project_report(request, pk):
 
 
 @login_required
+def project_members_json(request, pk):
+    """Return JSON list of project members for assignee dropdown"""
+    project = get_object_or_404(Project, pk=pk)
+
+    # Check if user has access to this project
+    if not user_can_access_project(request.user, project):
+        return JsonResponse({"error": "Access denied"}, status=403)
+
+    members = project.members.all().select_related('profile')
+    members_data = []
+
+    for member in members:
+        members_data.append({
+            'id': member.id,
+            'name': member.get_full_name() or member.username,
+            'email': member.email,
+            'avatar': member.profile.image.url if hasattr(member, 'profile') and member.profile.image else None,
+            'initials': f"{member.first_name[:1] if member.first_name else ''}{member.last_name[:1] if member.last_name else ''}" or member.username[
+                :2].upper()
+        })
+
+    return JsonResponse({"members": members_data})
+
+
+@login_required
 def active_sprint(request, pk):
     project = get_object_or_404(Project, pk=pk)
     request.session["current_project_id"] = project.id
@@ -98,6 +124,45 @@ def active_sprint(request, pk):
     # Sprint actif
     active_sprint = project.sprints.filter(status='active').first()
 
+    # Calculer les statistiques pour le sprint actif
+    if active_sprint:
+        tickets = active_sprint.tickets.all()
+        active_sprint.total_issues = tickets.count()
+        active_sprint.todo_count = tickets.filter(status='todo').count()
+        active_sprint.inprogress_count = tickets.filter(status='in_progress').count()
+        active_sprint.inreview_count = tickets.filter(status='in_review').count()
+        active_sprint.done_count = tickets.filter(status='done').count()
+        active_sprint.blocked_count = tickets.filter(status='blocked').count()
+
+        # Calculer le pourcentage de progression
+        if active_sprint.total_issues > 0:
+            active_sprint.completion_percentage = int((active_sprint.done_count / active_sprint.total_issues) * 100)
+        else:
+            active_sprint.completion_percentage = 0
+
+        # Calculer les jours restants
+        if active_sprint.end_date:
+            from datetime import date
+            today = date.today()
+            active_sprint.days_remaining = max((active_sprint.end_date - today).days, 0)
+
+        # Ajouter les tickets filtrés à chaque colonne
+        for column in columns:
+            # Mapper le nom de la colonne au statut du ticket
+            status_map = {
+                'To Do': 'todo',
+                'In Progress': 'in_progress',
+                'In Review': 'in_review',
+                'Done': 'done',
+                'Blocked': 'blocked'
+            }
+
+            # Chercher le statut correspondant
+            ticket_status = status_map.get(column.name, column.name.lower())
+
+            # Filtrer les tickets du sprint par statut
+            column.tickets = tickets.filter(status=ticket_status)
+
     context = {
         "project": project,
         "board": board,
@@ -105,13 +170,52 @@ def active_sprint(request, pk):
         "membership": membership,
         "active_sprint": active_sprint,
         "planned_sprints": project.sprints.filter(status="planned").order_by("start_date"),
-
     }
     return render(request, "scrum/sprint/active_sprint.html", context)
 
+@login_required
+def project_roadmap(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    if not user_can_access_project(request.user, project):
+        messages.error(request, "You don't have access to this project.")
+        return redirect("project-list")
+
+    epics = Ticket.objects.filter(project=project, type='epic').order_by('created_at')
+    membership = project.memberships.filter(user=request.user).first()
+
+    context = {
+        "project": project,
+        "membership": membership,
+        "epics": epics,
+    }
+    return render(request, "scrum/project_roadmap.html", context)
 
 
+@login_required
+def project_releases(request, pk):
+    project = get_object_or_404(Project, pk=pk)
+    if not user_can_access_project(request.user, project):
+        messages.error(request, "You don't have access to this project.")
+        return redirect("project-list")
 
+    sprints = project.sprints.all().order_by('-created_at')
+    membership = project.memberships.filter(user=request.user).first()
+
+    for sprint in sprints:
+        tickets = sprint.tickets.all()
+        sprint.total_issues     = tickets.count()
+        sprint.done_count       = tickets.filter(status='done').count()
+        sprint.completion_percentage = (
+            int((sprint.done_count / sprint.total_issues) * 100)
+            if sprint.total_issues else 0
+        )
+
+    context = {
+        "project": project,
+        "membership": membership,
+        "sprints": sprints,
+    }
+    return render(request, "scrum/project_releases.html", context)
 
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
@@ -121,6 +225,58 @@ class ProjectListView(LoginRequiredMixin, ListView):
 
     def get_queryset(self):
         return project_queryset_for(self.request.user)
+
+class ProjectIssuesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
+    model = Ticket
+    template_name = "scrum/project_issues.html"
+    context_object_name = "tickets"
+
+    def test_func(self):
+        return user_can_access_project(self.request.user, get_object_or_404(Project, pk=self.kwargs["pk"]))
+
+    def handle_no_permission(self):
+        messages.error(self.request, "You don't have access to this project.")
+        return redirect("project-list")
+
+    def get_queryset(self):
+        self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
+        qs = Ticket.objects.filter(project=self.project).select_related(
+            "assignee", "assignee__profile", "parent", "requester"
+        ).order_by("-created_at")
+
+        self.search     = self.request.GET.get("q", "").strip()
+        self.f_type     = self.request.GET.get("type", "")
+        self.f_status   = self.request.GET.get("status", "")
+        self.f_priority = self.request.GET.get("priority", "")
+        self.f_assignee = self.request.GET.get("assignee", "")
+
+        if self.search:
+            qs = qs.filter(title__icontains=self.search)
+        if self.f_type:
+            qs = qs.filter(type=self.f_type)
+        if self.f_status:
+            qs = qs.filter(status=self.f_status)
+        if self.f_priority:
+            qs = qs.filter(priority=self.f_priority)
+        if self.f_assignee:
+            qs = qs.filter(assignee__id=self.f_assignee)
+
+        return qs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context["project"]    = self.project
+        context["membership"] = self.project.memberships.filter(user=self.request.user).first()
+        context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
+        context["can_delete"] = is_project_admin(self.request.user, self.project)
+        context["members"]    = self.project.members.select_related("profile")
+        context["search"]     = self.search
+        context["f_type"]     = self.f_type
+        context["f_status"]   = self.f_status
+        context["f_priority"] = self.f_priority
+        context["f_assignee"] = self.f_assignee
+        context["total"]      = self.get_queryset().count()
+        return context
 
 
 class ProjectDetailView(LoginRequiredMixin, DetailView):
@@ -146,10 +302,10 @@ class ProjectSettingsView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
 
     def test_func(self):
         project = self.get_object()
-        return project.created_by == self.request.user
+        return user_can_access_project(self.request.user, project)  # tous les membres peuvent voir
 
     def handle_no_permission(self):
-        messages.error(self.request, "Only the project creator can access project settings.")
+        messages.error(self.request, "You don't have access to this project.")
         return redirect("project-board", pk=self.get_object().pk)
 
     def get_context_data(self, **kwargs):
@@ -158,7 +314,16 @@ class ProjectSettingsView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         self.request.session["current_project_id"] = project.id
         context["memberships"] = project.memberships.select_related("user")
         context["membership_form"] = MembershipForm()
+        context["membership"] = project.memberships.filter(user=self.request.user).first()
+        context["is_admin"] = is_project_admin(self.request.user, project)  # <-- nouveau
         return context
+
+    def post(self, request, *args, **kwargs):
+        project = self.get_object()
+        if not is_project_admin(request.user, project):
+            messages.error(request, "Only admins can modify project settings.")
+            return redirect("project-settings", pk=project.pk)
+        return super().post(request, *args, **kwargs)
 
     def get_success_url(self):
         return reverse("project-settings", kwargs={"pk": self.object.pk})
@@ -238,6 +403,7 @@ class ProjectDeleteView(LoginRequiredMixin, UserPassesTestMixin, DeleteView):
         return redirect("home")
 
 
+
 class MembershipAddView(LoginRequiredMixin, View):
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
@@ -255,6 +421,23 @@ class MembershipAddView(LoginRequiredMixin, View):
         else:
             messages.error(request, "Unable to add this member.")
 
+        return redirect("project-settings", pk=pk)
+
+class MembershipUpdateRoleView(LoginRequiredMixin, View):
+    def post(self, request, pk, membership_pk):
+        project = get_object_or_404(Project, pk=pk)
+        if project.created_by != request.user:
+            messages.error(request, "Only the project creator can change member roles.")
+            return redirect("project-board", pk=pk)
+        membership = get_object_or_404(Membership, pk=membership_pk, project=project)
+        new_role = request.POST.get("role")
+        new_team_role = request.POST.get("team_role")
+        if new_role in ["admin", "contributor", "read-only"]:
+            membership.role = new_role
+        if new_team_role in ["developer", "scrum_master", "product_owner", "tester", "designer", "other"]:
+            membership.team_role = new_team_role
+        membership.save()
+        messages.success(request, "Role updated successfully.")
         return redirect("project-settings", pk=pk)
 
 
@@ -298,7 +481,6 @@ class MembershipUpdateRoleView(LoginRequiredMixin, View):
 class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Ticket
     form_class = TicketForm
-    template_name = "scrum/ticket/ticket_form.html"
 
     def test_func(self):
         return is_contributor_or_admin(self.request.user, get_object_or_404(Project, pk=self.kwargs["pk"]))
@@ -311,9 +493,22 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         initial = super().get_initial()
         title = self.request.GET.get('title', '').strip()
         ticket_type = self.request.GET.get('type', '').strip().lower()
+        status = self.request.GET.get('status', '').strip().lower()
 
         if title:
             initial['title'] = title
+
+        # Mapper le statut depuis le nom de la colonne
+        status_map = {
+            'to do': 'todo',
+            'in progress': 'in_progress',
+            'in review': 'in_review',
+            'done': 'done',
+            'blocked': 'blocked'
+        }
+
+        if status in status_map:
+            initial['status'] = status_map[status]
 
         TYPE_MAP = {
             'story': 'user story',
@@ -344,12 +539,18 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         project = get_object_or_404(Project, pk=self.kwargs["pk"])
         form.instance.project = project
         form.instance.requester = self.request.user
-        form.instance.status = "todo"
-        if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            self.object = form.save()
-            return JsonResponse({"success": True, "ticket_id": self.object.pk})
+
+        if not form.instance.status:
+            form.instance.status = "todo"
+
+        self.object = form.save()
+
+        log_activity(self.request.user, project, "create_ticket",
+                     ticket=self.object, message=f"created ticket {self.object.title}"
+                     )
+
         messages.success(self.request, f'Issue "{form.instance.title}" created.')
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_success_url(self):
         return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
@@ -370,13 +571,20 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
         self.request.session["current_project_id"] = self.project.id
         normalize_backlog_order(self.project)
-        
-        qs = Ticket.objects.filter(project=self.project).select_related("assignee", "assignee__profile", "parent").order_by("backlog_order", "created_at")
-        
+
+        qs = Ticket.objects.filter(project=self.project) \
+            .exclude(type='epic') \
+            .select_related("assignee", "assignee__profile", "parent") \
+            .order_by("backlog_order", "created_at")
+
         # Filtres GET
         type_filter = self.request.GET.get("type", "")
         priority_filter = self.request.GET.get("priority", "")
         status_filter = self.request.GET.get("status", "")
+        epic_filter = self.request.GET.get("epic", "")
+
+        if epic_filter:
+            qs = qs.filter(parent__id=epic_filter)
         
         if type_filter:
             qs = qs.filter(type=type_filter)
@@ -402,13 +610,18 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             context["filter_priority"],
             context["filter_status"]
         ])
+        context["epics"] = Ticket.objects.filter(project=self.project, type='epic').order_by("backlog_order")
+        context["filter_epic"] = self.request.GET.get("epic", "")
 
         sprints = self.project.sprints.all().order_by('-created_at')
 
         for sprint in sprints:
             tickets = sprint.tickets.all()
-            sprint.total_issues      = tickets.count()
-            sprint.completed_issues  = tickets.filter(status='done').count()
+            sprint.total_issues = tickets.count()
+            sprint.completed_issues = tickets.filter(status='done').count()
+            sprint.todo_count = tickets.filter(status='todo').count()
+            sprint.inprogress_count = tickets.filter(status='in_progress').count()
+            sprint.done_count = tickets.filter(status='done').count()
             sprint.completion_percentage = (
                 int((sprint.completed_issues / sprint.total_issues) * 100)
                 if sprint.total_issues else 0
@@ -417,6 +630,13 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
                 from datetime import date
                 today = date.today()
                 sprint.days_remaining = max((sprint.end_date - today).days, 0)
+
+            # Assignees uniques du sprint
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            assignee_ids = tickets.exclude(assignee=None).values_list('assignee_id', flat=True).distinct()
+            sprint.assignees = list(User.objects.filter(id__in=assignee_ids).select_related('profile'))
+
         context["sprints"] = sprints
         return context
 
@@ -491,11 +711,22 @@ class TicketUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         return ['scrum/ticket/ticket_form.html']
 
     def form_valid(self, form):
+        old_status = self.get_object().status
+        self.object = form.save()  # <-- sauvegarde directe
+        ticket = self.object
+
+        if old_status != ticket.status:
+            log_activity(self.request.user, ticket.project, "status_change",
+                         ticket=ticket, message=f"moved {ticket.title} to {ticket.status}")
+        else:
+            log_activity(self.request.user, ticket.project, "update_ticket",
+                         ticket=ticket, message=f"updated {ticket.title}")
+
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
-            self.object = form.save()
-            return JsonResponse({"success": True})
-        messages.success(self.request, f'Issue "{form.instance.title}" updated.')
-        return super().form_valid(form)
+            return JsonResponse({"success": True})  # <-- manquait
+
+        messages.success(self.request, f'Issue "{ticket.title}" updated.')
+        return redirect(self.get_success_url())
 
     def form_invalid(self, form):
         if self.request.headers.get("x-requested-with") == "XMLHttpRequest":
@@ -599,10 +830,42 @@ def quick_create_ticket(request, pk):
     messages.success(request, f'Issue "{ticket.title}" created.')
     return redirect("product-backlog", pk=pk)
 
+@login_required
+def ticket_inline_update(request, pk, ticket_pk):
+    project = get_object_or_404(Project, pk=pk)
+    ticket = get_object_or_404(Ticket, pk=ticket_pk, project=project)
+
+    if not is_contributor_or_admin(request.user, project):
+        return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
+
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "POST only"}, status=405)
+
+    field = request.POST.get("field")
+    value = request.POST.get("value", "")
+
+    ALLOWED_FIELDS = ["title", "description", "priority", "status", "story_points"]
+
+    if field not in ALLOWED_FIELDS:
+        return JsonResponse({"success": False, "error": f"Field '{field}' not allowed"}, status=400)
+
+    try:
+        if field == "story_points":
+            setattr(ticket, field, int(value) if value else None)
+        else:
+            setattr(ticket, field, value)
+        ticket.save(update_fields=[field])
+        log_activity(request.user, project, "update_ticket",
+                     ticket=ticket, message=f"updated {field} on {ticket.title}")
+        return JsonResponse({"success": True})
+    except Exception as e:
+        return JsonResponse({"success": False, "error": str(e)}, status=400)
+
+#Sprint ======================
 class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Sprint
     form_class = SprintForm
-    template_name = "scrum/sprint/sprint_form.html"
+    template_name = "scrum/sprint/_sprint_modal.html"
 
     def test_func(self):
         project = get_object_or_404(Project, pk=self.kwargs["pk"])
@@ -615,8 +878,15 @@ class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def form_valid(self, form):
         project = get_object_or_404(Project, pk=self.kwargs["pk"])
         form.instance.project = project
+
+        self.object = form.save()
+
+        log_activity(self.request.user,project,"create_sprint",
+            sprint=self.object,message=f"created sprint {self.object.name}"
+        )
+
         messages.success(self.request, f'Sprint "{form.instance.name}" created successfully!')
-        return super().form_valid(form)
+        return redirect(self.get_success_url())
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -624,8 +894,72 @@ class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
         return context
 
     def get_success_url(self):
-        return reverse("project-active-sprint", kwargs={"pk": self.kwargs["pk"]})
+        return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
 
+class SprintDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
+    def test_func(self):
+        sprint = get_object_or_404(Sprint, pk=self.kwargs["sprint_pk"], project__pk=self.kwargs["pk"])
+        return is_project_admin(self.request.user, sprint.project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "Only admins can delete sprints.")
+        return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def post(self, request, pk, sprint_pk):
+        sprint = get_object_or_404(Sprint, pk=sprint_pk, project__pk=pk)
+        name = sprint.name
+
+        # Détache ce sprint de tous les tickets liés
+        for ticket in sprint.tickets.all():
+            ticket.sprints.remove(sprint)  # <-- correct pour ManyToManyField
+
+        # Supprime le sprint
+        sprint.delete()
+        messages.success(request, f'Sprint "{name}" deleted.')
+        return redirect("product-backlog", pk=pk)
+
+@login_required
+def sprint_start(request, pk, sprint_pk):
+    project = get_object_or_404(Project, pk=pk)
+    if not is_contributor_or_admin(request.user, project):
+        messages.error(request, "Permission denied.")
+        return redirect("product-backlog", pk=pk)
+    sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+    if request.method == "POST":
+        # Close any currently active sprint first (optional safety)
+        project.sprints.filter(status='active').update(status='closed')
+        sprint.status = 'active'
+        sprint.save()
+        log_activity(
+            request.user,
+            project,
+            "start_sprint",
+            sprint=sprint,
+            message=f"started sprint {sprint.name}"
+        )
+        messages.success(request, f'Sprint "{sprint.name}" started.')
+    return redirect("product-backlog", pk=pk)
+
+
+@login_required
+def sprint_complete(request, pk, sprint_pk):
+    project = get_object_or_404(Project, pk=pk)
+    if not is_contributor_or_admin(request.user, project):
+        messages.error(request, "Permission denied.")
+        return redirect("product-backlog", pk=pk)
+    sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+    if request.method == "POST":
+        sprint.status = 'closed'
+        sprint.save()
+        log_activity(
+            request.user,
+            project,
+            "complete_sprint",
+            sprint=sprint,
+            message=f"completed sprint {sprint.name}"
+        )
+        messages.success(request, f'Sprint "{sprint.name}" completed.')
+    return redirect("product-backlog", pk=pk)
 
 ##################comment ticket###########
 
@@ -633,6 +967,7 @@ class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 def add_comment(request, ticket_pk):
     """Permet d'ajouter un commentaire à un ticket spécifique."""
     ticket = get_object_or_404(Ticket, pk=ticket_pk)
+
     
     if request.method == "POST":
         form = CommentForm(request.POST)
@@ -641,6 +976,9 @@ def add_comment(request, ticket_pk):
             comment.ticket = ticket
             comment.author = request.user
             comment.save()
+            log_activity(request.user,ticket.project,
+                "comment",ticket=ticket,message=f"commented on {ticket.title}"
+            )
             messages.success(request, "Commentaire ajouté.")
             
     # Redirige vers la page d'où vient l'utilisateur (utile car tes tickets sont dans des "drawers")

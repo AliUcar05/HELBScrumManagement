@@ -156,11 +156,19 @@
                 </a>
                 {% endif %}
                 {% if can_delete %}
-                <a class="dropdown-item text-danger" onclick="openDeleteModal({{ ticket.id }}, '{{ project.code }}-{{ ticket.id }}', '{{ ticket.title|escapejs }}', '{% url 'ticket-delete' project.pk ticket.pk %}'); return false;">
-                    <i class="fas fa-trash mr-2"></i>Delete
-                </a>
+                    {% url 'ticket-delete' project.pk ticket.pk as ticket_delete_url %}
+                    <a class="dropdown-item text-danger"
+                        onclick="confirmDelete({
+                            title: 'Delete issue?',
+                            message: '<strong>{{ project.code }}-{{ ticket.id }}</strong> — {{ ticket.title|escapejs }}',
+                            warning: 'Child issues will be detached but not deleted.',
+                            action: '{{ ticket_delete_url }}'
+                        }); return false;">
+                        <i class="fas fa-trash mr-2"></i>Delete
+                    </a>
                 {% endif %}
             </div>
         </div>
     </td>
 </tr>
+{% include 'scrum/global/confirm_delete_modal.html' %}

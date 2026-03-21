@@ -32,12 +32,6 @@
 
                     <ul>
                         <li>
-                            <a href="" class="sidebar-link">
-                                <i class="fas fa-th-large"></i>
-                                <span>Board</span>
-                            </a>
-                        </li>
-                        <li>
                             <a href="{% url 'product-backlog' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'product-backlog' %}active{% endif %}">
                                 <i class="fas fa-server"></i>
                                 <span>Backlog</span>
@@ -50,19 +44,19 @@
                             </a>
                         </li>
                         <li>
-                            <a href="" class="sidebar-link {% if request.resolver_match.url_name == 'NOM-URL' %}active{% endif %}">
+                            <a href="{% url 'project-issues' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-issues' %}active{% endif %}">
                                 <i class="fas fa-desktop"></i>
                                 <span>Issues</span>
                             </a>
                         </li>
                         <li>
-                            <a href="" class="sidebar-link {% if request.resolver_match.url_name == 'NOM-URL' %}active{% endif %}">
+                            <a href="{% url 'project-roadmap' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-roadmap' %}active{% endif %}">
                                 <i class="fas fa-map"></i>
                                 <span>Roadmap</span>
                             </a>
                         </li>
                         <li>
-                            <a href="" class="sidebar-link {% if request.resolver_match.url_name == 'NOM-URL' %}active{% endif %}">
+                            <a href="{% url 'project-releases' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-releases' %}active{% endif %}">
                                 <i class="fas fa-archive"></i>
                                 <span>Releases</span>
                             </a>
@@ -74,7 +68,7 @@
                             </a>
                         </li>
 
-                        {% if membership.can_manage and user.profile.global_role|lower != 'read-only' %}
+                        {% if user.profile.global_role|lower != 'read-only' %}
                             <li>
                                 <a href="{% url 'project-settings' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-settings' %}active{% endif %}">
                                     <i class="fas fa-cog"></i>
@@ -83,20 +77,22 @@
                             </li>
                         {% endif %}
 
-                        {% if user.profile.global_role|lower == 'admin' %}
-                            <hr>
-                            <li>
-                                <a href="{% url 'manage-users' %}?next={{ request.get_full_path|urlencode }}" class="sidebar-link {% if request.resolver_match.url_name == 'manage-users' %}active{% endif %}">
-                                    <i class="fas fa-users-cog"></i>
-                                    <span>Manage Users</span>
-                                </a>
-                            </li>
-                            <li>
-                                <a href="{% url 'create-user' %}?next={{ request.get_full_path|urlencode }}" class="sidebar-link {% if request.resolver_match.url_name == 'create-user' %}active{% endif %}">
-                                    <i class="fas fa-user-plus"></i>
-                                    <span>Create User</span>
-                                </a>
-                            </li>
+                        {% if user.profile.global_role|lower == 'admin'  %}
+                        <hr>
+                            {% if create_user_form %}
+                                <li>
+                                    <a class="sidebar-link" data-toggle="modal" data-target="#createUserModal" style="cursor:pointer;">
+                                        <i class="fas fa-user-plus"></i>
+                                        <span>Create User</span>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        <li>
+                            <a class="sidebar-link" data-toggle="modal" data-target="#addMemberModal" style="cursor:pointer;">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Add Member</span>
+                            </a>
+                        </li>
                         {% endif %}
                     </ul>
                  </div>
@@ -127,7 +123,7 @@
             </div>
         </div>
     </div>
-
+    {% include 'scrum/global/_sidebar_modals.html' %}
     <script>
 
        document.getElementById('toggleBtn').onclick = function() {

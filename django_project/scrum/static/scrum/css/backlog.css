@@ -1136,3 +1136,41 @@ tr:hover {
 .inline-type-selector:hover {
     background: #f4f5f7;
 }
+
+/*===Dilara CSS*/
+ .backlog-filter-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 0 14px 0;
+    flex-wrap: wrap;
+}
+.filter-select {
+    padding: 6px 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 13px;
+    background: #fff;
+    cursor: pointer;
+    color: #333;
+    min-width: 130px;
+}
+.filter-select:focus {
+    outline: none;
+    border-color: #0052cc;
+}
+.btn-clear-filters {
+    padding: 6px 12px;
+    background: #ffebe6;
+    color: #de350b;
+    border: 1px solid #ffbdad;
+    border-radius: 6px;
+    font-size: 13px;
+    text-decoration: none;
+    font-weight: 600;
+}
+.btn-clear-filters:hover {
+    background: #ffbdad;
+    color: #de350b;
+    text-decoration: none;
+}
