@@ -1,66 +1,92 @@
 {% extends 'scrum/project_board.html' %}
-
+{% load static %}
 {% block project_content %}
-
-    {% if active_sprint %}
-        <div class="alert alert-success d-flex align-items-center gap-3 mb-4">
-            <i class="bi bi-lightning-charge-fill fs-4"></i>
-            <div class="flex-grow-1">
-                <strong>Active Sprint:</strong> {{ active_sprint.name }}
-                {% if active_sprint.goal %}
-                <br><small>Goal: {{ active_sprint.goal }}</small>
+    <link rel="stylesheet" href="{% static 'scrum/css/active_sprint.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <div>
+        {% if active_sprint %}
+            <div class="as-banner">
+                <div class="as-banner-left">
+                    <div class="as-banner-title">
+                        <span class="as-label">Active Sprint</span>
+                        <h2 class="as-sprint-name">{{ active_sprint.name }}</h2>
+                        {% if active_sprint.goals %}
+                            <p class="as-goal">{{ active_sprint.goals }}</p>
+                        {% endif %}
+                    </div>
+                    <div class="as-banner-meta">
+                        {% if active_sprint.start_date and active_sprint.end_date %}
+                        <span class="as-meta-item">
+                            <i class="far fa-calendar-alt"></i>
+                            {{ active_sprint.start_date|date:"M d" }} — {{ active_sprint.end_date|date:"M d, Y" }}
+                        </span>
+                        {% endif %}
+                        {% if active_sprint.days_remaining %}
+                        <span class="as-meta-item as-meta-item--warning">
+                            <i class="far fa-clock"></i>
+                            {{ active_sprint.days_remaining }} days remaining
+                        </span>
+                        {% endif %}
+                        <span class="as-meta-item">
+                            <i class="fas fa-ticket-alt"></i>
+                            {{ active_sprint.total_issues|default:0 }} issues
+                        </span>
+                    </div>
+                </div>
+                <div class="as-banner-right">
+                    <div class="as-progress-block">
+                        <div class="as-progress-labels">
+                            <span>Progress</span>
+                            <span class="as-progress-pct">{{ active_sprint.completion_percentage|default:0 }}%</span>
+                        </div>
+                        <div class="as-progress-track">
+                            <div class="as-progress-fill" style="width: {{ active_sprint.completion_percentage|default:0 }}%;"></div>
+                        </div>
+                        <div class="as-progress-stats">
+                            <span class="as-stat as-stat--todo">
+                                <span class="as-stat-dot"></span>
+                                {{ active_sprint.todo_count|default:0 }} To Do
+                            </span>
+                            <span class="as-stat as-stat--inprogress">
+                                <span class="as-stat-dot"></span>
+                                {{ active_sprint.inprogress_count|default:0 }} In Progress
+                            </span>
+                            <span class="as-stat as-stat--done">
+                                <span class="as-stat-dot"></span>
+                                {{ active_sprint.done_count|default:0 }} Done
+                            </span>
+                        </div>
+                    </div>
+                    <form method="POST" action="{% url 'sprint-complete' project.pk active_sprint.pk %}">
+                        {% csrf_token %}
+                        <button type="submit" class="as-complete-btn">
+                            <i class="fas fa-flag-checkered"></i> Complete Sprint
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="as-empty-banner">
+                <div class="as-empty-icon"><i class="fas fa-running"></i></div>
+                <div class="as-empty-text">
+                    <strong>No active sprint</strong>
+                    <span>Create and start a sprint from the backlog to begin tracking work.</span>
+                </div>
+                {% if membership.role|lower != 'read-only' %}
+                <a href="{% url 'product-backlog' project.pk %}" class="as-go-backlog-btn">
+                    <i class="fas fa-arrow-right"></i> Go to Backlog
+                </a>
                 {% endif %}
             </div>
-            <div class="d-flex gap-2">
-                <a href="#" class="btn btn-success btn-sm">
-                    <i class="bi bi-kanban me-1"></i> View Board
-                </a>
-                <a href="#" class="btn btn-outline-success btn-sm">
-                    <i class="bi bi-list-ul me-1"></i> Sprint Backlog
-                </a>
-            </div>
-        </div>
-    {% else %}
-        <div class="alert alert-light border d-flex align-items-center gap-3 mb-4">
-            <i class="bi bi-calendar-x fs-4 text-muted"></i>
-            <div class="flex-grow-1">
-                <strong>No active sprint.</strong>
-                <small class="text-muted ms-2">Create and start a sprint to begin tracking work.</small>
-            </div>
+        {% endif %}
 
-            {% if user.profile.global_role|lower != 'read-only' %}
-                <a href="{% url 'sprint-create' project.pk %}" class="btn btn-outline-primary btn-sm" style="margin-left: 100px">
-                    <i class="bi bi-plus me-1"></i> Create Sprint
-                </a>
-            {% endif %}
+        <div class="backlog-quick-filters">
+            <span class="bqf-label">Quick Filters:</span>
+            <button class="bqf-btn" onclick="applyQuickFilter('mine')">Only My Issues</button>
+            <button class="bqf-btn" onclick="applyQuickFilter('recent')">Recently Updated</button>
+            <button class="bqf-btn" onclick="applyQuickFilter('blocked')">Blocked</button>
         </div>
-    {% endif %}
-
-
-    <!-- PLANNED SPRINTS -->
-    {% if planned_sprints %}
-    <div class="mb-4">
-        <h5 class="font-weight-bold mb-3">Planned Sprints</h5>
-        {% for sprint in planned_sprints %}
-        <div class="card border-0 shadow-sm mb-3" style="border-radius: 10px;">
-            <div class="card-body d-flex align-items-center justify-content-between">
-                <div>
-                    <h6 class="font-weight-bold mb-1">{{ sprint.name }}</h6>
-                    {% if sprint.goals %}
-                        <small class="text-muted">{{ sprint.goals }}</small><br>
-                    {% endif %}
-                    <small class="text-muted">
-                        {{ sprint.start_date }} → {{ sprint.end_date|default:"No end date" }}
-                    </small>
-                </div>
-                <div class="d-flex gap-2">
-                    <span class="badge badge-warning text-dark">Planned</span>
-                </div>
-            </div>
-        </div>
-        {% endfor %}
     </div>
-    {% endif %}
 
     <hr>
 
@@ -100,4 +126,11 @@
         </div>
         {% endif %}
     </div>
+    <script>
+        setTimeout(function()
+        {
+            location.reload();
+        }, 30000); // 30 secondes
+    </script>
+    {% include 'scrum/sprint/_sprint_modal.html' %}
 {% endblock project_content%}

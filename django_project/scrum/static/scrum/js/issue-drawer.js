@@ -1,177 +1,265 @@
-// Édition inline dans le drawer
+// ===== TICKET DRAWER =====
+
+let currentDrawerTicketId = null;
+
+function openTicketDrawer(ticketId, drawerUrl) {
+    const drawer  = document.getElementById('ticketDrawer');
+    const overlay = document.getElementById('tdrOverlay');
+    const loading = document.getElementById('tdrLoading');
+    const content = document.getElementById('tdrContent');
+
+    document.querySelectorAll('.ticket-row').forEach(r => r.classList.remove('drawer-active'));
+    const row = document.querySelector(`.ticket-row[data-ticket-id="${ticketId}"]`);
+    if (row) row.classList.add('drawer-active');
+
+    loading.style.display = 'flex';
+    content.innerHTML = '';
+    drawer.classList.add('open');
+    overlay.classList.add('active');
+    currentDrawerTicketId = ticketId;
+
+    fetch(drawerUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => r.text())
+        .then(html => {
+            loading.style.display = 'none';
+            content.innerHTML = html;
+        })
+        .catch(() => {
+            loading.style.display = 'none';
+            content.innerHTML = '<div class="p-4 text-danger">Failed to load ticket details.</div>';
+        });
+}
+
+function closeTicketDrawer() {
+    document.getElementById('ticketDrawer').classList.remove('open');
+    document.getElementById('tdrOverlay').classList.remove('active');
+    document.querySelectorAll('.ticket-row').forEach(r => r.classList.remove('drawer-active'));
+    currentDrawerTicketId = null;
+}
+
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') closeTicketDrawer();
+});
+
+// ===== INLINE FIELD EDITING =====
+
 function editField(fieldName) {
-    const ticketId = document.getElementById('tdrInner').dataset.ticketId;
+    const ticketId  = document.getElementById('tdrInner').dataset.ticketId;
     const projectId = document.getElementById('tdrInner').dataset.projectId;
-    const element = event.target.closest('[onclick^="editField"]') || event.target;
+    const element   = event.target.closest('[onclick^="editField"]') || event.target;
 
-    // Récupérer la valeur actuelle
     let currentValue = '';
-    let fieldType = 'text';
-    let options = [];
+    let fieldType    = 'text';
+    let options      = [];
 
-    switch(fieldName) {
+    switch (fieldName) {
         case 'title':
-            currentValue = document.getElementById('tdrTitle').textContent;
+            currentValue = document.getElementById('tdrTitle').textContent.trim();
             break;
         case 'description':
-            currentValue = document.getElementById('tdrDescription').innerText;
+            currentValue = document.getElementById('tdrDescription').innerText.trim();
+            if (currentValue === 'Add a description...') currentValue = '';
             fieldType = 'textarea';
             break;
         case 'priority':
             currentValue = element.classList.contains('priority')
-                ? element.className.match(/priority-(\w+)/)[1]
+                ? (element.className.match(/priority-(\w+)/) || [])[1] || 'medium'
                 : 'medium';
             fieldType = 'select';
             options = [
                 { value: 'highest', label: 'Highest' },
-                { value: 'high', label: 'High' },
-                { value: 'medium', label: 'Medium' },
-                { value: 'low', label: 'Low' }
+                { value: 'high',    label: 'High'    },
+                { value: 'medium',  label: 'Medium'  },
+                { value: 'low',     label: 'Low'     },
+                { value: 'lowest',  label: 'Lowest'  },
             ];
             break;
         case 'status':
             currentValue = element.classList.contains('tdr-status')
-                ? element.className.match(/status-(\w+)/)[1]
+                ? (element.className.match(/status-(\w+)/) || [])[1] || 'todo'
                 : 'todo';
             fieldType = 'select';
             options = [
-                { value: 'todo', label: 'To Do' },
-                { value: 'in_progress', label: 'In Progress' },
-                { value: 'done', label: 'Done' }
+                { value: 'todo',        label: 'To Do'      },
+                { value: 'in_progress', label: 'In Progress'},
+                { value: 'in_review',   label: 'In Review'  },
+                { value: 'done',        label: 'Done'       },
+                { value: 'blocked',     label: 'Blocked'    },
             ];
             break;
         case 'story_points':
-            currentValue = element.querySelector('.tdr-points').textContent;
+            const pts = element.querySelector('.tdr-points');
+            currentValue = pts ? pts.textContent.trim() : '';
             if (currentValue === '—') currentValue = '';
             fieldType = 'number';
             break;
         case 'assignee':
-            fieldType = 'select';
-            // Charger les assignees via AJAX
-            fetchAssignees(projectId, ticketId);
+            fetchAssignees(projectId, ticketId, element);
+            return;
+        default:
             return;
     }
 
-    // Créer le formulaire d'édition
-    const editContainer = document.createElement('div');
-    editContainer.className = 'tdr-edit-field';
-
+    // Build input HTML
     let inputHtml = '';
     if (fieldType === 'select') {
-        inputHtml = '<select class="form-control">';
+        inputHtml = '<select class="form-control form-control-sm">';
         options.forEach(opt => {
-            const selected = opt.value === currentValue ? 'selected' : '';
-            inputHtml += `<option value="${opt.value}" ${selected}>${opt.label}</option>`;
+            const sel = opt.value === currentValue ? 'selected' : '';
+            inputHtml += `<option value="${opt.value}" ${sel}>${opt.label}</option>`;
         });
         inputHtml += '</select>';
     } else if (fieldType === 'textarea') {
-        inputHtml = `<textarea class="form-control" rows="4">${currentValue}</textarea>`;
+        inputHtml = `<textarea class="form-control form-control-sm" rows="4">${currentValue}</textarea>`;
     } else if (fieldType === 'number') {
-        inputHtml = `<input type="number" class="form-control" value="${currentValue}" min="0" max="100">`;
+        inputHtml = `<input type="number" class="form-control form-control-sm" value="${currentValue}" min="0" max="999">`;
     } else {
-        inputHtml = `<input type="text" class="form-control" value="${currentValue}">`;
+        inputHtml = `<input type="text" class="form-control form-control-sm" value="${currentValue}">`;
     }
 
+    const editContainer = document.createElement('div');
+    editContainer.className = 'tdr-edit-field';
     editContainer.innerHTML = `
-        <div class="tdr-edit-input">${inputHtml}</div>
-        <div class="tdr-edit-actions">
-            <button class="btn btn-primary btn-sm" onclick="saveField(this, ${ticketId}, '${fieldName}')">Save</button>
+        <div class="tdr-edit-input" style="margin-bottom:8px;">${inputHtml}</div>
+        <div class="tdr-edit-actions" style="display:flex;gap:8px;">
+            <button class="btn btn-primary btn-sm"   onclick="saveField(this, ${ticketId}, '${fieldName}')">Save</button>
             <button class="btn btn-secondary btn-sm" onclick="cancelEdit(this)">Cancel</button>
         </div>
     `;
 
-    // Remplacer le contenu
-    const targetElement = fieldName === 'title'
-        ? document.querySelector('.tdr-title-container')
-        : fieldName === 'description'
-            ? document.querySelector('.tdr-description').parentNode
-            : element.closest('.tdr-meta-item') || element.closest('.tdr-status-container') || element.parentNode;
+    // Find target container to replace
+    let targetElement;
+    if (fieldName === 'title') {
+        targetElement = document.querySelector('.tdr-title-container');
+    } else if (fieldName === 'description') {
+        targetElement = document.querySelector('.tdr-description').parentNode;
+    } else if (fieldName === 'status') {
+        targetElement = element.closest('.tdr-status-container') || element.parentNode;
+    } else {
+        targetElement = element.closest('.tdr-meta-item') || element.parentNode;
+    }
 
-    const originalContent = targetElement.innerHTML;
-    targetElement.dataset.original = originalContent;
+    targetElement.dataset.original = targetElement.innerHTML;
     targetElement.innerHTML = '';
     targetElement.appendChild(editContainer);
+
+    // Auto-focus
+    const input = editContainer.querySelector('input, select, textarea');
+    if (input) input.focus();
 }
 
+// ─── Save via inline-update endpoint ───────────────────────────────────────
 function saveField(button, ticketId, fieldName) {
     const editContainer = button.closest('.tdr-edit-field');
-    const input = editContainer.querySelector('input, select, textarea');
-    const value = input.value;
-    const projectId = document.getElementById('tdrInner').dataset.projectId;
+    const input         = editContainer.querySelector('input, select, textarea');
+    const value         = input ? input.value : '';
+    const projectId     = document.getElementById('tdrInner').dataset.projectId;
 
-    fetch(`/projects/${projectId}/ticket/update/${ticketId}/`, {
+    fetch(`/projects/${projectId}/ticket/${ticketId}/inline-update/`, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': getCookie('csrftoken'),
+            'Content-Type':     'application/x-www-form-urlencoded',
+            'X-CSRFToken':      getCookie('csrftoken'),
             'X-Requested-With': 'XMLHttpRequest'
         },
-        body: new URLSearchParams({
-            [fieldName]: value
-        })
+        body: new URLSearchParams({ field: fieldName, value: value })
     })
-    .then(response => response.json())
+    .then(r => r.json())
     .then(data => {
         if (data.success) {
-            // Recharger le drawer
             openTicketDrawer(ticketId, `/projects/${projectId}/ticket/detail/${ticketId}/?drawer=1`);
         } else {
-            alert('Error saving field');
+            alert('Error: ' + (data.error || 'Unknown error'));
         }
     })
-    .catch(error => {
-        console.error('Error:', error);
-        alert('Error saving field');
+    .catch(err => {
+        console.error(err);
+        alert('Network error: ' + err.message);
     });
 }
 
 function cancelEdit(button) {
     const editContainer = button.closest('.tdr-edit-field');
-    const parent = editContainer.parentNode;
-    parent.innerHTML = parent.dataset.original || '';
+    const parent        = editContainer.parentNode;
+    parent.innerHTML    = parent.dataset.original || '';
 }
 
-function fetchAssignees(projectId, ticketId) {
-    // Implémenter le chargement des assignees
-    console.log('Fetch assignees for project', projectId);
-}
+// ─── Assignee (fetch project members) ──────────────────────────────────────
+function fetchAssignees(projectId, ticketId, element) {
+    const targetElement = element.closest('.tdr-meta-item') || element.parentNode;
+    const originalContent = targetElement.innerHTML;
+    targetElement.dataset.original = originalContent;
 
-function addComment(ticketId) {
-    const commentText = document.getElementById('newComment').value;
-    if (!commentText.trim()) return;
+    targetElement.innerHTML = `
+        <div class="tdr-edit-field">
+            <div class="tdr-edit-input" style="margin-bottom:8px;">
+                <select class="form-control form-control-sm" id="assigneeSelect">
+                    <option value="">— Unassigned —</option>
+                    <option value="loading" disabled>Loading members...</option>
+                </select>
+            </div>
+            <div style="display:flex;gap:8px;">
+                <button class="btn btn-primary btn-sm"
+                    onclick="saveField(this, ${ticketId}, 'assignee_id')">Save</button>
+                <button class="btn btn-secondary btn-sm" onclick="cancelEdit(this)">Cancel</button>
+            </div>
+        </div>
+    `;
 
-    const projectId = document.getElementById('tdrInner').dataset.projectId;
-
-    fetch(`/projects/${projectId}/ticket/${ticketId}/comment/`, {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'X-CSRFToken': getCookie('csrftoken'),
-            'X-Requested-With': 'XMLHttpRequest'
-        },
-        body: new URLSearchParams({
-            content: commentText
-        })
+    // Load members via API with better error handling
+    fetch(`/projects/${projectId}/members-json/`, {
+        headers: { 'X-Requested-With': 'XMLHttpRequest' }
     })
-    .then(response => response.json())
+    .then(r => {
+        if (!r.ok) {
+            throw new Error(`HTTP error! status: ${r.status}`);
+        }
+        return r.json();
+    })
     .then(data => {
-        if (data.success) {
-            document.getElementById('newComment').value = '';
-            openTicketDrawer(ticketId, `/projects/${projectId}/ticket/detail/${ticketId}/?drawer=1`);
+        const select = document.getElementById('assigneeSelect');
+        if (select) {
+            // Clear loading option
+            select.innerHTML = '<option value="">— Unassigned —</option>';
+
+            if (data.members && data.members.length > 0) {
+                data.members.forEach(m => {
+                    const opt = document.createElement('option');
+                    opt.value = m.id;
+                    opt.textContent = m.name;
+                    select.appendChild(opt);
+                });
+            } else {
+                // If no members, show message
+                const opt = document.createElement('option');
+                opt.value = "";
+                opt.disabled = true;
+                opt.textContent = "No members available";
+                select.appendChild(opt);
+            }
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        console.error('Error loading members:', error);
+        const select = document.getElementById('assigneeSelect');
+        if (select) {
+            select.innerHTML = '<option value="">— Unassigned —</option>';
+            const opt = document.createElement('option');
+            opt.value = "";
+            opt.disabled = true;
+            opt.textContent = "Error loading members";
+            select.appendChild(opt);
+        }
+    });
 }
-
-// Fonction pour récupérer le cookie CSRF
+// ─── CSRF cookie helper ─────────────────────────────────────────────────────
 function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
-        const cookies = document.cookie.split(';');
-        for (let i = 0; i < cookies.length; i++) {
-            const cookie = cookies[i].trim();
-            if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        for (const cookie of document.cookie.split(';')) {
+            const c = cookie.trim();
+            if (c.startsWith(name + '=')) {
+                cookieValue = decodeURIComponent(c.slice(name.length + 1));
                 break;
             }
         }

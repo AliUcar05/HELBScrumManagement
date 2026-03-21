@@ -3,6 +3,8 @@ import os
 from django.db import models
 from django.utils import timezone
 from PIL import Image
+from django.contrib.auth.models import User
+
 
 
 
@@ -149,9 +151,19 @@ class Membership(models.Model):
         ("read-only", "Read-only"),
     ]
 
+    TEAM_ROLE_CHOICES = [
+        ("developer", "Developer"),
+        ("scrum_master", "Scrum Master"),
+        ("product_owner", "Product Owner"),
+        ("tester", "Tester"),
+        ("designer", "Designer"),
+        ("other", "Other"),
+    ]
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name="memberships")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, related_name="memberships")
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="contributor")
+    team_role = models.CharField(max_length=20, choices=TEAM_ROLE_CHOICES, default="developer")  # <-- nouveau
 
     # Capacite individuelle dans ce projet (en effort_unit du projet)
     capacity_per_sprint = models.PositiveIntegerField(
@@ -474,3 +486,32 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by {self.author.username} on {self.ticket.ticket_id}"
+
+# ===========================================================
+#   Activity
+# ===========================================================
+class Activity(models.Model):
+
+    ACTION_TYPES = [
+        ('create_ticket', 'Created ticket'),
+        ('comment', 'Commented'),
+        ('status_change', 'Changed status'),
+        ('create_sprint', 'Created sprint'),
+        ('update_description', 'Updated description'),
+        ('assign', 'Assigned ticket'),
+    ]
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE)
+
+    ticket = models.ForeignKey(Ticket, null=True, blank=True, on_delete=models.CASCADE)
+    sprint = models.ForeignKey(Sprint, null=True, blank=True, on_delete=models.CASCADE)
+
+    action = models.CharField(max_length=50, choices=ACTION_TYPES)
+
+    description = models.TextField(blank=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.user} {self.action}"

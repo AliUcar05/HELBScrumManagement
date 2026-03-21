@@ -1,186 +1,461 @@
 {% extends "scrum/project_board.html" %}
 {% load crispy_forms_tags %}
+{% load static %}
 
 {% block project_content %}
-    <div class="container mt-4" style="max-width: 1500px;">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+<style>
+* { box-sizing: border-box; }
+.ps-wrap { display:flex; height:calc(100vh - 56px); overflow:hidden; }
+.ps-nav { width:200px; flex-shrink:0; border-right:1px solid #e0e4ed; padding:20px 0; background:#fff; overflow-y:auto; }
+.ps-nav-label { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6b778c; padding:6px 20px; margin-top:8px; }
+.ps-nav-item { display:block; padding:7px 20px; font-size:13px; color:#42526e; text-decoration:none; cursor:pointer; border-left:3px solid transparent; transition:background .1s,color .1s; white-space:nowrap; }
+.ps-nav-item:hover { background:#f4f5f7; color:#172b4d; text-decoration:none; }
+.ps-nav-item.active { color:#0052cc; border-left-color:#0052cc; font-weight:600; background:#deebff; }
+.ps-nav-item.danger { color:#de350b; }
+.ps-nav-item.danger:hover { background:#ffebe6; }
+.ps-nav-divider { height:1px; background:#e0e4ed; margin:10px 0; }
+.ps-body { flex:1; overflow-y:auto; padding:32px 40px; background:#fafbfc; }
+.ps-section { display:none; }
+.ps-section.active { display:block; }
+.ps-title { font-size:20px; font-weight:700; color:#172b4d; margin-bottom:4px; }
+.ps-sub { font-size:13px; color:#6b778c; margin-bottom:24px; }
+.ps-summary-grid { display:grid; grid-template-columns:1fr 1fr; gap:0 40px; }
+.ps-summary-row { padding:18px 0; border-bottom:1px solid #e0e4ed; display:flex; flex-direction:column; gap:4px; }
+.ps-summary-row:last-child { border-bottom:none; }
+.ps-summary-row-title { font-size:14px; font-weight:700; color:#172b4d; }
+.ps-summary-row-val { font-size:13px; color:#42526e; line-height:1.6; }
+.ps-summary-link { font-size:13px; color:#0052cc; font-weight:500; text-decoration:none; cursor:pointer; width:fit-content; }
+.ps-summary-link:hover { text-decoration:underline; }
+.ps-panel { background:#fff; border:1px solid #e0e4ed; border-radius:8px; padding:24px 28px; margin-bottom:20px; }
+.ps-panel-title { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.07em; color:#6b778c; margin-bottom:18px; display:flex; align-items:center; gap:8px; }
+.ps-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin-bottom:24px; }
+.ps-stat { background:#fff; border:1px solid #e0e4ed; border-radius:8px; padding:16px 18px; display:flex; align-items:center; gap:14px; }
+.ps-stat-icon { width:44px; height:44px; border-radius:8px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:18px; color:#fff; }
+.ic-blue { background:#0052cc; } .ic-orange { background:#ff8b00; } .ic-green { background:#36b37e; }
+.ps-stat-label { font-size:12px; color:#6b778c; margin-bottom:2px; }
+.ps-stat-value { font-size:22px; font-weight:700; color:#172b4d; }
+.ps-table-wrap { border:1px solid #e0e4ed; border-radius:8px; overflow:hidden; background:#fff; }
+.ps-table { width:100%; border-collapse:collapse; font-size:13px; }
+.ps-table th { text-transform:uppercase; font-size:10px; font-weight:700; letter-spacing:.06em; color:#6b778c; padding:10px 14px; border-bottom:2px solid #e0e4ed; text-align:left; background:#fff; }
+.ps-table td { padding:11px 14px; border-bottom:1px solid #f0f0f0; vertical-align:middle; }
+.ps-table tbody tr:last-child td { border-bottom:none; }
+.ps-table tbody tr:hover td { background:#f8f9fa; }
+.ps-avatar { width:34px; height:34px; border-radius:50%; background:#0052cc; color:#fff; font-size:12px; font-weight:700; display:flex; align-items:center; justify-content:center; overflow:hidden; flex-shrink:0; }
+.ps-avatar img { width:100%; height:100%; object-fit:cover; }
+.ps-dot { width:8px; height:8px; border-radius:50%; background:#36b37e; display:inline-block; margin-right:5px; }
+.ps-search-wrap { position:relative; }
+.ps-search-wrap i { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:#6b778c; font-size:12px; }
+.ps-search { width:100%; padding:7px 12px 7px 30px; border:1px solid #dfe1e6; border-radius:6px; font-size:13px; color:#172b4d; outline:none; transition:border-color .15s; background:#fff; }
+.ps-search:focus { border-color:#0052cc; }
+.ps-type-list { list-style:none; padding:0; margin:0; }
+.ps-type-list li { display:flex; align-items:center; gap:8px; padding:6px 0; font-size:13px; color:#172b4d; border-bottom:1px solid #f4f5f7; }
+.ps-type-list li:last-child { border-bottom:none; }
+.ps-danger-panel { border:1px solid #ffbdad; border-radius:8px; padding:20px 24px; background:#fff; max-width:520px; }
+.ps-readonly-notice { background:#fffae6; border:1px solid #ffe380; border-radius:6px; padding:10px 16px; font-size:13px; color:#7a6200; margin-bottom:20px; display:flex; align-items:center; gap:8px; }
+fieldset[disabled] { opacity:.6; pointer-events:none; }
+</style>
 
-        <div class="mb-3">
-            <h2 class="font-weight-bold">
-                Project Settings
-            </h2>
-            <p class="text-muted mb-0">{{ object.name }} — <span class="badge badge-secondary">{{ object.code }}</span></p>
-        </div>
+<div class="ps-wrap">
 
-        <div class="row">
-            <div class="col-md-8">
+    <div class="ps-nav">
+        <span class="ps-nav-item active" onclick="psShow('summary', this)">Summary</span>
+        <span class="ps-nav-item" onclick="psShow('general', this)">Details</span>
+        <div class="ps-nav-divider"></div>
+        <div class="ps-nav-label">Issue types</div>
+        <span class="ps-nav-item" style="padding-left:28px;" onclick="psShow('issue-types', this)">Bug</span>
+        <span class="ps-nav-item" style="padding-left:28px;" onclick="psShow('issue-types', this)">Epic</span>
+        <span class="ps-nav-item" style="padding-left:28px;" onclick="psShow('issue-types', this)">Story</span>
+        <span class="ps-nav-item" style="padding-left:28px;" onclick="psShow('issue-types', this)">Task</span>
+        <div class="ps-nav-divider"></div>
+        <span class="ps-nav-item" onclick="psShow('sprints', this)">Sprints</span>
+        <div class="ps-nav-divider"></div>
+        <span class="ps-nav-item" onclick="psShow('team', this)">Team</span>
+        {% if is_admin %}
+        <span class="ps-nav-item" onclick="psShow('members', this)">Users and roles</span>
+        <div class="ps-nav-divider"></div>
+        <span class="ps-nav-item danger" onclick="psShow('danger', this)">Danger zone</span>
+        {% endif %}
+    </div>
 
-                <!-- Identité -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-info-circle mr-1"></i> Project Information
-                        </h6>
-                        <form method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
-                            <div class="form-row">
-                                <div class="col-sm-8">
-                                    {{ form.name|as_crispy_field }}
-                                </div>
-                                <div class="col-sm-4">
-                                    {{ form.code|as_crispy_field }}
-                                </div>
-                            </div>
-                            {{ form.description|as_crispy_field }}
-                            {{ form.image|as_crispy_field }}
+    <div class="ps-body">
 
-                            <h6 class="text-uppercase text-muted font-weight-bold mt-4 mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                                <i class="fas fa-th-large mr-1"></i> Board & Type
-                            </h6>
-                            <div class="form-row">
-                                <div class="col-sm-6">
-                                    {{ form.board_type|as_crispy_field }}
-                                </div>
-                                <div class="col-sm-6">
-                                    {{ form.project_type|as_crispy_field }}
-                                </div>
-                            </div>
-
-                            <h6 class="text-uppercase text-muted font-weight-bold mt-4 mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                                <i class="fas fa-calendar-alt mr-1"></i> Timeline
-                            </h6>
-                            <div class="form-row">
-                                <div class="col-sm-6">
-                                    {{ form.start_date|as_crispy_field }}
-                                </div>
-                                <div class="col-sm-6">
-                                    {{ form.end_date|as_crispy_field }}
-                                </div>
-                            </div>
-
-                            <h6 class="text-uppercase text-muted font-weight-bold mt-4 mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                                <i class="fas fa-bolt mr-1"></i> Sprint Settings
-                            </h6>
-                            {{ form.effort_unit|as_crispy_field }}
-                            {{ form.sprint_duration|as_crispy_field }}
-                            <div class="mt-3">
-                                <button class="btn btn-primary" type="submit">
-                                    <i class="fas fa-check mr-1"></i> Save Changes
-                                </button>
-                                <a href="{% url 'project-detail' object.pk %}" class="btn btn-outline-secondary ml-2">
-                                    <i class="fas fa-times mr-1"></i> Cancel
-                                </a>
-                            </div>
-                        </form>
-                    </div>
-                </div>
-
-                <!-- Danger Zone -->
-                <div class="card border-danger shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-danger font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-exclamation-triangle mr-1"></i> Danger Zone
-                        </h6>
-                        <p class="text-muted small mb-3">
-                            Deleting this project will permanently remove all issues, sprints and the board.
-                            This action <strong>cannot be undone</strong>.
-                        </p>
-                        <a href="{% url 'project-delete' object.pk %}" class="btn btn-outline-danger btn-sm">
-                            <i class="fas fa-trash mr-1"></i> Delete this project
-                        </a>
-                    </div>
-                </div>
-
+        <!-- SUMMARY -->
+        <div class="ps-section active" id="pss-summary">
+            <div class="ps-title">Project settings</div>
+            <div class="ps-sub">
+                Overview of {{ object.name }} ({{ object.code }})
+                {% if not is_admin %}
+                    <span class="badge badge-warning ml-2" style="font-size:11px;">Read-only</span>
+                {% endif %}
             </div>
-
-            <!-- ========== COLONNE DROITE — Members ========== -->
-            <div class="col-md-4">
-
-                <!-- Members list -->
-                <div class="card border-0 shadow-sm mb-4" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-users mr-1"></i> Project Members
-                            <span class="badge badge-secondary ml-1">{{ memberships|length }}</span>
-                        </h6>
-
-                        <table class="table table-sm">
-                            <thead>
-                                <tr>
-                                    <th>User</th>
-                                    <th>Role</th>
-                                    <th></th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for m in memberships %}
-                                <tr>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="rounded-circle bg-primary text-white d-flex align-items-center justify-content-center mr-2"
-                                                 style="width:28px; height:28px; font-size:.75rem; font-weight:700; flex-shrink:0;">
-                                                {{ m.user.username|first|upper }}
-                                            </div>
-                                            <div>
-                                                <div style="font-size:.85rem; font-weight:600;">{{ m.user.username }}</div>
-                                                {% if m.capacity_per_sprint %}
-                                                <small class="text-muted">{{ m.capacity_per_sprint }} pts</small>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <form method="POST" action="{% url 'membership-update-role' object.pk m.pk %}">
-                                            {% csrf_token %}
-                                            <select name="role" class="form-control form-control-sm" onchange="this.form.submit()">
-                                                <option value="admin" {% if m.role == 'admin' %}selected{% endif %}>Admin</option>
-                                                <option value="contributor" {% if m.role == 'contributor' %}selected{% endif %}>Contributor</option>
-                                                <option value="read-only" {% if m.role == 'read-only' %}selected{% endif %}>Read-only</option>
-                                            </select>
-                                        </form>
-                                    </td>
-                                    <td class="text-right">
-                                        <form method="POST" action="{% url 'membership-delete' object.pk m.pk %}">
-                                            {% csrf_token %}
-                                            <button
-                                                type="submit"
-                                                class="btn btn-sm btn-outline-danger"
-                                                title="Remove this member from the project"
-                                                aria-label="Remove this member from the project">
-                                                <i class="fas fa-times"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% empty %}
-                                <tr>
-                                    <td colspan="3" class="text-muted text-center py-3">
-                                        <i class="fas fa-user-slash"></i> No members yet
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <div class="ps-summary-grid">
+                <div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Project name</div>
+                        <div class="ps-summary-row-val">{{ object.name }}</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Project code</div>
+                        <div class="ps-summary-row-val">{{ object.code }}</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Description</div>
+                        <div class="ps-summary-row-val">{{ object.description|default:"—" }}</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Project type</div>
+                        <div class="ps-summary-row-val">{{ object.get_project_type_display }}</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Timeline</div>
+                        <div class="ps-summary-row-val">
+                            {% if object.start_date %}Start: <strong>{{ object.start_date|date:"M d, Y" }}</strong>{% endif %}
+                            {% if object.end_date %} — End: <strong>{{ object.end_date|date:"M d, Y" }}</strong>{% endif %}
+                        </div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Created by</div>
+                        <div class="ps-summary-row-val">{{ object.created_by.get_full_name|default:object.created_by.username }}</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Created at</div>
+                        <div class="ps-summary-row-val">{{ object.created_at|date:"M d, Y" }}</div>
                     </div>
                 </div>
-
-                <!-- Add Member -->
-                <div class="card border-0 shadow-sm" style="border-radius: 12px;">
-                    <div class="card-body">
-                        <h6 class="text-uppercase text-muted font-weight-bold mb-3" style="font-size:.75rem; letter-spacing:.08em;">
-                            <i class="fas fa-user-plus mr-1"></i> Add Member
-                        </h6>
-                        <form method="POST" action="{% url 'membership-add' object.pk %}">
-                            {% csrf_token %}
-                            {{ membership_form|crispy }}
-                            <button class="btn btn-success btn-block mt-2">
-                                <i class="fas fa-plus mr-1"></i> Add Member
-                            </button>
-                        </form>
+                <div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Issue types</div>
+                        <ul class="ps-type-list mt-1">
+                            <li><i class="fas fa-square" style="color:#de350b;font-size:13px;"></i> Bug</li>
+                            <li><i class="fas fa-bolt" style="color:#5243aa;font-size:13px;"></i> Epic</li>
+                            <li><i class="fas fa-bookmark" style="color:#36b37e;font-size:13px;"></i> Story</li>
+                            <li><i class="fas fa-check-square" style="color:#42526e;font-size:13px;"></i> Task</li>
+                        </ul>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Effort unit</div>
+                        <div class="ps-summary-row-val">{{ object.get_effort_unit_display }}</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Sprint duration</div>
+                        <div class="ps-summary-row-val">{{ object.sprint_duration }} days</div>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Team</div>
+                        <div class="ps-summary-row-val"><strong>{{ memberships|length }}</strong> member{{ memberships|length|pluralize }}</div>
+                        <span class="ps-summary-link" onclick="psShow('team', document.querySelector('[onclick*=team]'))">View team →</span>
+                    </div>
+                    <div class="ps-summary-row">
+                        <div class="ps-summary-row-title">Active sprint</div>
+                        <div class="ps-summary-row-val">
+                            {% for s in object.sprints.all %}{% if s.status == 'active' %}<strong>{{ s.name }}</strong>{% endif %}{% empty %}—{% endfor %}
+                        </div>
                     </div>
                 </div>
-
             </div>
         </div>
+
+        <!-- DETAILS -->
+        <div class="ps-section" id="pss-general">
+            <div class="ps-title">Details</div>
+            <div class="ps-sub">Project name, description and timeline.</div>
+            {% if not is_admin %}
+            <div class="ps-readonly-notice">
+                <i class="fas fa-lock"></i> You have read-only access. Only admins can edit project details.
+            </div>
+            {% endif %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset {% if not is_admin %}disabled{% endif %}>
+                    <div class="ps-panel">
+                        <div class="ps-panel-title"><i class="fas fa-tag"></i> Identity</div>
+                        <div class="form-row">
+                            <div class="col-sm-8">{{ form.name|as_crispy_field }}</div>
+                            <div class="col-sm-4">{{ form.code|as_crispy_field }}</div>
+                        </div>
+                        {{ form.description|as_crispy_field }}
+                        {{ form.image|as_crispy_field }}
+                        <div class="form-row">
+                            <div class="col-sm-6">{{ form.project_type|as_crispy_field }}</div>
+                        </div>
+                    </div>
+                    <div class="ps-panel">
+                        <div class="ps-panel-title"><i class="fas fa-calendar-alt"></i> Timeline</div>
+                        <div class="form-row">
+                            <div class="col-sm-6">{{ form.start_date|as_crispy_field }}</div>
+                            <div class="col-sm-6">{{ form.end_date|as_crispy_field }}</div>
+                        </div>
+                    </div>
+                </fieldset>
+                {% if is_admin %}
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-check mr-1"></i> Save Changes
+                </button>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- ISSUE TYPES -->
+        <div class="ps-section" id="pss-issue-types">
+            <div class="ps-title">Issue types</div>
+            <div class="ps-sub">Standard issue types available in this Scrum project.</div>
+            <div class="ps-panel" style="max-width:400px;">
+                <ul class="ps-type-list">
+                    <li><i class="fas fa-square" style="color:#de350b;font-size:14px;"></i> <strong>Bug</strong> <small class="text-muted ml-2">A problem or error</small></li>
+                    <li><i class="fas fa-bolt" style="color:#5243aa;font-size:14px;"></i> <strong>Epic</strong> <small class="text-muted ml-2">Large body of work</small></li>
+                    <li><i class="fas fa-bookmark" style="color:#36b37e;font-size:14px;"></i> <strong>Story</strong> <small class="text-muted ml-2">User story</small></li>
+                    <li><i class="fas fa-check-square" style="color:#42526e;font-size:14px;"></i> <strong>Task</strong> <small class="text-muted ml-2">A piece of work</small></li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- SPRINTS -->
+        <div class="ps-section" id="pss-sprints">
+            <div class="ps-title">Sprints</div>
+            <div class="ps-sub">Default sprint settings for this project.</div>
+            {% if not is_admin %}
+            <div class="ps-readonly-notice">
+                <i class="fas fa-lock"></i> You have read-only access. Only admins can edit sprint settings.
+            </div>
+            {% endif %}
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <fieldset {% if not is_admin %}disabled{% endif %}>
+                    <div class="ps-panel" style="max-width:480px;">
+                        {{ form.effort_unit|as_crispy_field }}
+                        {{ form.sprint_duration|as_crispy_field }}
+                    </div>
+                </fieldset>
+                {% if is_admin %}
+                <button class="btn btn-primary" type="submit">
+                    <i class="fas fa-check mr-1"></i> Save Changes
+                </button>
+                {% endif %}
+            </form>
+        </div>
+
+        <!-- TEAM -->
+        <div class="ps-section" id="pss-team">
+            <div class="d-flex justify-content-between align-items-start mb-4">
+                <div>
+                    <div class="ps-title">Team</div>
+                    <div class="ps-sub">People working on this project and their Scrum roles.</div>
+                </div>
+                {% if is_admin %}
+                <span class="btn btn-primary btn-sm" onclick="psShow('members', document.querySelector('[onclick*=members]'))">
+                    <i class="fas fa-user-plus mr-1"></i> Add Member
+                </span>
+                {% endif %}
+            </div>
+
+            <div class="ps-stats">
+                <div class="ps-stat">
+                    <div class="ps-stat-icon ic-blue"><i class="fas fa-shield-alt"></i></div>
+                    <div>
+                        <div class="ps-stat-label">Total Members</div>
+                        <div class="ps-stat-value">{{ memberships|length }}</div>
+                    </div>
+                </div>
+                <div class="ps-stat">
+                    <div class="ps-stat-icon ic-orange"><i class="fas fa-star"></i></div>
+                    <div>
+                        <div class="ps-stat-label">Scrum Masters</div>
+                        <div class="ps-stat-value">
+                            {% with c=0 %}{% for m in memberships %}{% if m.team_role == 'scrum_master' %}{% with c=c|add:1 %}{% endwith %}{% endif %}{% endfor %}—{% endwith %}
+                        </div>
+                    </div>
+                </div>
+                <div class="ps-stat">
+                    <div class="ps-stat-icon ic-green"><i class="fas fa-code"></i></div>
+                    <div>
+                        <div class="ps-stat-label">Developers</div>
+                        <div class="ps-stat-value">—</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="ps-search-wrap mb-3" style="max-width:280px;">
+                <i class="fas fa-search"></i>
+                <input type="text" class="ps-search" id="teamSearch" placeholder="Search members…" onkeyup="filterTeam()">
+            </div>
+
+            <div class="ps-table-wrap">
+                <table class="ps-table">
+                    <thead>
+                        <tr>
+                            <th>Member</th>
+                            <th>Scrum Role</th>
+                            <th>Access</th>
+                            <th>Capacity</th>
+                            {% if is_admin %}<th>Actions</th>{% endif %}
+                        </tr>
+                    </thead>
+                    <tbody id="teamList">
+                        {% for m in memberships %}
+                        <tr data-name="{{ m.user.get_full_name|lower }} {{ m.user.username|lower }}">
+                            <td>
+                                <div class="d-flex align-items-center" style="gap:10px;">
+                                    <div class="ps-avatar">
+                                        {% if m.user.profile.image %}
+                                            <img src="{{ m.user.profile.image.url }}" alt="">
+                                        {% else %}
+                                            {{ m.user.first_name|first|upper }}{{ m.user.last_name|first|upper }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div style="font-size:13px;font-weight:600;color:#172b4d;">{{ m.user.get_full_name|default:m.user.username }}</div>
+                                        <div style="font-size:11px;color:#6b778c;">{{ m.user.email }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                {% if is_admin %}
+                                <form method="POST" action="{% url 'membership-update-role' object.pk m.pk %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="role" value="{{ m.role }}">
+                                    <select name="team_role" class="form-control form-control-sm" style="width:140px;" onchange="this.form.submit()">
+                                        <option value="developer"     {% if m.team_role == 'developer' %}selected{% endif %}>Developer</option>
+                                        <option value="scrum_master"  {% if m.team_role == 'scrum_master' %}selected{% endif %}>Scrum Master</option>
+                                        <option value="product_owner" {% if m.team_role == 'product_owner' %}selected{% endif %}>Product Owner</option>
+                                        <option value="tester"        {% if m.team_role == 'tester' %}selected{% endif %}>Tester</option>
+                                        <option value="designer"      {% if m.team_role == 'designer' %}selected{% endif %}>Designer</option>
+                                        <option value="other"         {% if m.team_role == 'other' %}selected{% endif %}>Other</option>
+                                    </select>
+                                </form>
+                                {% else %}
+                                    <span style="font-size:13px;color:#42526e;">{{ m.get_team_role_display|default:m.team_role|capfirst }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if is_admin %}
+                                <form method="POST" action="{% url 'membership-update-role' object.pk m.pk %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="team_role" value="{{ m.team_role }}">
+                                    <select name="role" class="form-control form-control-sm" style="width:120px;" onchange="this.form.submit()">
+                                        <option value="admin"       {% if m.role == 'admin' %}selected{% endif %}>Admin</option>
+                                        <option value="contributor" {% if m.role == 'contributor' %}selected{% endif %}>Contributor</option>
+                                        <option value="read-only"   {% if m.role == 'read-only' %}selected{% endif %}>Read-only</option>
+                                    </select>
+                                </form>
+                                {% else %}
+                                    <span style="font-size:13px;color:#42526e;">{{ m.role|capfirst }}</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if m.capacity_per_sprint %}
+                                    <span style="background:#deebff;color:#0052cc;font-size:11px;font-weight:700;padding:2px 8px;border-radius:4px;">{{ m.capacity_per_sprint }} pts</span>
+                                {% else %}
+                                    <span style="color:#aaa;">—</span>
+                                {% endif %}
+                            </td>
+                            {% if is_admin %}
+                            <td>
+                                <form method="POST" action="{% url 'membership-delete' object.pk m.pk %}" style="margin:0;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-sm btn-outline-danger" title="Remove">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </form>
+                            </td>
+                            {% endif %}
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5" class="text-center text-muted py-4">No members yet.</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- USERS AND ROLES — admin only -->
+        {% if is_admin %}
+        <div class="ps-section" id="pss-members">
+            <div class="ps-title">Users and roles</div>
+            <div class="ps-sub">Add a user to this project and assign their access level and Scrum role.</div>
+            <div class="ps-panel" style="max-width:500px;">
+                <div class="ps-panel-title"><i class="fas fa-user-plus"></i> Add member</div>
+                <form method="POST" action="{% url 'membership-add' object.pk %}">
+                    {% csrf_token %}
+                    <div class="form-group">
+                        <label style="font-size:13px;font-weight:600;color:#172b4d;">User</label>
+                        <select name="user" class="form-control">
+                            <option value="">— Select a user —</option>
+                            {% for u in membership_form.fields.user.queryset %}
+                            <option value="{{ u.pk }}">{{ u.get_full_name|default:u.username }} ({{ u.email }})</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-size:13px;font-weight:600;color:#172b4d;">Access role</label>
+                                <select name="role" class="form-control">
+                                    <option value="contributor">Contributor</option>
+                                    <option value="admin">Admin</option>
+                                    <option value="read-only">Read-only</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <label style="font-size:13px;font-weight:600;color:#172b4d;">Scrum role</label>
+                                <select name="team_role" class="form-control">
+                                    <option value="developer">Developer</option>
+                                    <option value="scrum_master">Scrum Master</option>
+                                    <option value="product_owner">Product Owner</option>
+                                    <option value="tester">Tester</option>
+                                    <option value="designer">Designer</option>
+                                    <option value="other">Other</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary">
+                        <i class="fas fa-plus mr-1"></i> Add to project
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- DANGER ZONE — admin only -->
+        <div class="ps-section" id="pss-danger">
+            <div class="ps-title" style="color:#de350b;">Danger zone</div>
+            <div class="ps-sub">Irreversible actions — proceed with caution.</div>
+            <div class="ps-danger-panel">
+                <h6 class="font-weight-bold text-danger mb-2">Delete this project</h6>
+                <p class="text-muted small mb-3">
+                    Permanently removes all issues, sprints and the board.
+                    This action <strong>cannot be undone</strong>.
+                </p>
+                <a href="{% url 'project-delete' object.pk %}" class="btn btn-danger btn-sm">
+                    <i class="fas fa-trash mr-1"></i> Delete Project
+                </a>
+            </div>
+        </div>
+        {% endif %}
 
     </div>
-{% endblock project_content%}
+</div>
+
+<script>
+function psShow(name, el) {
+    document.querySelectorAll('.ps-section').forEach(s => s.classList.remove('active'));
+    document.querySelectorAll('.ps-nav-item').forEach(a => a.classList.remove('active'));
+    var sec = document.getElementById('pss-' + name);
+    if (sec) sec.classList.add('active');
+    if (el) el.classList.add('active');
+}
+function filterTeam() {
+    var q = document.getElementById('teamSearch').value.toLowerCase();
+    document.querySelectorAll('#teamList tr[data-name]').forEach(function(r) {
+        r.style.display = r.dataset.name.includes(q) ? '' : 'none';
+    });
+}
+if (window.location.hash) {
+    var map = { '#team':'team','#members':'members','#sprints':'sprints','#danger':'danger','#general':'general' };
+    var sec = map[window.location.hash];
+    if (sec) { var el = document.querySelector('[onclick*="' + sec + '"]'); psShow(sec, el); }
+}
+</script>
+{% endblock project_content %}

@@ -10,7 +10,7 @@ from .views import (
     TicketCreateView,
     TicketUpdateView,
     TicketDetailView,
-    TicketDeleteView, TicketListView, TicketReorderView
+    TicketDeleteView, TicketListView, TicketReorderView, SprintDeleteView, ProjectIssuesView
 )
 
 urlpatterns = [
@@ -32,6 +32,10 @@ urlpatterns = [
     path('projects/<int:pk>/active-sprint/', views.active_sprint, name='project-active-sprint'),
     path('projects/<int:pk>/report/', views.project_report, name='project-report'),
     path("projects/<int:pk>/settings/", ProjectSettingsView.as_view(), name="project-settings"),
+    path("projects/<int:pk>/issues/", ProjectIssuesView.as_view(), name="project-issues"),
+    path('projects/<int:pk>/roadmap/',  views.project_roadmap,  name='project-roadmap'),
+    path('projects/<int:pk>/releases/', views.project_releases, name='project-releases'),
+
 
     # TICKET ISSUES URL
     path('projects/<int:pk>/ticket/create/',TicketCreateView.as_view(),name='ticket-create'),
@@ -42,8 +46,14 @@ urlpatterns = [
     path('projects/<int:pk>/ticket/delete/<int:ticket_pk>/delete/',TicketDeleteView.as_view(),name='ticket-delete'),
     path('projects/<int:pk>/ticket/<int:ticket_pk>/reorder/<str:direction>/', TicketReorderView.as_view(), name='ticket-reorder'),
 
+    path('projects/<int:pk>/ticket/<int:ticket_pk>/inline-update/',views.ticket_inline_update, name='ticket-inline-update'),
+    path('projects/<int:pk>/members-json/', views.project_members_json, name='project-members-json'),
+
     # SPRINT 
     path("projects/<int:pk>/sprints/create/", SprintCreateView.as_view(), name="sprint-create"),
+    path("projects/<int:pk>/sprints/<int:sprint_pk>/delete/", SprintDeleteView.as_view(), name="sprint-delete"),
+    path("projects/<int:pk>/sprints/<int:sprint_pk>/start/",    views.sprint_start,    name="sprint-start"),
+    path("projects/<int:pk>/sprints/<int:sprint_pk>/complete/", views.sprint_complete, name="sprint-complete"),
 
     #TICKET COMMENTS
     path('ticket/<int:ticket_pk>/comment/add/', views.add_comment, name='add_comment'),

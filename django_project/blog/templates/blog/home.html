@@ -148,6 +148,38 @@
                 </div>
             </div>
 
+            <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">
+                <div class="card-header bg-white border-0 pt-3 pb-0 d-flex justify-content-between align-items-center">
+                    <h6 class="font-weight-bold mb-0">
+                        <i class="fas fa-stream mr-2 text-primary"></i>Recent Activity
+                    </h6>
+                </div>
+                <div class="card-body pt-2 pb-1">
+                    {% for activity in recent_activity %}
+                    <div class="d-flex align-items-start py-2 border-bottom" style="gap:10px;">
+                        <div class="rounded-circle bg-light d-flex align-items-center justify-content-center flex-shrink-0"
+                             style="width:34px;height:34px;font-size:0.75rem;font-weight:700;">
+                            {{ activity.user.username|first|upper }}
+                        </div>
+                        <div style="flex:1;min-width:0;">
+                            <div style="font-size:0.8rem;">
+                                <strong>{{ activity.user.username }}</strong>
+                                {{ activity.description }}
+                            </div>
+                            <small class="text-muted">
+                                {{ activity.project.name }} · {{ activity.created_at|timesince }} ago
+                            </small>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-3">
+                        <i class="fas fa-stream" style="font-size:1.5rem;color:#d6dbe4;"></i>
+                        <p class="text-muted mt-2 mb-0" style="font-size:0.85rem;">No recent activity</p>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+
         </div>
 
         <div class="col-md-4">
@@ -163,33 +195,34 @@
                         </a>
                     </div>
                 {% endif %}
+                {% for project in recent_projects %}
+                    <div class="{% if user.profile.global_role|lower == 'admin' %}col-6{% else %}col-6{% endif %} pr-0 pl-1 mb-2">
+                        <a href="#" data-toggle="modal" data-target="#globalCreateTicketModal" data-project-id="{{ project.pk }}"
+                           class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100"
+                           style="border-radius:10px;">
+                            <i class="fas fa-ticket-alt mb-1" style="font-size:1.1rem; color:#0fbcb0;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Create Ticket</span>
+                        </a>
+                    </div>
 
-                <div class="{% if user.profile.global_role|lower == 'admin' %}col-6{% else %}col-6{% endif %} pr-0 pl-1 mb-2">
-                    <a href="{% url 'project-list' %}"
-                       class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100"
-                       style="border-radius:10px;">
-                        <i class="fas fa-ticket-alt mb-1" style="font-size:1.1rem; color:#0fbcb0;"></i>
-                        <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Create Ticket</span>
-                    </a>
-                </div>
+                    <div class="col-6 pl-0 pr-1">
+                        <a href="{% url 'product-backlog' project.pk %}"
+                           class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100"
+                           style="border-radius:10px;">
+                            <i class="fas fa-redo mb-1" style="font-size:1.1rem; color:#f5a623;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">New Sprint</span>
+                        </a>
+                    </div>
 
-                <div class="col-6 pl-0 pr-1">
-                    <a href="{% url 'project-list' %}"
-                       class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100"
-                       style="border-radius:10px;">
-                        <i class="fas fa-redo mb-1" style="font-size:1.1rem; color:#f5a623;"></i>
-                        <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">New Sprint</span>
-                    </a>
-                </div>
-
-                <div class="col-6 pr-0 pl-1">
-                    <a href="#"
-                       class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100"
-                       style="border-radius:10px;">
-                        <i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>
-                        <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Backlog</span>
-                    </a>
-                </div>
+                    <div class="col-6 pr-0 pl-1">
+                        <a href="{% url 'product-backlog' project.pk%}"
+                           class="card border-0 shadow-sm d-flex flex-column align-items-start p-3 text-decoration-none h-100"
+                           style="border-radius:10px;">
+                            <i class="fas fa-list-ul mb-1" style="font-size:1.1rem; color:#f05d7a;"></i>
+                            <span style="font-size:0.8rem; font-weight:600; color:#172b4d;">Backlog</span>
+                        </a>
+                    </div>
+                {% endfor %}
             </div>
 
             <div class="card border-0 shadow-sm mb-4" style="border-radius:12px;">

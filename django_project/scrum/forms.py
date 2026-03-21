@@ -39,7 +39,7 @@ class ProjectForm(forms.ModelForm):
 class MembershipForm(forms.ModelForm):
     class Meta:
         model = Membership
-        fields = ["user", "role"]
+        fields = ["user", "role", "team_role"]
 
 
 #Ticket form
