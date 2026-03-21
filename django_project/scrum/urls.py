@@ -49,6 +49,8 @@ urlpatterns = [
     path('projects/<int:pk>/ticket/<int:ticket_pk>/inline-update/',views.ticket_inline_update, name='ticket-inline-update'),
     path('projects/<int:pk>/members-json/', views.project_members_json, name='project-members-json'),
 
+    path("projects/<int:pk>/tickets/<int:ticket_pk>/add-to-sprint/", views.add_ticket_to_sprint, name="add-ticket-to-sprint"),
+
     # SPRINT 
     path("projects/<int:pk>/sprints/create/", SprintCreateView.as_view(), name="sprint-create"),
     path("projects/<int:pk>/sprints/<int:sprint_pk>/delete/", SprintDeleteView.as_view(), name="sprint-delete"),

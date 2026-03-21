@@ -361,6 +361,50 @@
             </div>
         </div>
     </div>
+    <!-- MODAL ADD TO SPRINT -->
+<div class="modal fade" id="moveToSprintModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title"><i class="fas fa-redo-alt mr-2"></i>Add to Sprint</h5>
+                <button type="button" class="close" data-dismiss="modal">
+                    <span>&times;</span>
+                </button>
+            </div>
+            <form method="POST" id="moveToSprintForm">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <p class="text-muted mb-3">Select a sprint for this issue :</p>
+                    <div id="sprintOptionsList">
+                        {% for sprint in sprints %}
+                            {% if sprint.status != 'completed' %}
+                            <label class="d-flex align-items-center p-2 mb-2 border rounded" style="cursor:pointer;">
+                                <input type="radio" name="sprint_id" value="{{ sprint.pk }}" class="mr-2">
+                                <div>
+                                    <strong>{{ sprint.name }}</strong>
+                                    <span class="badge {% if sprint.status == 'active' %}badge-success{% else %}badge-warning text-dark{% endif %} ml-2">
+                                        {{ sprint.status|title }}
+                                    </span>
+                                    <br>
+                                    <small class="text-muted">{{ sprint.start_date }} → {{ sprint.end_date|default:"No end date" }}</small>
+                                </div>
+                            </label>
+                            {% endif %}
+                        {% empty %}
+                            <p class="text-muted">No sprints available. Create a sprint first.</p>
+                        {% endfor %}
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-plus mr-1"></i> Add to Sprint
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
 
     {% include 'scrum/sprint/_sprint_modal.html' %}
     {% include 'scrum/global/confirm_delete_modal.html' %}
@@ -372,5 +416,5 @@
 
     <script>
         const TICKET_CREATE_URL = "{% url 'ticket-quick-create' project.pk %}";
-    </script>
+        const PROJECT_PK = {{ project.pk }};    </script>
 {% endblock project_content %}

@@ -9,6 +9,8 @@ from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 from .utils import log_activity
+from .models import Project, Membership, Ticket, Sprint, SprintTicket
+
 
 from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm, SprintForm
 from .models import Project, Membership, Ticket
@@ -1020,3 +1022,25 @@ def delete_comment(request, comment_pk):
         messages.success(request, "Commentaire supprimé.")
         
     return redirect(request.META.get('HTTP_REFERER', reverse('product-backlog', kwargs={'pk': comment.ticket.project.pk})))
+
+@login_required
+def add_ticket_to_sprint(request, pk, ticket_pk):
+    project = get_object_or_404(Project, pk=pk)
+    ticket = get_object_or_404(Ticket, pk=ticket_pk, project=project)
+
+    if not is_contributor_or_admin(request.user, project):
+        messages.error(request, "You don't have permission to add issues to a sprint.")
+        return redirect("product-backlog", pk=pk)
+
+    if request.method == "POST":
+        sprint_pk = request.POST.get("sprint_id")
+        sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+
+        if SprintTicket.objects.filter(sprint=sprint, ticket=ticket).exists():
+            messages.warning(request, f'Issue already in sprint "{sprint.name}".')
+            return redirect("product-backlog", pk=pk)
+
+        SprintTicket.objects.create(sprint=sprint, ticket=ticket)
+        messages.success(request, f'Issue "{ticket.title}" added to sprint "{sprint.name}".')
+
+    return redirect("product-backlog", pk=pk)

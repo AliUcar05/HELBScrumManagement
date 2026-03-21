@@ -188,3 +188,12 @@ function quickCreateIssue() {
     const url = TICKET_CREATE_URL + '?title=' + encodeURIComponent(input.value) + '&type=' + selectedType.value;
     window.location.href = url;
 }
+
+function moveToSprint(ticketId) {
+    var form = document.getElementById('moveToSprintModal');
+    if (form) {
+        document.getElementById('moveToSprintForm').action = 
+            '/projects/' + PROJECT_PK + '/tickets/' + ticketId + '/add-to-sprint/';
+        $('#moveToSprintModal').modal('show');
+    }
+}
