@@ -2,434 +2,438 @@
 {% load crispy_forms_tags %}
 {% if user.is_authenticated %}
 
-    <link rel="stylesheet" href="{% static 'scrum/css/ticket_modal.css' %}">
-        <style>
-    .type-selector {
-        display: flex;
-        gap: 8px;
-        flex-wrap: wrap;
-    }
-    .type-option {
-        cursor: pointer;
-        border-radius: 4px;
-        padding: 2px;
-        border: 2px solid transparent;
-        transition: border-color 0.15s;
-    }
-    .type-option:hover {
-        border-color: #aaa;
-    }
-    .type-option--selected {
-        border-color: #0052cc !important;
-    }
-    .type-badge {
-        display: inline-flex;
-        align-items: center;
-        gap: 4px;
-        padding: 3px 8px;
-        border-radius: 4px;
-        font-size: 12px;
-        font-weight: 600;
-        white-space: nowrap;
-    }
-    </style>
+<link rel="stylesheet" href="{% static 'scrum/css/ticket_modal.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
+  <style>
+.type-selector {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+.type-option {
+    cursor: pointer;
+    border-radius: 4px;
+    padding: 2px;
+    border: 2px solid transparent;
+    transition: border-color 0.15s;
+}
+.type-option:hover {
+    border-color: #aaa;
+}
+.type-option--selected {
+    border-color: #0052cc !important;
+}
+.type-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    white-space: nowrap;
+}
+</style>
+<div class="modal fade" id="globalCreateTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content tm-content">
 
+            <div class="tm-header">
+                <h4 class="tm-title" id="tmModalTitle">Create Issue</h4>
+                <button type="button" class="tm-close" data-dismiss="modal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="tm-divider"></div>
 
-    <div class="modal fade" id="globalCreateTicketModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content tm-content">
+            <div class="card border-0">
+                <div class="card-body">
+                    {% if ticket_form and current_project %}
+                    <form method="POST" action="{% url 'ticket-create' current_project.pk %}" enctype="multipart/form-data" id="tmCreateForm">
+                        {% csrf_token %}
 
-                <div class="tm-header">
-                    <h4 class="tm-title">Create Issue</h4>
-                    <button type="button" class="tm-close" data-dismiss="modal">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="tm-divider"></div>
+                        <div class="tm-drawer-body">
 
-                <div class="card border-0">
-                    <div class="card-body">
-                        {% if ticket_form and current_project %}
-                            <form method="POST" action="{% url 'ticket-create' current_project.pk %}" enctype="multipart/form-data">
-                                {% csrf_token %}
-
-                                <div class="tm-drawer-body">
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tm-label-crispy">Project <span class="tm-required">*</span></label>
-                                                <div class="tm-readonly-input">
-                                                    {% if current_project.image %}
-                                                        <img src="{{ current_project.image.url }}" class="tm-project-img" alt="{{ current_project.name }}">
-                                                    {% else %}
-                                                        <span class="tm-project-square"></span>
-                                                    {% endif %}
-                                                    {{ current_project.name }}
-                                                    <span class="tm-project-code">({{ current_project.code }})</span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tm-label-crispy">Type <span class="tm-required">*</span></label>
-                                                <div class="type-selector" id="typeSelectorModal">
-                                                    <div class="type-option" data-value="user story" onclick="selectTicketType(this)">
-                                                        <span style="background:#E3FCEF;color:#006644;border:1px solid #ABF5D1;" class="type-badge">
-                                                            <i class="fas fa-bookmark"></i> Story
-                                                        </span>
-                                                    </div>
-                                                    <div class="type-option" data-value="task" onclick="selectTicketType(this)">
-                                                        <span style="background:#DEEBFF;color:#0747A6;border:1px solid #B3D4FF;" class="type-badge">
-                                                            <i class="fas fa-check-square"></i> Task
-                                                        </span>
-                                                    </div>
-                                                    <div class="type-option" data-value="bug" onclick="selectTicketType(this)">
-                                                        <span style="background:#FFEBE6;color:#de350b;border:1px solid #FFBDAD;" class="type-badge">
-                                                            <i class="fas fa-bug"></i> Bug
-                                                        </span>
-                                                    </div>
-                                                    <div class="type-option" data-value="epic" onclick="selectTicketType(this)">
-                                                        <span style="background:#EAE6FF;color:#403294;border:1px solid #C0B6F2;" class="type-badge">
-                                                            <i class="fas fa-bolt"></i> Epic
-                                                        </span>
-                                                    </div>
-                                                </div>
-                                                <input type="hidden" name="type" id="typeValueModal" value="user story">
-                                            </div>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Project <span class="tm-required">*</span></label>
+                                        <div class="tm-readonly-input">
+                                            {% if current_project.image %}
+                                            <img src="{{ current_project.image.url }}" class="tm-project-img" alt="{{ current_project.name }}">
+                                            {% else %}
+                                            <span class="tm-project-square"></span>
+                                            {% endif %}
+                                            {{ current_project.name }}
+                                            <span class="tm-project-code">({{ current_project.code }})</span>
                                         </div>
                                     </div>
-
-                                    <hr class="tm-hr">
-
-                                    <div class="row">
-                                        <div class="col-12">
-                                            {{ ticket_form.title|as_crispy_field }}
-                                        </div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="form-group">
-                                                <label class="tm-label-crispy">Description</label>
-                                                <div class="tm-editor">
-                                                    <div class="tm-editor-toolbar">
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('bold')" title="Bold"><b>B</b></button>
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('italic')" title="Italic"><i>I</i></button>
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('underline')" title="Underline"><u>U</u></button>
-                                                        <div class="tm-tb-sep"></div>
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('insertUnorderedList')" title="Bullet list">
-                                                            <i class="fas fa-list-ul"></i>
-                                                        </button>
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('insertOrderedList')" title="Numbered list">
-                                                            <i class="fas fa-list-ol"></i>
-                                                        </button>
-                                                        <div class="tm-tb-sep"></div>
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('formatBlock', 'blockquote')" title="Quote">
-                                                            <i class="fas fa-quote-right"></i>
-                                                        </button>
-                                                        <button type="button" class="tm-tb-btn" onclick="tmFormat('formatBlock', 'pre')" title="Code">
-                                                            <i class="fas fa-code"></i>
-                                                        </button>
-                                                    </div>
-                                                    <div class="tm-editor-area"
-                                                         id="descriptionEditor"
-                                                         contenteditable="true"
-                                                         data-placeholder="Add a description…"></div>
-                                                </div>
-                                                <input type="hidden" name="description" id="descriptionHidden">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Issue Type <span class="tm-required">*</span></label>
+                                        <div class="type-selector" id="typeSelectorModal">
+                                            <div class="type-option" data-value="user story" onclick="selectTicketType(this)">
+                                                <span class="type-badge type-badge--story"><i class="fas fa-bookmark"></i> Story</span>
+                                            </div>
+                                            <div class="type-option" data-value="task" onclick="selectTicketType(this)">
+                                                <span class="type-badge type-badge--task"><i class="fas fa-check-square"></i> Task</span>
+                                            </div>
+                                            <div class="type-option" data-value="bug" onclick="selectTicketType(this)">
+                                                <span class="type-badge type-badge--bug"><i class="fas fa-bug"></i> Bug</span>
+                                            </div>
+                                            <div class="type-option" data-value="epic" onclick="selectTicketType(this)">
+                                                <span class="type-badge type-badge--epic"><i class="fas fa-bolt"></i> Epic</span>
                                             </div>
                                         </div>
+                                        <input type="hidden" name="type" id="typeValueModal" value="user story">
                                     </div>
+                                </div>
+                            </div>
 
-                                    <div class="row">
-                                        <div class="col-12">
-                                            <div class="form-group">
-                                                <label class="tm-label-crispy">Attachment</label>
-                                                <div class="tm-dropzone" id="tmDropzone">
-                                                    <i class="fas fa-cloud-upload-alt tm-dropzone-icon"></i>
-                                                    <span class="tm-dropzone-text">
-                                                        Drop files to attach, or <label for="attachmentInput" class="tm-dropzone-browse">browse</label>
-                                                    </span>
-                                                    <input type="file" name="attachments" id="attachmentInput" multiple style="display:none;">
-                                                </div>
-                                                <div class="tm-file-list" id="tmFileList"></div>
+                            <hr class="tm-hr">
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy" id="tmTitleLabel">Summary <span class="tm-required">*</span></label>
+                                        <input type="text" name="title" id="tmTitleInput" class="form-control" placeholder="What needs to be done?" required>
+                                        <p class="tm-hint" id="tmTitleHint" style="display:none;">Provide a short name to identify this epic.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Description</label>
+                                        <div id="tmQuillEditor" style="min-height:140px;"></div>
+                                        <input type="hidden" name="description" id="descriptionHidden">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Attachment</label>
+                                        <div class="tm-dropzone" id="tmDropzone">
+                                            <i class="fas fa-cloud-upload-alt tm-dropzone-icon"></i>
+                                            <span class="tm-dropzone-text">
+                                                Drop files to attach, or <label for="attachmentInput" class="tm-dropzone-browse">browse</label>
+                                            </span>
+                                            <input type="file" name="attachments" id="attachmentInput" multiple style="display:none;">
+                                        </div>
+                                        <div class="tm-file-list" id="tmFileList"></div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <hr class="tm-hr">
+
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Reporter</label>
+                                        <div class="tm-readonly-input tm-readonly-input--user">
+                                            <div class="tm-avatar">
+                                                {% if request.user.profile.image %}
+                                                <img src="{{ request.user.profile.image.url }}" alt="{{ request.user.username }}">
+                                                {% else %}
+                                                {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                                                {% endif %}
                                             </div>
+                                            <span>{{ request.user.get_full_name|default:request.user.username }}</span>
                                         </div>
                                     </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tm-label-crispy">Reporter</label>
-                                                <div class="tm-readonly-input tm-readonly-input--user">
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Assignee</label>
+                                        <input type="hidden" name="assignee" id="assigneeValue">
+                                        <div class="tm-user-select" id="assigneeDropdown">
+                                            <div class="tm-user-select__trigger" onclick="toggleAssigneeDropdown()">
+                                                <div class="tm-avatar tm-avatar--placeholder" id="assigneeAvatar"><i class="fas fa-user"></i></div>
+                                                <span id="assigneeLabel">— Unassigned —</span>
+                                                <i class="fas fa-chevron-down tm-user-select__arrow"></i>
+                                            </div>
+                                            <div class="tm-user-select__menu" id="assigneeMenu">
+                                                <div class="tm-user-option" data-value="" data-name="— Unassigned —" onclick="selectAssignee(this)">
+                                                    <div class="tm-avatar tm-avatar--placeholder"><i class="fas fa-user"></i></div>
+                                                    <span>— Unassigned —</span>
+                                                </div>
+                                                {% for member in ticket_form.fields.assignee.queryset %}
+                                                <div class="tm-user-option"
+                                                     data-value="{{ member.pk }}"
+                                                     data-name="{{ member.get_full_name|default:member.username }}"
+                                                     data-img="{% if member.profile.image %}{{ member.profile.image.url }}{% endif %}"
+                                                     data-initials="{{ member.first_name|first|upper }}{{ member.last_name|first|upper }}"
+                                                     onclick="selectAssignee(this)">
                                                     <div class="tm-avatar">
-                                                        {% if request.user.profile.image %}
-                                                            <img src="{{ request.user.profile.image.url }}" alt="{{ request.user.username }}">
+                                                        {% if member.profile.image %}
+                                                        <img src="{{ member.profile.image.url }}" alt="{{ member.username }}">
                                                         {% else %}
-                                                            {{ request.user.first_name|first|upper }}{{ request.user.last_name|first|upper }}
+                                                        {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
                                                         {% endif %}
                                                     </div>
-                                                    <span>{{ request.user.get_full_name|default:request.user.username }}</span>
+                                                    <span>{{ member.get_full_name|default:member.username }}</span>
                                                 </div>
-                                            </div>
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="form-group">
-                                                <label class="tm-label-crispy">Assignee</label>
-                                                <input type="hidden" name="assignee" id="assigneeValue">
-                                                <div class="tm-user-select" id="assigneeDropdown">
-                                                    <div class="tm-user-select__trigger" onclick="toggleAssigneeDropdown()">
-                                                        <div class="tm-avatar tm-avatar--placeholder" id="assigneeAvatar">
-                                                            <i class="fas fa-user"></i>
-                                                        </div>
-                                                        <span id="assigneeLabel">— Unassigned —</span>
-                                                        <i class="fas fa-chevron-down tm-user-select__arrow"></i>
-                                                    </div>
-                                                    <div class="tm-user-select__menu" id="assigneeMenu">
-                                                        <div class="tm-user-option" data-value="" data-name="— Unassigned —" onclick="selectAssignee(this)">
-                                                            <div class="tm-avatar tm-avatar--placeholder"><i class="fas fa-user"></i></div>
-                                                            <span>— Unassigned —</span>
-                                                        </div>
-                                                        {% for member in ticket_form.fields.assignee.queryset %}
-                                                            <div class="tm-user-option"
-                                                                 data-value="{{ member.pk }}"
-                                                                 data-name="{{ member.get_full_name|default:member.username }}"
-                                                                 data-img="{% if member.profile.image %}{{ member.profile.image.url }}{% endif %}"
-                                                                 data-initials="{{ member.first_name|first|upper }}{{ member.last_name|first|upper }}"
-                                                                 onclick="selectAssignee(this)">
-                                                                <div class="tm-avatar">
-                                                                    {% if member.profile.image %}
-                                                                        <img src="{{ member.profile.image.url }}" alt="{{ member.username }}">
-                                                                    {% else %}
-                                                                        {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
-                                                                    {% endif %}
-                                                                </div>
-                                                                <span>{{ member.get_full_name|default:member.username }}</span>
-                                                            </div>
-                                                        {% endfor %}
-                                                    </div>
-                                                </div>
+                                                {% endfor %}
                                             </div>
                                         </div>
                                     </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">{{ ticket_form.priority|as_crispy_field }}</div>
-                                        <div class="col-md-6"></div>                    
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-md-6">{{ ticket_form.story_points|as_crispy_field }}</div>
-                                        <div class="col-md-6">{{ ticket_form.due_date|as_crispy_field }}</div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-12">{{ ticket_form.labels|as_crispy_field }}</div>
-                                    </div>
-
-                                    <div class="row">
-                                        <div class="col-12">
-                                                <label class="tm-label-crispy">Parent</label>
-                                                <select name="parent" id="id_parent" class="form-control">
-                                                    <option value="">— None —</option>
-                                                    {% for ticket in ticket_form.fields.parent.queryset %}
-                                                        <option value="{{ ticket.pk }}" data-type="{{ ticket.type }}">
-                                                            {{ ticket.ticket_id }} - {{ ticket.title }}
-                                                        </option>
-                                                    {% endfor %}
-                                                </select>
-                                        </div>
-                                    </div>
-
                                 </div>
-
-                                <div class="tm-drawer-footer">
-                                    <label class="tm-create-another">
-                                        <input type="checkbox" name="create_another"> Create another
-                                    </label>
-                                    <div class="tm-footer-actions">
-                                        <button type="button" class="tm-btn tm-btn--ghost" data-dismiss="modal">Cancel</button>
-                                        <button type="submit" class="tm-btn tm-btn--primary" onclick="syncDescription()">Create</button>
-                                    </div>
-                                </div>
-
-                            </form>
-                        {% else %}
-                            <div class="tm-empty-state">
-                                <p class="tm-empty-title">No project selected</p>
-                                <a href="{% url 'project-list' %}" class="tm-btn tm-btn--primary mt-3">View Projects</a>
                             </div>
-                        {% endif %}
-                    </div>
-                </div>
 
+                            <div class="row">
+                                <div class="col-md-6">{{ ticket_form.priority|as_crispy_field }}</div>
+                                <div class="col-md-6">{{ ticket_form.story_points|as_crispy_field }}</div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6">{{ ticket_form.due_date|as_crispy_field }}</div>
+                                <div class="col-md-6">{{ ticket_form.labels|as_crispy_field }}</div>
+                            </div>
+
+                            <div class="row" id="tmEpicLinkGroup">
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Epic Link</label>
+                                        <select name="parent" id="tmEpicLinkSelect" class="form-control">
+                                            <option value="">— No Epic —</option>
+                                            {% for ticket in ticket_form.fields.parent.queryset %}
+                                            {% if ticket.type == 'epic' %}
+                                            <option value="{{ ticket.pk }}" data-type="epic">{{ ticket.ticket_id }} — {{ ticket.title }}</option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                        <p class="tm-hint">Choose an epic to assign this issue to.</p>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-group">
+                                        <label class="tm-label-crispy">Sprint</label>
+                                        <select name="_sprint_id" id="tmSprintSelect" class="form-control">
+                                            <option value="">— Backlog (no sprint) —</option>
+                                            {% for sprint in current_project.sprints.all %}
+                                            {% if sprint.status == 'active' or sprint.status == 'planned' %}
+                                            <option value="{{ sprint.pk }}">
+                                                {{ sprint.name }}{% if sprint.status == 'active' %} (Active){% endif %}
+                                            </option>
+                                            {% endif %}
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+
+                        <div class="tm-drawer-footer">
+                            <label class="tm-create-another">
+                                <input type="checkbox" name="create_another"> Create another
+                            </label>
+                            <div class="tm-footer-actions">
+                                <button type="button" class="tm-btn tm-btn--ghost" data-dismiss="modal">Cancel</button>
+                                <button type="submit" class="tm-btn tm-btn--primary" id="tmSubmitBtn">Create</button>
+                            </div>
+                        </div>
+
+                    </form>
+                    {% else %}
+                    <div class="tm-empty-state">
+                        <p class="tm-empty-title">No project selected</p>
+                        <a href="{% url 'project-list' %}" class="tm-btn tm-btn--primary mt-3">View Projects</a>
+                    </div>
+                    {% endif %}
+                </div>
             </div>
+
         </div>
     </div>
+</div>
 
-    <script>
-        function tmFormat(cmd, val)
-        {
-            document.getElementById('descriptionEditor').focus();
-            document.execCommand(cmd, false, val || null);
-        }
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script>
+(function () {
+    var tmQuill = null;
 
-        function syncDescription()
-        {
-            document.getElementById('descriptionHidden').value = document.getElementById('descriptionEditor').innerHTML;
-        }
+    function initQuill() {
+        var container = document.getElementById('tmQuillEditor');
+        if (!container) return;
 
-        // Sync aussi au submit du form
-        document.addEventListener('DOMContentLoaded', function ()
-        {
-            var form = document.querySelector('#globalCreateTicketModal form');
+        // Destroy any previous Quill instance on this container
+        container.innerHTML = '';
+        container.className = '';
 
-            if (form)
-            {
-                form.addEventListener('submit', syncDescription);
-            }
-
-            /* ---- Placeholder pour l'éditeur ---- */
-            var editor = document.getElementById('descriptionEditor');
-            if (editor)
-            {
-                editor.addEventListener('focus', function() {
-                    if (this.innerHTML === '') this.classList.add('focused');
-                });
-                editor.addEventListener('blur', function() {
-                    this.classList.remove('focused');
-                });
-            }
-
-            /* ---- Drop zone ---- */
-            var dropzone = document.getElementById('tmDropzone');
-            var fileInput = document.getElementById('attachmentInput');
-            var fileList  = document.getElementById('tmFileList');
-
-            if (dropzone) {
-                dropzone.addEventListener('dragover', function(e) {
-                    e.preventDefault();
-                    dropzone.classList.add('tm-dropzone--active');
-                });
-                dropzone.addEventListener('dragleave', function() {
-                    dropzone.classList.remove('tm-dropzone--active');
-                });
-                dropzone.addEventListener('drop', function(e) {
-                    e.preventDefault();
-                    dropzone.classList.remove('tm-dropzone--active');
-                    handleFiles(e.dataTransfer.files);
-                });
-                dropzone.addEventListener('click', function(e) {
-                    if (e.target.tagName !== 'LABEL' && e.target.tagName !== 'INPUT') {
-                        fileInput.click();
-                    }
-                });
-                fileInput.addEventListener('change', function() {
-                    handleFiles(this.files);
-                });
-            }
-
-            function handleFiles(files) {
-                fileList.innerHTML = '';
-                Array.from(files).forEach(function(file) {
-                    var item = document.createElement('div');
-                    item.className = 'tm-file-item';
-                    var icon = file.type.startsWith('image/') ? '🖼️' : '📄';
-                    item.innerHTML = icon + ' <span>' + file.name + '</span>'
-                        + '<small>' + (file.size / 1024).toFixed(1) + ' KB</small>';
-                    fileList.appendChild(item);
-                });
+        tmQuill = new Quill('#tmQuillEditor', {
+            theme: 'snow',
+            placeholder: 'Add a description…',
+            modules: {
+                toolbar: [
+                    [{ header: [1, 2, 3, false] }],
+                    ['bold', 'italic', 'underline', 'strike'],
+                    [{ color: [] }, { background: [] }],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    [{ indent: '-1' }, { indent: '+1' }],
+                    ['blockquote', 'code-block'],
+                    ['link', 'image'],
+                    ['clean']
+                ]
             }
         });
 
-        /* ---- Assignee dropdown ---- */
-        function toggleAssigneeDropdown() {
-            document.getElementById('assigneeMenu').classList.toggle('tm-user-select__menu--open');
-            document.getElementById('assigneeDropdown').classList.toggle('tm-user-select--open');
+        // Sync content to hidden input on submit
+        var form = document.getElementById('tmCreateForm');
+        if (form) {
+            form.addEventListener('submit', function () {
+                document.getElementById('descriptionHidden').value =
+                    tmQuill ? tmQuill.root.innerHTML : '';
+            });
         }
-        function selectAssignee(el) {
-            var value    = el.dataset.value;
-            var name     = el.dataset.name;
-            var img      = el.dataset.img;
-            var initials = el.dataset.initials || '';
-            document.getElementById('assigneeValue').value = value;
-            var avatar = document.getElementById('assigneeAvatar');
-            var label  = document.getElementById('assigneeLabel');
-            if (!value) {
-                avatar.innerHTML = '<i class="fas fa-user"></i>';
-                avatar.className = 'tm-avatar tm-avatar--placeholder';
-            } else if (img) {
-                avatar.innerHTML = '<img src="' + img + '" alt="' + name + '">';
-                avatar.className = 'tm-avatar';
-            } else {
-                avatar.innerHTML = initials;
-                avatar.className = 'tm-avatar';
-            }
-            label.textContent = name;
-            document.getElementById('assigneeMenu').classList.remove('tm-user-select__menu--open');
-            document.getElementById('assigneeDropdown').classList.remove('tm-user-select--open');
+    }
+
+    // Init once DOM is ready — but only ONCE (guard via flag)
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initQuill);
+    } else {
+        initQuill();
+    }
+
+    // Re-init if modal is shown (handles case where modal was in DOM before Quill loaded)
+    document.addEventListener('show.bs.modal', function (e) {
+        if (e.target && e.target.id === 'globalCreateTicketModal') {
+            if (!tmQuill) initQuill();
         }
-        document.addEventListener('click', function(e) {
-            var dd = document.getElementById('assigneeDropdown');
-            if (dd && !dd.contains(e.target)) {
-                document.getElementById('assigneeMenu').classList.remove('tm-user-select__menu--open');
-                dd.classList.remove('tm-user-select--open');
-            }
+    });
+
+    // Reset on close
+    document.addEventListener('hidden.bs.modal', function (e) {
+        if (!e.target || e.target.id !== 'globalCreateTicketModal') return;
+        document.getElementById('tmTitleInput').value = '';
+        if (tmQuill) tmQuill.setContents([]);
+        document.getElementById('assigneeValue').value = '';
+        document.getElementById('assigneeLabel').textContent = '— Unassigned —';
+        document.getElementById('assigneeAvatar').className = 'tm-avatar tm-avatar--placeholder';
+        document.getElementById('assigneeAvatar').innerHTML = '<i class="fas fa-user"></i>';
+        document.getElementById('tmSprintSelect').value = '';
+        document.getElementById('tmEpicLinkSelect').value = '';
+        document.getElementById('tmFileList').innerHTML = '';
+        var defaultType = document.querySelector('#typeSelectorModal .type-option[data-value="user story"]');
+        if (defaultType) selectTicketType(defaultType);
+    });
+
+    // Dropzone
+    document.addEventListener('DOMContentLoaded', function () {
+        var dropzone = document.getElementById('tmDropzone');
+        var fileInput = document.getElementById('attachmentInput');
+        var fileList  = document.getElementById('tmFileList');
+        if (!dropzone) return;
+
+        dropzone.addEventListener('dragover', function (e) {
+            e.preventDefault(); dropzone.classList.add('tm-dropzone--active');
         });
+        dropzone.addEventListener('dragleave', function () {
+            dropzone.classList.remove('tm-dropzone--active');
+        });
+        dropzone.addEventListener('drop', function (e) {
+            e.preventDefault();
+            dropzone.classList.remove('tm-dropzone--active');
+            showFiles(e.dataTransfer.files);
+        });
+        dropzone.addEventListener('click', function (e) {
+            if (e.target.tagName !== 'LABEL' && e.target.tagName !== 'INPUT') fileInput.click();
+        });
+        fileInput.addEventListener('change', function () { showFiles(this.files); });
 
-        // Type selector
-        function selectTicketType(el) {
-            document.querySelectorAll('#typeSelectorModal .type-option').forEach(function(opt) {
-                opt.classList.remove('type-option--selected');
+        function showFiles(files) {
+            fileList.innerHTML = '';
+            Array.from(files).forEach(function (f) {
+                var el = document.createElement('div');
+                el.className = 'tm-file-item';
+                var icon = f.type.startsWith('image/') ? '<i class="fas fa-image"></i>' : '<i class="fas fa-file"></i>';
+                el.innerHTML = icon + ' <span>' + f.name + '</span><small>' + (f.size / 1024).toFixed(1) + ' KB</small>';
+                fileList.appendChild(el);
             });
-            el.classList.add('type-option--selected');
-            var val = el.dataset.value;
-            document.getElementById('typeValueModal').value = val;
-
-            var parentField = document.querySelector('select[name="parent"]');
-            if (!parentField) return;
-
-            var parentGroup = parentField.closest('.form-group') || parentField.parentElement;
-
-            if (val === 'bug' || val === 'epic') {
-                // Bloquer complètement
-                parentField.value = '';
-                parentField.disabled = true;
-                parentGroup.style.opacity = '0.4';
-                parentGroup.title = val === 'bug' ? 'Bugs cannot have a parent' : 'Epics cannot have a parent';
-
-            } else if (val === 'user story') {
-                // Story → seulement les Epics
-                parentField.disabled = false;
-                parentGroup.style.opacity = '1';
-                parentGroup.title = 'Parent must be an Epic';
-                filterParentOptions(parentField, ['epic']);
-
-            } else if (val === 'task') {
-                // Task → Epics et Stories
-                parentField.disabled = false;
-                parentGroup.style.opacity = '1';
-                parentGroup.title = 'Parent must be an Epic or a Story';
-                filterParentOptions(parentField, ['epic', 'user story']);
-            }
         }
+    });
+}());
 
-        function filterParentOptions(selectEl, allowedTypes) {
-            Array.from(selectEl.options).forEach(function(option) {
-                if (option.value === '') {
-                    // Garder l'option "None"
-                    option.style.display = '';
-                    return;
-                }
-                var optionType = option.dataset.type ? option.dataset.type.toLowerCase() : '';
-                option.style.display = allowedTypes.includes(optionType) ? '' : 'none';
-            });
-            // Reset la valeur si l'option sélectionnée est maintenant cachée
-            var selected = selectEl.options[selectEl.selectedIndex];
-            if (selected && selected.style.display === 'none') {
-                selectEl.value = '';
-            }
+// ── Type selector ─────────────────────────────────────────────
+function selectTicketType(el) {
+    document.querySelectorAll('#typeSelectorModal .type-option').forEach(function (o) {
+        o.classList.remove('type-option--selected');
+    });
+    el.classList.add('type-option--selected');
+    var val = el.dataset.value;
+    document.getElementById('typeValueModal').value = val;
+
+    var titleLabel  = document.getElementById('tmTitleLabel');
+    var titleHint   = document.getElementById('tmTitleHint');
+    var titleInput  = document.getElementById('tmTitleInput');
+    var epicGroup   = document.getElementById('tmEpicLinkGroup');
+    var modalTitle  = document.getElementById('tmModalTitle');
+
+    if (val === 'epic') {
+        titleLabel.innerHTML = 'Epic Name <span class="tm-required">*</span>';
+        titleHint.style.display = 'block';
+        titleInput.placeholder = 'Short name for this epic';
+        modalTitle.textContent = 'Create Epic';
+        epicGroup.style.display = 'none';
+    } else {
+        titleLabel.innerHTML = 'Summary <span class="tm-required">*</span>';
+        titleHint.style.display = 'none';
+        titleInput.placeholder = 'What needs to be done?';
+        epicGroup.style.display = '';
+        var labels = { 'user story': 'Create Story', 'task': 'Create Task', 'bug': 'Create Bug' };
+        modalTitle.textContent = labels[val] || 'Create Issue';
+    }
+}
+
+// ── Assignee dropdown ─────────────────────────────────────────
+function toggleAssigneeDropdown() {
+    document.getElementById('assigneeMenu').classList.toggle('tm-user-select__menu--open');
+    document.getElementById('assigneeDropdown').classList.toggle('tm-user-select--open');
+}
+function selectAssignee(el) {
+    var value = el.dataset.value, name = el.dataset.name,
+        img = el.dataset.img, initials = el.dataset.initials || '';
+    document.getElementById('assigneeValue').value = value;
+    var avatar = document.getElementById('assigneeAvatar');
+    var label  = document.getElementById('assigneeLabel');
+    if (!value) {
+        avatar.innerHTML = '<i class="fas fa-user"></i>';
+        avatar.className = 'tm-avatar tm-avatar--placeholder';
+    } else if (img) {
+        avatar.innerHTML = '<img src="' + img + '" alt="' + name + '">';
+        avatar.className = 'tm-avatar';
+    } else {
+        avatar.innerHTML = initials;
+        avatar.className = 'tm-avatar';
+    }
+    label.textContent = name;
+    document.getElementById('assigneeMenu').classList.remove('tm-user-select__menu--open');
+    document.getElementById('assigneeDropdown').classList.remove('tm-user-select--open');
+}
+document.addEventListener('click', function (e) {
+    var dd = document.getElementById('assigneeDropdown');
+    if (dd && !dd.contains(e.target)) {
+        document.getElementById('assigneeMenu').classList.remove('tm-user-select__menu--open');
+        dd.classList.remove('tm-user-select--open');
+    }
+});
+
+// Called from backlog_epic.js
+function preselectEpicInModal(epicId, epicTitle) {
+    var sel = document.getElementById('tmEpicLinkSelect');
+    if (!sel) return;
+    for (var i = 0; i < sel.options.length; i++) {
+        if (String(sel.options[i].value) === String(epicId)) {
+            sel.selectedIndex = i;
+            break;
         }
-    </script>
+    }
+}
+</script>
+
 {% endif %}

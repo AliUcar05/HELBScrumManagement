@@ -547,10 +547,18 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
         self.object = form.save()
 
-        log_activity(self.request.user, project, "create_ticket",
-                     ticket=self.object, message=f"created ticket {self.object.title}"
-                     )
+        # Si un sprint a ete selectionne dans le modal, y ajouter le ticket
+        sprint_id = self.request.POST.get("_sprint_id", "").strip()
+        if sprint_id:
+            from .models import SprintTicket
+            sprint = Sprint.objects.filter(pk=sprint_id, project=project).first()
+            if sprint:
+                SprintTicket.objects.get_or_create(sprint=sprint, ticket=self.object)
 
+        log_activity(
+            self.request.user, project, "create_ticket",
+            ticket=self.object, message=f"created ticket {self.object.title}"
+        )
         messages.success(self.request, f'Issue "{form.instance.title}" created.')
         return redirect(self.get_success_url())
 
@@ -574,32 +582,34 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         self.request.session["current_project_id"] = self.project.id
         normalize_backlog_order(self.project)
 
-        qs = Ticket.objects.filter(project=self.project) \
-            .exclude(type='epic') \
-            .select_related("assignee", "assignee__profile", "parent") \
+        qs = (
+            Ticket.objects
+            .filter(project=self.project)
+            .exclude(type='epic')
+            # EXCLURE LES TICKETS QUI SONT DANS UN SPRINT ACTIF OU PLANNED
+            .exclude(sprints__status__in=['active', 'planned'])
+            .select_related("assignee", "assignee__profile", "parent")
+            .prefetch_related("sprints")
             .order_by("backlog_order", "created_at")
+        )
 
         # Filtres GET
         type_filter = self.request.GET.get("type", "")
         priority_filter = self.request.GET.get("priority", "")
-        status_filter = self.request.GET.get("status", "")
         epic_filter = self.request.GET.get("epic", "")
 
         if epic_filter:
             qs = qs.filter(parent__id=epic_filter)
-        
         if type_filter:
             qs = qs.filter(type=type_filter)
         if priority_filter:
             qs = qs.filter(priority=priority_filter)
-        if status_filter:
-            qs = qs.filter(status=status_filter)
-        
+
         return qs
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project"]    = self.project
+        context["project"] = self.project
         context["membership"] = self.project.memberships.filter(user=self.request.user).first()
         context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
         context["can_delete"] = is_project_admin(self.request.user, self.project)
@@ -607,41 +617,49 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         context["filter_type"] = self.request.GET.get("type", "")
         context["filter_priority"] = self.request.GET.get("priority", "")
         context["filter_status"] = self.request.GET.get("status", "")
+        context["filter_epic"] = self.request.GET.get("epic", "")
         context["active_filters"] = any([
             context["filter_type"],
             context["filter_priority"],
-            context["filter_status"]
+            context["filter_status"],
         ])
-        context["epics"] = Ticket.objects.filter(project=self.project, type='epic').order_by("backlog_order")
-        context["filter_epic"] = self.request.GET.get("epic", "")
 
+        # EPICS — avec stats calculées en Python (pas de méthodes custom sur le modèle)
+        raw_epics = Ticket.objects.filter(
+            project=self.project, type='epic'
+        ).order_by("backlog_order", "created_at")
+
+        epics = []
+        for epic in raw_epics:
+            subs = epic.subtickets.all()
+            total = subs.count()
+            done = subs.filter(status='done').count()
+            pts = sum(t.story_points for t in subs if t.story_points)
+            unest = subs.filter(story_points__isnull=True).count()
+            # Attacher les stats directement à l'objet epic pour le template
+            epic.stat_total = total
+            epic.stat_done = done
+            epic.stat_pts = pts
+            epic.stat_unest = unest
+            epics.append(epic)
+
+        context["epics"] = epics
+
+        # SPRINTS
+        from django.contrib.auth import get_user_model
+        User = get_user_model()
         sprints = self.project.sprints.all().order_by('-created_at')
-
         for sprint in sprints:
             tickets = sprint.tickets.all()
             sprint.total_issues = tickets.count()
-            sprint.completed_issues = tickets.filter(status='done').count()
             sprint.todo_count = tickets.filter(status='todo').count()
             sprint.inprogress_count = tickets.filter(status='in_progress').count()
             sprint.done_count = tickets.filter(status='done').count()
-            sprint.completion_percentage = (
-                int((sprint.completed_issues / sprint.total_issues) * 100)
-                if sprint.total_issues else 0
-            )
-            if sprint.status == 'active' and sprint.end_date:
-                from datetime import date
-                today = date.today()
-                sprint.days_remaining = max((sprint.end_date - today).days, 0)
-
-            # Assignees uniques du sprint
-            from django.contrib.auth import get_user_model
-            User = get_user_model()
             assignee_ids = tickets.exclude(assignee=None).values_list('assignee_id', flat=True).distinct()
             sprint.assignees = list(User.objects.filter(id__in=assignee_ids).select_related('profile'))
+        context["sprints"] = list(sprints)
 
-        context["sprints"] = sprints
         return context
-
 
 
 class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
@@ -898,6 +916,36 @@ class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     def get_success_url(self):
         return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
 
+class SprintUpdateView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
+    model = Sprint
+    form_class = SprintForm
+    pk_url_kwarg = "sprint_pk"
+
+    def test_func(self):
+        sprint = get_object_or_404(Sprint, pk=self.kwargs["sprint_pk"], project__pk=self.kwargs["pk"])
+        return is_contributor_or_admin(self.request.user, sprint.project)
+
+    def handle_no_permission(self):
+        messages.error(self.request, "Permission denied.")
+        return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def get_object(self, queryset=None):
+        return get_object_or_404(Sprint, pk=self.kwargs["sprint_pk"], project__pk=self.kwargs["pk"])
+
+    def form_valid(self, form):
+        sprint = form.save()
+        log_activity(self.request.user,sprint.project,"create_sprint",sprint=sprint, message=f"updated sprint {sprint.name}")
+        messages.success(self.request, f'Sprint "{sprint.name}" updated.')
+        return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def form_invalid(self, form):
+        # Le modal passe par POST, on redirige avec un message d'erreur
+        messages.error(self.request, "Error updating sprint. Please check the fields.")
+        return redirect("product-backlog", pk=self.kwargs["pk"])
+
+    def get_success_url(self):
+        return reverse("product-backlog", kwargs={"pk": self.kwargs["pk"]})
+
 class SprintDeleteView(LoginRequiredMixin, UserPassesTestMixin, View):
     def test_func(self):
         sprint = get_object_or_404(Sprint, pk=self.kwargs["sprint_pk"], project__pk=self.kwargs["pk"])
@@ -962,6 +1010,24 @@ def sprint_complete(request, pk, sprint_pk):
         )
         messages.success(request, f'Sprint "{sprint.name}" completed.')
     return redirect("product-backlog", pk=pk)
+
+
+@login_required
+def ticket_remove_from_sprint(request, pk):
+    """POST {ticket_id} — removes a ticket from all sprints (back to backlog)."""
+    project = get_object_or_404(Project, pk=pk)
+    if not is_contributor_or_admin(request.user, project):
+        messages.error(request, "Permission denied.")
+        return redirect("product-backlog", pk=pk)
+
+    if request.method == "POST":
+        ticket_id = request.POST.get("ticket_id")
+        ticket = get_object_or_404(Ticket, pk=ticket_id, project=project)
+        ticket.sprints.clear()  # Supprime le ticket de tous les sprints
+        messages.success(request, f'"{ticket.title}" moved back to backlog.')
+
+    return redirect("product-backlog", pk=pk)
+
 
 ##################comment ticket###########
 

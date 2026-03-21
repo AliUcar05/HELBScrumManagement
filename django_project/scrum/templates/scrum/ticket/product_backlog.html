@@ -1,420 +1,532 @@
 {% extends 'scrum/project_board.html' %}
 {% load static %}
 {% block project_content %}
-    <link rel="stylesheet" href="{% static 'scrum/css/backlog.css' %}">
-    <link rel="stylesheet" href="{% static 'scrum/css/issue-drawer.css' %}">
-    <link rel="stylesheet" href="{% static 'scrum/css/sprint_table.css' %}">
-    <link rel="stylesheet" href="{% static 'scrum/css/active_sprint.css' %}">
 
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <h1 class="page-title">Product Backlog</h1>
-    <div class="backlog-quick-filters">
-        <span class="bqf-label">Quick Filters:</span>
-        <button class="bqf-btn" onclick="applyQuickFilter('mine')">Only My Issues</button>
-        <button class="bqf-btn" onclick="applyQuickFilter('recent')">Recently Updated</button>
-    </div>
-    <hr>
-    <div class="backlog-layout">
-        <div class="backlog-main" id="backlogMain">
-            <div class="backlog-container">
+<link rel="stylesheet" href="{% static 'scrum/css/backlog.css' %}">
+<link rel="stylesheet" href="{% static 'scrum/css/issue-drawer.css' %}">
+<link rel="stylesheet" href="{% static 'scrum/css/sprint_table.css' %}">
+<link rel="stylesheet" href="{% static 'scrum/css/active_sprint.css' %}">
+<link rel="stylesheet" href="{% static 'scrum/css/epic_panel.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-                <div class="sprints-section">
-                    <div class="sprints-section-header">
-                        <h2>Sprints</h2>
-                        <button class="btn btn-dark" data-toggle="modal" data-target="#createSprintModal">
-                            <i class="fas fa-plus mr-1"></i> Create Sprint
+<h1 class="page-title">Product Backlog</h1>
+
+<div class="backlog-quick-filters">
+    <span class="bqf-label">Quick Filters:</span>
+    <button class="bqf-btn" onclick="applyQuickFilter('mine')">Only My Issues</button>
+    <button class="bqf-btn" onclick="applyQuickFilter('recent')">Recently Updated</button>
+</div>
+
+<hr>
+
+<div class="backlog-layout">
+
+    <div class="epic-tab-label {% if filter_epic %}active{% endif %}" id="epicTabLabel" onclick="toggleEpicPanel()" title="Show epics panel">EPICS</div>
+
+    <div class="epic-panel {% if filter_epic %}open{% endif %}" id="epicPanel">
+        <div class="epic-panel-inner">
+
+            <div class="epic-panel-header">
+                <span class="epic-panel-title">Epics</span>
+                <div class="epic-panel-header-actions">
+                    {% if can_create %}
+                    <button class="epic-panel-btn" title="Create Epic" onclick="openCreateModalAsEpic()"><i class="fas fa-plus"></i></button>
+                    {% endif %}
+                    <button class="epic-panel-btn" title="Close" onclick="toggleEpicPanel()"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+
+            <div class="epic-panel-body">
+
+                <a href="{% url 'product-backlog' project.pk %}" class="epic-all-row {% if not filter_epic %}active{% endif %}">All issues</a>
+
+                {% for epic in epics %}
+                <div class="epic-item" id="epic-item-{{ epic.pk }}" data-epic-index="{{ forloop.counter0 }}">
+
+                    <div class="epic-item-header {% if filter_epic == epic.pk|stringformat:'s' %}active{% endif %}" id="epic-header-{{ epic.pk }}" onclick="handleEpicClick(event, {{ epic.pk }}, '{% url 'product-backlog' project.pk %}?epic={{ epic.pk }}')">
+                        <span class="epic-item-chevron {% if filter_epic == epic.pk|stringformat:'s' %}open{% endif %}" id="epic-chev-{{ epic.pk }}">
+                            <i class="fas fa-chevron-right"></i>
+                        </span>
+                        <span class="epic-item-name" title="{{ epic.title }}">{{ epic.title }}</span>
+                        {% if can_create %}
+                        <button class="epic-item-menu-btn" onclick="toggleEpicMenu(event, {{ epic.pk }})" title="More options">
+                            <i class="fas fa-ellipsis-h"></i>
+                        </button>
+                        {% endif %}
+                    </div>
+
+                    <div class="epic-item-progress">
+                        <div class="epic-item-progress-fill" id="epic-fill-{{ epic.pk }}"></div>
+                    </div>
+
+                    {% if can_create %}
+                    <div class="epic-item-dropdown" id="epic-menu-{{ epic.pk }}">
+                        <a href="?epic={{ epic.pk }}" class="epic-dd-item" onclick="event.stopPropagation();">
+                            <i class="fas fa-filter"></i> Filter by this epic
+                        </a>
+                        <button class="epic-dd-item" onclick="event.stopPropagation(); closeAllEpicMenus(); openCreateInEpicModal({{ epic.pk }}, '{{ epic.title|escapejs }}')">
+                            <i class="fas fa-plus"></i> Create issue in epic
+                        </button>
+                        <div class="epic-dd-sep"></div>
+                        {% url 'ticket-delete' project.pk epic.pk as epic_delete_url %}
+                        <button class="epic-dd-item epic-dd-item--danger" onclick="event.stopPropagation(); closeAllEpicMenus(); confirmDelete({title:'Delete epic?',message:'<strong>{{ epic.title|escapejs }}</strong>',warning:'Child issues will be detached but not deleted.',action:'{{ epic_delete_url }}'})">
+                            <i class="fas fa-trash"></i> Delete epic
                         </button>
                     </div>
-
-                    {% for sprint in sprints %}
-                        <div class="sprint-table-block" id="sprint-block-{{ sprint.pk }}">
-
-                            <div class="spt-header" onclick="toggleSprint({{ sprint.pk }})">
-                                <div class="spt-header-left">
-                                    <span class="spt-chevron" id="chevron-{{ sprint.pk }}">
-                                        <i class="fas fa-chevron-down"></i>
-                                    </span>
-                                    <span class="spt-name">{{ sprint.name }}</span>
-                                    <span class="spt-count">{{ sprint.total_issues }} issue{{ sprint.total_issues|pluralize }}</span>
-                                    {% if sprint.status == 'active' %}
-                                        <span class="spt-badge spt-badge--active">ACTIVE</span>
-                                        <span class="spt-status-dots">
-                                            <span class="spt-dot spt-dot--todo" title="To Do">{{ sprint.todo_count|default:0 }}</span>
-                                            <span class="spt-dot spt-dot--inprogress" title="In Progress">{{ sprint.inprogress_count|default:0 }}</span>
-                                            <span class="spt-dot spt-dot--done" title="Done">{{ sprint.done_count|default:0 }}</span>
-                                        </span>
-                                    {% endif %}
-                                </div>
-                                <div class="spt-header-right" onclick="event.stopPropagation()">
-                                    {% if sprint.status == 'planned' %}
-                                        <form method="POST" action="{% url 'sprint-start' project.pk sprint.pk %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="spt-action-btn spt-action-btn--start">Start sprint</button>
-                                        </form>
-                                    {% elif sprint.status == 'active' %}
-                                        <form method="POST" action="{% url 'sprint-complete' project.pk sprint.pk %}" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="spt-action-btn spt-action-btn--complete">Complete sprint</button>
-                                        </form>
-                                    {% endif %}
-                                    <div class="spt-more-menu">
-                                        <button class="spt-more-btn" onclick="toggleSprintMenu(event, {{ sprint.pk }})">
-                                            <i class="fas fa-ellipsis-h"></i>
-                                        </button>
-                                        <div class="spt-dropdown" id="sprint-menu-{{ sprint.pk }}">
-                                            <a href="#" class="spt-dropdown-item" onclick="openEditSprintModal({{ sprint.pk }}, '{{ sprint.name|escapejs }}')">
-                                                <i class="fas fa-edit"></i> Edit sprint
-                                            </a>
-                                            {% url 'sprint-delete' project.pk sprint.pk as sprint_delete_url %}
-                                            <button type="button" class="spt-dropdown-item spt-dropdown-item--danger"
-                                                onclick="confirmDelete({
-                                                    title: 'Delete sprint?',
-                                                    message: '<strong>{{ sprint.name|escapejs }}</strong>',
-                                                    warning: 'Issues will be moved back to the backlog.',
-                                                    action: '{{ sprint_delete_url }}'
-                                                })">
-                                                <i class="fas fa-trash"></i> Delete sprint
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div class="spt-subinfo" id="subinfo-{{ sprint.pk }}">
-                                {% if sprint.assignees %}
-                                    <div class="spt-avatars">
-                                        {% for member in sprint.assignees|slice:":4" %}
-                                            <div class="spt-avatar" title="{{ member.get_full_name|default:member.username }}">
-                                                {% if member.profile.image %}
-                                                    <img src="{{ member.profile.image.url }}" alt="{{ member.username }}">
-                                                {% else %}
-                                                    {{ member.first_name|first|upper }}{{ member.last_name|first|upper }}
-                                                {% endif %}
-                                            </div>
-                                        {% endfor %}
-                                        {% if sprint.assignees|length > 4 %}
-                                            <div class="spt-avatar spt-avatar--more">+{{ sprint.assignees|length|add:"-4" }}</div>
-                                        {% endif %}
-                                    </div>
-                                {% endif %}
-                                    <span class="spt-dates">
-                                        {% if sprint.start_date and sprint.end_date %}
-                                            {{ sprint.start_date|date:"d/M/Y" }} &bull; {{ sprint.end_date|date:"d/M/Y" }}
-                                        {% endif %}
-                                    </span>
-                                {% if sprint.goals %}
-                                    <span class="spt-goal">{{ sprint.goals }}</span>
-                                {% endif %}
-                            </div>
-
-                            <div class="spt-body" id="spt-body-{{ sprint.pk }}">
-                                {% with sprint_tickets=sprint.tickets.all %}
-                                    {% if sprint_tickets %}
-                                        {% for ticket in sprint_tickets %}
-                                            <div class="spt-row" data-ticket-id="{{ ticket.pk }}">
-                                                <div class="spt-row-left">
-                                                    <span class="spt-type-icon">
-                                                        {% if ticket.type == 'bug' %}
-                                                            <i class="fas fa-square" style="color:#de350b;font-size:14px;"></i>
-                                                        {% elif ticket.type == 'user story' %}
-                                                            <i class="fas fa-bookmark" style="color:#36b37e;font-size:14px;"></i>
-                                                        {% elif ticket.type == 'task' %}
-                                                            <i class="fas fa-check-square" style="color:#42526e;font-size:14px;"></i>
-                                                        {% elif ticket.type == 'epic' %}
-                                                            <i class="fas fa-bolt" style="color:#5243aa;font-size:14px;"></i>
-                                                        {% endif %}
-                                                    </span>
-                                                    <span class="spt-priority-icon">
-                                                        {% if ticket.priority == 'highest' or ticket.priority == 'high' %}
-                                                            <i class="fas fa-arrow-up" style="color:#de350b;font-size:11px;"></i>
-                                                        {% elif ticket.priority == 'medium' %}
-                                                            <i class="fas fa-equals" style="color:#ffc400;font-size:11px;"></i>
-                                                        {% elif ticket.priority == 'low' or ticket.priority == 'lowest' %}
-                                                            <i class="fas fa-arrow-down" style="color:#36b37e;font-size:11px;"></i>
-                                                        {% else %}
-                                                            <i class="fas fa-equals" style="color:#aaa;font-size:11px;"></i>
-                                                        {% endif %}
-                                                    </span>
-                                                    <a class="spt-ticket-key" href="#" onclick="openTicketDrawer({{ ticket.pk }}); return false;">
-                                                        {{ ticket.ticket_id }}
-                                                    </a>
-                                                    <span class="spt-ticket-title">{{ ticket.title }}</span>
-                                                </div>
-                                                <div class="spt-row-right">
-                                                    {% if ticket.parent %}
-                                                        <span class="spt-epic-tag" style="background:#eae6ff;color:#5243aa;">
-                                                            {{ ticket.parent.title|truncatechars:20 }}
-                                                        </span>
-                                                    {% endif %}
-                                                    <div class="spt-avatar spt-avatar--sm" title="{% if ticket.assignee %}{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}{% else %}Unassigned{% endif %}">
-                                                        {% if ticket.assignee and ticket.assignee.profile.image %}
-                                                            <img src="{{ ticket.assignee.profile.image.url }}" alt="{{ ticket.assignee.username }}">
-                                                        {% elif ticket.assignee %}
-                                                            {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
-                                                        {% else %}
-                                                            <i class="fas fa-user" style="font-size:11px;color:#aaa;"></i>
-                                                        {% endif %}
-                                                    </div>
-                                                    {% if ticket.story_points %}
-                                                        <span class="spt-points">{{ ticket.story_points }}</span>
-                                                    {% endif %}
-                                                </div>
-                                            </div>
-                                        {% endfor %}
-                                    {% else %}
-                                        <div class="spt-empty">
-                                            <p>Plan your sprint. Drag and drop issues from the backlog below.</p>
-                                        </div>
-                                    {% endif %}
-                                {% endwith %}
-                            </div>
-                        </div>
-                    {% empty %}
-                        <div class="spt-no-sprints">
-                            <p>No sprints yet. Create your first sprint!</p>
-                        </div>
-                    {% endfor %}
-                </div>
-
-                <!-- EPICS SECTION -->
-                <div class="sprints-section" style="margin-bottom:24px;">
-                    <div class="sprints-section-header">
-                        <h2>Epics</h2>
-                    </div>
-                    {% if epics %}
-                    <div style="display:flex;gap:8px;flex-wrap:wrap;">
-                        <a href="{% url 'product-backlog' project.pk %}"
-                           class="btn btn-sm {% if not filter_epic %}btn-dark{% else %}btn-outline-secondary{% endif %}">
-                            All
-                        </a>
-                        {% for epic in epics %}
-                        <a href="?epic={{ epic.pk }}"
-                           class="btn btn-sm {% if filter_epic == epic.pk|stringformat:'s' %}btn-primary{% else %}btn-outline-secondary{% endif %}"
-                           style="background:{% if filter_epic == epic.pk|stringformat:'s' %}#5243aa{% else %}transparent{% endif %};
-                                  color:{% if filter_epic == epic.pk|stringformat:'s' %}#fff{% else %}#5243aa{% endif %};
-                                  border-color:#5243aa;">
-                            <i class="fas fa-bolt mr-1"></i>{{ epic.title|truncatechars:25 }}
-                            <span class="badge badge-light ml-1">{{ epic.subtickets.count }}</span>
-                        </a>
-                        {% endfor %}
-                    </div>
-                    {% else %}
-                    <div class="spt-no-sprints"><p>No epics yet. Create an epic to organize your work.</p></div>
                     {% endif %}
-                </div>
-                 <div class="backlog-section">
-                     <div class="backlog-header">
-                        <div class="backlog-title">
-                            <h2>Backlog</h2>
-                            <span class="backlog-count">{{ tickets|length }} issues</span>
+
+                    <div class="epic-item-body {% if filter_epic == epic.pk|stringformat:'s' %}open{% endif %}" id="epic-body-{{ epic.pk }}">
+                        <a href="#" class="epic-item-link" onclick="openTicketDrawer({{ epic.pk }}, '{% url 'ticket-detail' project.pk epic.pk %}?drawer=1'); return false;">
+                            {{ project.code }}-{{ epic.pk }} {{ epic.title|truncatechars:28 }}
+                        </a>
+                        <div class="epic-stat-row">
+                            <span class="epic-stat-label">Issues</span>
+                            <span class="epic-stat-badge">{{ epic.subtickets.count }}</span>
                         </div>
-
-                         <div class="backlog-actions">
-                            {% if can_create %}
-                                <button class="btn btn-dark" data-toggle="modal" data-target="#globalCreateTicketModal">Create Issue</button>
-                            {% endif %}
-                         </div>
-                     </div>
-
-                     <!-- FILTER BAR -->
-                    <form method="GET" class="backlog-filter-bar" id="filterBar">
-                        <select name="type" class="filter-select" onchange="this.form.submit()">
-                            <option value="">All Types</option>
-                            <option value="epic" {% if filter_type == "epic" %}selected{% endif %}>Epic</option>
-                            <option value="user story" {% if filter_type == "user story" %}selected{% endif %}>Story</option>
-                            <option value="task" {% if filter_type == "task" %}selected{% endif %}>Task</option>
-                            <option value="bug" {% if filter_type == "bug" %}selected{% endif %}>Bug</option>
-                        </select>
-
-                        <select name="priority" class="filter-select" onchange="this.form.submit()">
-                            <option value="">All Priorities</option>
-                            <option value="highest" {% if filter_priority == "highest" %}selected{% endif %}>Highest</option>
-                            <option value="high" {% if filter_priority == "high" %}selected{% endif %}>High</option>
-                            <option value="medium" {% if filter_priority == "medium" %}selected{% endif %}>Medium</option>
-                            <option value="low" {% if filter_priority == "low" %}selected{% endif %}>Low</option>
-                            <option value="lowest" {% if filter_priority == "lowest" %}selected{% endif %}>Lowest</option>
-                        </select>
-
-                        <select name="status" class="filter-select" onchange="this.form.submit()">
-                            <option value="">All Statuses</option>
-                            <option value="todo" {% if filter_status == "todo" %}selected{% endif %}>To Do</option>
-                            <option value="in_progress" {% if filter_status == "in_progress" %}selected{% endif %}>In Progress</option>
-                            <option value="in_review" {% if filter_status == "in_review" %}selected{% endif %}>In Review</option>
-                            <option value="done" {% if filter_status == "done" %}selected{% endif %}>Done</option>
-                            <option value="blocked" {% if filter_status == "blocked" %}selected{% endif %}>Blocked</option>
-                        </select>
-
-                        {% if active_filters %}
-                            <a href="{% url 'product-backlog' project.pk %}" class="btn-clear-filters">
-                                <i class="fas fa-times"></i> Clear Filters
-                            </a>
+                        <div class="epic-stat-row">
+                            <span class="epic-stat-label">Completed</span>
+                            <span class="epic-stat-badge" id="epic-done-{{ epic.pk }}">0</span>
+                        </div>
+                        <div class="epic-stat-row">
+                            <span class="epic-stat-label">Unestimated</span>
+                            <span class="epic-stat-badge" id="epic-unest-{{ epic.pk }}">0</span>
+                        </div>
+                        <div class="epic-stat-row">
+                            <span class="epic-stat-label">Estimate</span>
+                            <span class="epic-stat-badge" id="epic-pts-{{ epic.pk }}">0</span>
+                        </div>
+                        {% if can_create %}
+                        <button class="epic-create-link" onclick="openCreateInEpicModal({{ epic.pk }}, '{{ epic.title|escapejs }}')">
+                            <i class="fas fa-plus"></i> Create issue in epic
+                        </button>
                         {% endif %}
-                    </form>
-
-                     <div class="table-container">
-                         <table>
-                             <thead>
-                                <tr>
-                                    <th style="width: 56px;">Up</th>
-                                    <th style="width: 56px;">Down</th>
-                                    <th>Type</th>
-                                    <th>Key</th>
-                                    <th>Title</th>
-                                    <th>Priority</th>
-                                    <th>Estimate</th>
-                                    <th>Assignee</th>
-                                    <th>Epic Link</th>
-                                    <th>Sprint</th>
-                                    <th style="width: 72px;">Actions</th>
-                                </tr>
-                             </thead>
-                             <tbody id="backlog-tbody">
-                                {% for ticket in tickets %}
-                                    {% include 'scrum/ticket/ticket_row.html' with ticket=ticket %}
-                                {% empty %}
-                                    <tr>
-                                        <td colspan="11" class="empty-state" >
-                                            <i class="fas fa-clipboard-list"></i>
-                                            <p>No issues in backlog</p>
-                                        </td>
-                                    </tr>
-                                {% endfor %}
-                              <tr class="create-issue-trigger-row" id="createIssueTriggerRow">
-                                    <td></td>
-                                    <td></td>
-                                    <td colspan="9">
-                                        <button class="create-issue-trigger-btn" onclick="showInlineCreate()">
-                                            <i class="fas fa-plus"></i> Create issue
-                                        </button>
-                                    </td>
-                                </tr>
-
-                                <tr class="create-issue-inline-row" id="createIssueInlineRow" style="display: none;">
-                                    <td></td>
-                                    <td style="vertical-align: top; padding-top: 10px; position: relative;">
-
-                                        <div class="inline-type-selector" id="inlineTypeSelector" onclick="toggleTypePicker(event)" title="Story">
-                                            <i class="fas fa-bookmark" style="color:#36b37e;font-size:16px;"></i>
-                                        </div>
-
-                                        <div class="type-picker hidden" id="typePicker">
-                                            <div class="type-picker-item" onclick="selectType('story')">
-                                                <i class="fas fa-bookmark" style="color:#36b37e;"></i> Story
-                                            </div>
-                                            <div class="type-picker-item" onclick="selectType('bug')">
-                                                <i class="fas fa-bug" style="color:#de350b;"></i> Bug
-                                            </div>
-                                            <div class="type-picker-item" onclick="selectType('task')">
-                                                <i class="fas fa-check-square" style="color:#42526e;"></i> Task
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td colspan="9">
-                                        <input type="text" class="inline-create-input" id="inlineCreateInput" placeholder="What needs to be done?" onkeydown="handleInlineCreateKey(event)">
-                                        <div class="inline-create-footer">
-                                            <span class="inline-create-label">
-                                                New <strong id="inlineTypeLabel">Story</strong> in <strong>Backlog</strong>
-                                                <i class="fas fa-chevron-down" style="font-size:10px;margin-left:2px;color:#5e6c84;"></i>
-                                            </span>
-                                            <div class="inline-create-actions">
-                                                <button class="btn-link-blue" onclick="quickCreateIssue()">Open in dialog</button>
-                                                <button class="btn-link-cancel" onclick="hideInlineCreate()">Cancel</button>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-                             </tbody>
-                         </table>
-                     </div>
-                 </div>
-            </div>
-        </div>
-        <div class="tdr-overlay" id="tdrOverlay" onclick="closeTicketDrawer()"></div>
-
-        <div class="ticket-drawer" id="ticketDrawer">
-            <div class="tdr-loading" id="tdrLoading">
-                <i class="fas fa-spinner fa-spin"></i>
-            </div>
-            <div id="tdrContent"></div>
-        </div>
-    </div>
-
-    <!-- Modal Edit Ticket -->
-    <div class="modal fade" id="editTicketModal" tabindex="-1">
-        <div class="modal-dialog modal-lg modal-dialog-centered">
-            <div class="modal-content" style="border-radius: 8px; border: none;">
-                <div class="modal-header" style="border-bottom: 1px solid #dfe1e6; padding: 16px 20px;">
-                    <h5 class="modal-title" style="font-weight: 700; color: #172b4d;">
-                        Edit Issue — <span id="editTicketKey"></span>
-                    </h5>
-                    <button type="button" class="close" data-dismiss="modal">
-                        <i class="fas fa-times"></i>
-                    </button>
-                </div>
-                <div class="modal-body p-4">
-                    <div id="editTicketFormContainer">
-                        <div class="text-center py-4">
-                            <i class="fas fa-spinner fa-spin" style="color: #6b778c; font-size: 24px;"></i>
-                        </div>
                     </div>
+
                 </div>
+                {% empty %}
+                <p class="epic-empty-msg">No epics yet.</p>
+                {% endfor %}
+
+                <a href="{% url 'product-backlog' project.pk %}?no_epic=1" class="epic-no-epic-row">Issues without epics</a>
+
             </div>
-        </div>
-    </div>
-    <!-- MODAL ADD TO SPRINT -->
-<div class="modal fade" id="moveToSprintModal" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title"><i class="fas fa-redo-alt mr-2"></i>Add to Sprint</h5>
-                <button type="button" class="close" data-dismiss="modal">
-                    <span>&times;</span>
+
+            {% if can_create %}
+            <div class="epic-panel-footer">
+                <button class="epic-panel-create-btn" onclick="openCreateModalAsEpic()">
+                    <i class="fas fa-plus"></i> Create Epic
                 </button>
             </div>
-            <form method="POST" id="moveToSprintForm">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <p class="text-muted mb-3">Select a sprint for this issue :</p>
-                    <div id="sprintOptionsList">
-                        {% for sprint in sprints %}
-                            {% if sprint.status != 'completed' %}
-                            <label class="d-flex align-items-center p-2 mb-2 border rounded" style="cursor:pointer;">
-                                <input type="radio" name="sprint_id" value="{{ sprint.pk }}" class="mr-2">
-                                <div>
-                                    <strong>{{ sprint.name }}</strong>
-                                    <span class="badge {% if sprint.status == 'active' %}badge-success{% else %}badge-warning text-dark{% endif %} ml-2">
-                                        {{ sprint.status|title }}
-                                    </span>
-                                    <br>
-                                    <small class="text-muted">{{ sprint.start_date }} → {{ sprint.end_date|default:"No end date" }}</small>
-                                </div>
-                            </label>
+            {% endif %}
+
+        </div>
+    </div>
+
+    <div class="backlog-main" id="backlogMain">
+        <div class="backlog-container">
+
+            <div class="sprints-section">
+                <div class="sprints-section-header">
+                    <h2>Sprints</h2>
+                    {% if can_create %}
+                    <button class="btn btn-dark" data-toggle="modal" data-target="#createSprintModal">
+                        <i class="fas fa-plus mr-1"></i> Create Sprint
+                    </button>
+                    {% endif %}
+                </div>
+
+                {% for sprint in sprints %}
+                {% if sprint.status != 'completed' and sprint.status != 'closed' %}
+                <div class="sprint-table-block" id="sprint-block-{{ sprint.pk }}">
+
+                    <div class="spt-header" onclick="toggleSprint({{ sprint.pk }})">
+                        <div class="spt-header-left">
+                            <span class="spt-chevron" id="chevron-{{ sprint.pk }}"><i class="fas fa-chevron-down"></i></span>
+                            <span class="spt-name">{{ sprint.name }}</span>
+                            <span class="spt-count">{{ sprint.total_issues }} issue{{ sprint.total_issues|pluralize }}</span>
+                            {% if sprint.status == 'active' %}
+                            <span class="spt-badge spt-badge--active">ACTIVE</span>
+                            <span class="spt-status-dots">
+                                <span class="spt-dot spt-dot--todo" title="To Do">{{ sprint.todo_count|default:0 }}</span>
+                                <span class="spt-dot spt-dot--inprogress" title="In Progress">{{ sprint.inprogress_count|default:0 }}</span>
+                                <span class="spt-dot spt-dot--done" title="Done">{{ sprint.done_count|default:0 }}</span>
+                            </span>
                             {% endif %}
-                        {% empty %}
-                            <p class="text-muted">No sprints available. Create a sprint first.</p>
+                        </div>
+                        <div class="spt-header-right" onclick="event.stopPropagation()">
+                            {% if can_create %}
+                            {% if sprint.status == 'planned' %}
+                            <button type="button" class="spt-action-btn" onclick="handleStartSprint({{ sprint.pk }}, '{{ sprint.goals|escapejs }}', '{% url 'sprint-start' project.pk sprint.pk %}')">
+                                Start sprint
+                            </button>
+                            {% elif sprint.status == 'active' %}
+                            <form method="POST" action="{% url 'sprint-complete' project.pk sprint.pk %}" style="display:inline;">
+                                {% csrf_token %}
+                                <button type="submit" class="spt-action-btn spt-action-btn--complete">Complete sprint</button>
+                            </form>
+                            {% endif %}
+                            {% endif %}
+                            <div class="spt-more-menu">
+                                <button class="spt-more-btn" onclick="toggleSprintMenu(event, {{ sprint.pk }})">
+                                    <i class="fas fa-ellipsis-h"></i>
+                                </button>
+                                <div class="spt-dropdown" id="sprint-menu-{{ sprint.pk }}">
+                                    {% if can_create %}
+                                    <button type="button" class="spt-dropdown-item" onclick="openEditSprintModal({{ sprint.pk }}, '{{ sprint.name|escapejs }}', '{{ sprint.goals|escapejs }}', '{{ sprint.start_date|date:'Y-m-d' }}', '{{ sprint.end_date|date:'Y-m-d' }}', {{ sprint.sprint_capacity|default:'null' }})">
+                                        <i class="fas fa-edit"></i> Edit sprint
+                                    </button>
+                                    {% url 'sprint-delete' project.pk sprint.pk as sprint_delete_url %}
+                                    <button type="button" class="spt-dropdown-item spt-dropdown-item--danger" onclick="confirmDelete({title:'Delete sprint?',message:'<strong>{{ sprint.name|escapejs }}</strong>',warning:'Issues will be moved back to the backlog.',action:'{{ sprint_delete_url }}'})">
+                                        <i class="fas fa-trash"></i> Delete sprint
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="spt-subinfo" id="subinfo-{{ sprint.pk }}">
+                        {% if sprint.assignees %}
+                        <div class="spt-avatars">
+                            {% for member in sprint.assignees|slice:":4" %}
+                            <div class="spt-avatar" title="{{ member.get_full_name|default:member.username }}">
+                                {% if member.profile.image %}<img src="{{ member.profile.image.url }}" alt="">
+                                {% else %}{{ member.first_name|first|upper }}{{ member.last_name|first|upper }}{% endif %}
+                            </div>
+                            {% endfor %}
+                            {% if sprint.assignees|length > 4 %}
+                            <div class="spt-avatar spt-avatar--more">+{{ sprint.assignees|length|add:"-4" }}</div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                        <span class="spt-dates">
+                            {% if sprint.start_date and sprint.end_date %}{{ sprint.start_date|date:"d/M/Y" }} &bull; {{ sprint.end_date|date:"d/M/Y" }}{% endif %}
+                        </span>
+                        {% if sprint.goals %}<span class="spt-goal">{{ sprint.goals }}</span>{% endif %}
+                    </div>
+
+                    <div class="spt-body" id="spt-body-{{ sprint.pk }}" data-sprint-id="{{ sprint.pk }}">
+                        {% with sprint_tickets=sprint.tickets.all %}
+                        {% if sprint_tickets %}
+                        {% for ticket in sprint_tickets %}
+                        <div class="spt-row" data-ticket-id="{{ ticket.pk }}" data-sprint-id="{{ sprint.pk }}" data-draggable="true">
+                            <div class="spt-row-left">
+                                <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
+                                <span class="spt-type-icon">
+                                    {% if ticket.type == 'bug' %}<i class="fas fa-square" style="color:#de350b;font-size:13px;"></i>{% endif %}
+                                    {% if ticket.type == 'user story' %}<i class="fas fa-bookmark" style="color:#36b37e;font-size:13px;"></i>{% endif %}
+                                    {% if ticket.type == 'task' %}<i class="fas fa-check-square" style="color:#42526e;font-size:13px;"></i>{% endif %}
+                                    {% if ticket.type == 'epic' %}<i class="fas fa-bolt" style="color:#5243aa;font-size:13px;"></i>{% endif %}
+                                </span>
+                                <span class="spt-priority-icon">
+                                    {% if ticket.priority == 'highest' or ticket.priority == 'high' %}<i class="fas fa-arrow-up" style="color:#de350b;font-size:10px;"></i>{% endif %}
+                                    {% if ticket.priority == 'medium' %}<i class="fas fa-equals" style="color:#ffc400;font-size:10px;"></i>{% endif %}
+                                    {% if ticket.priority == 'low' or ticket.priority == 'lowest' %}<i class="fas fa-arrow-down" style="color:#36b37e;font-size:10px;"></i>{% endif %}
+                                </span>
+                                <a class="spt-ticket-key" href="#" onclick="openTicketDrawer({{ ticket.pk }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1'); return false;">{{ ticket.ticket_id }}</a>
+                                <span class="spt-ticket-title">{{ ticket.title }}</span>
+                            </div>
+                            <div class="spt-row-right">
+                                {% if ticket.parent %}
+                                <span class="spt-epic-tag" style="background:#eae6ff;color:#5243aa;">
+                                    <i class="fas fa-bolt" style="font-size:9px;"></i> {{ ticket.parent.title|truncatechars:14 }}
+                                </span>
+                                {% endif %}
+                                <div class="spt-avatar spt-avatar--sm">
+                                    {% if ticket.assignee and ticket.assignee.profile.image %}<img src="{{ ticket.assignee.profile.image.url }}" alt="">
+                                    {% elif ticket.assignee %}{{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
+                                    {% else %}<i class="fas fa-user" style="font-size:10px;color:#aaa;"></i>{% endif %}
+                                </div>
+                                {% if ticket.story_points %}<span class="spt-points">{{ ticket.story_points }}</span>{% endif %}
+                                {% if can_create %}
+                                <button class="spt-remove-btn" title="Move back to backlog" onclick="event.stopPropagation(); doRemoveFromSprint({{ ticket.pk }});">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                                {% endif %}
+                            </div>
+                        </div>
                         {% endfor %}
+                        {% else %}
+                        <div class="spt-empty"><p>Plan your sprint. Drag and drop issues from the backlog below.</p></div>
+                        {% endif %}
+                        {% endwith %}
+                    </div>
+
+                </div>
+                {% endif %}
+                {% empty %}
+                <div class="spt-no-sprints"><p>No sprints yet. Create your first sprint!</p></div>
+                {% endfor %}
+            </div>
+
+            <div class="backlog-section">
+                <div class="backlog-header">
+                    <div class="backlog-title">
+                        <h2>Backlog</h2>
+                        <span class="backlog-count">{{ tickets|length }} issues</span>
+                    </div>
+                    <div class="backlog-actions">
+                        {% if can_create %}
+                        <button class="btn btn-dark" id="createIssueBtn" data-toggle="modal" data-target="#globalCreateTicketModal" {% if filter_epic %}data-epic-id="{{ filter_epic }}" data-epic-title="{% for e in epics %}{% if e.pk|stringformat:'s' == filter_epic %}{{ e.title|escapejs }}{% endif %}{% endfor %}"{% endif %}>
+                            Create Issue
+                        </button>
+                        {% endif %}
                     </div>
                 </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                    <button type="submit" class="btn btn-primary">
-                        <i class="fas fa-plus mr-1"></i> Add to Sprint
-                    </button>
+
+                {% if filter_epic %}
+                {% for epic in epics %}
+                {% if epic.pk|stringformat:'s' == filter_epic %}
+                <div class="epic-filter-banner" data-epic-index="{{ forloop.counter0 }}">
+                    <i class="fas fa-bolt"></i>
+                    <strong>{{ epic.title }}</strong>
+                    <span class="epic-filter-count"> — {{ tickets|length }} issue{{ tickets|length|pluralize }}</span>
+                    <a href="{% url 'product-backlog' project.pk %}" class="epic-filter-banner-clear"><i class="fas fa-times"></i> Clear</a>
                 </div>
-            </form>
+                {% endif %}
+                {% endfor %}
+                {% endif %}
+
+                <form method="GET" class="backlog-filter-bar" id="filterBar">
+                    {% if filter_epic %}<input type="hidden" name="epic" value="{{ filter_epic }}">{% endif %}
+                    <select name="type" class="filter-select" onchange="this.form.submit()">
+                        <option value="">All Types</option>
+                        <option value="epic" {% if filter_type == "epic" %}selected{% endif %}>Epic</option>
+                        <option value="user story" {% if filter_type == "user story" %}selected{% endif %}>Story</option>
+                        <option value="task" {% if filter_type == "task" %}selected{% endif %}>Task</option>
+                        <option value="bug" {% if filter_type == "bug" %}selected{% endif %}>Bug</option>
+                    </select>
+                    <select name="priority" class="filter-select" onchange="this.form.submit()">
+                        <option value="">All Priorities</option>
+                        <option value="highest" {% if filter_priority == "highest" %}selected{% endif %}>Highest</option>
+                        <option value="high" {% if filter_priority == "high" %}selected{% endif %}>High</option>
+                        <option value="medium" {% if filter_priority == "medium" %}selected{% endif %}>Medium</option>
+                        <option value="low" {% if filter_priority == "low" %}selected{% endif %}>Low</option>
+                        <option value="lowest" {% if filter_priority == "lowest" %}selected{% endif %}>Lowest</option>
+                    </select>
+                    <select name="status" class="filter-select" onchange="this.form.submit()">
+                        <option value="">All Statuses</option>
+                        <option value="todo" {% if filter_status == "todo" %}selected{% endif %}>To Do</option>
+                        <option value="in_progress" {% if filter_status == "in_progress" %}selected{% endif %}>In Progress</option>
+                        <option value="in_review" {% if filter_status == "in_review" %}selected{% endif %}>In Review</option>
+                        <option value="done" {% if filter_status == "done" %}selected{% endif %}>Done</option>
+                        <option value="blocked" {% if filter_status == "blocked" %}selected{% endif %}>Blocked</option>
+                    </select>
+                    {% if active_filters %}
+                    <a href="{% url 'product-backlog' project.pk %}" class="btn-clear-filters">
+                        <i class="fas fa-times"></i> Clear Filters
+                    </a>
+                    {% endif %}
+                </form>
+
+                <div class="table-container">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="width:40px;"></th>
+                                <th style="width:40px;"></th>
+                                <th>Type</th>
+                                <th>Key</th>
+                                <th>Title</th>
+                                <th>Priority</th>
+                                <th>Estimate</th>
+                                <th>Assignee</th>
+                                <th>Epic Link</th>
+                                <th>Sprint</th>
+                                <th style="width:40px;"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="backlog-tbody">
+                            {% for ticket in tickets %}
+                            {% include 'scrum/ticket/ticket_row.html' with ticket=ticket %}
+                            {% empty %}
+                            <tr>
+                                <td colspan="11" class="empty-state">
+                                    <i class="fas fa-clipboard-list"></i>
+                                    <p>No issues in backlog</p>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                            <tr class="create-issue-trigger-row" id="createIssueTriggerRow">
+                                <td></td>
+                                <td></td>
+                                <td colspan="9">
+                                    <button class="create-issue-trigger-btn" onclick="showInlineCreate()">
+                                        <i class="fas fa-plus"></i> Create issue
+                                    </button>
+                                </td>
+                            </tr>
+                            <tr class="create-issue-inline-row" id="createIssueInlineRow" style="display:none;">
+                                <td></td>
+                                <td style="vertical-align:top;padding-top:10px;position:relative;">
+                                    <div class="inline-type-selector" id="inlineTypeSelector" onclick="toggleTypePicker(event)">
+                                        <i class="fas fa-bookmark" style="color:#36b37e;font-size:16px;"></i>
+                                    </div>
+                                    <div class="type-picker hidden" id="typePicker">
+                                        <div class="type-picker-item" onclick="selectType('story')"><i class="fas fa-bookmark" style="color:#36b37e;"></i> Story</div>
+                                        <div class="type-picker-item" onclick="selectType('bug')"><i class="fas fa-bug" style="color:#de350b;"></i> Bug</div>
+                                        <div class="type-picker-item" onclick="selectType('task')"><i class="fas fa-check-square" style="color:#42526e;"></i> Task</div>
+                                    </div>
+                                </td>
+                                <td colspan="9">
+                                    <input type="text" class="inline-create-input" id="inlineCreateInput" placeholder="What needs to be done?" onkeydown="handleInlineCreateKey(event)">
+                                    <div class="inline-create-footer">
+                                        <span class="inline-create-label">New <strong id="inlineTypeLabel">Story</strong> in <strong>Backlog</strong></span>
+                                        <div class="inline-create-actions">
+                                            <button class="btn-link-blue" onclick="quickCreateIssue()">Open in dialog</button>
+                                            <button class="btn-link-cancel" onclick="hideInlineCreate()">Cancel</button>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <div class="tdr-overlay" id="tdrOverlay" onclick="closeTicketDrawer()"></div>
+    <div class="ticket-drawer" id="ticketDrawer">
+        <div class="tdr-loading" id="tdrLoading"><i class="fas fa-spinner fa-spin"></i></div>
+        <div id="tdrContent"></div>
+    </div>
+
+</div>
+
+<div class="modal fade" id="editSprintModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:520px;">
+        <div class="modal-content bl-modal-content">
+            <div class="bl-modal-header">
+                <h5 class="bl-modal-title">Edit Sprint</h5>
+                <button type="button" class="close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body p-4">
+                <form id="editSprintForm" method="POST">
+                    {% csrf_token %}
+                    <div class="esm-field">
+                        <label class="esm-label">Sprint Name <span class="esm-required">*</span></label>
+                        <input type="text" name="name" id="editSprintName" class="form-control" required>
+                    </div>
+                    <div class="esm-field">
+                        <label class="esm-label">Goal</label>
+                        <textarea name="goals" id="editSprintGoal" class="form-control" rows="3"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="col-md-6">
+                            <div class="esm-field">
+                                <label class="esm-label">Start Date</label>
+                                <input type="date" name="start_date" id="editSprintStart" class="form-control">
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="esm-field">
+                                <label class="esm-label">End Date</label>
+                                <input type="date" name="end_date" id="editSprintEnd" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="esm-field">
+                        <label class="esm-label">Capacity <small style="text-transform:none;font-weight:400;">(story points)</small></label>
+                        <input type="number" name="sprint_capacity" id="editSprintCapacity" class="form-control esm-capacity-input" min="0" placeholder="e.g. 40">
+                    </div>
+                    <div class="d-flex justify-content-end mt-3" style="gap:8px;">
+                        <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-dark">Save Changes</button>
+                    </div>
+                </form>
+            </div>
         </div>
     </div>
 </div>
 
-    {% include 'scrum/sprint/_sprint_modal.html' %}
-    {% include 'scrum/global/confirm_delete_modal.html' %}
+<div class="modal fade" id="sprintGoalPromptModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:440px;">
+        <div class="modal-content bl-modal-content">
+            <div class="bl-modal-header">
+                <h5 class="bl-modal-title">
+                    <i class="fas fa-bullseye" style="color:#ff8b00;"></i> Add a Sprint Goal?
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body p-4">
+                <p class="sgp-intro">This sprint has no goal. A sprint goal helps the team stay focused — but you can skip it.</p>
+                <div class="form-group">
+                    <label class="esm-label">Sprint Goal</label>
+                    <textarea id="goalPromptInput" class="form-control" rows="3" placeholder="What should this sprint achieve?"></textarea>
+                </div>
+                <div class="d-flex justify-content-between mt-3">
+                    <button type="button" class="btn btn-outline-secondary" id="startWithoutGoalBtn">Start without goal</button>
+                    <button type="button" class="btn btn-dark" id="startWithGoalBtn">
+                        <i class="fas fa-play mr-1"></i> Start Sprint
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="{% static 'scrum/js/backlog.js' %}"></script>
-    <script src="{% static 'scrum/js/issue-drawer.js' %}"></script>
-    <script src="{% static 'scrum/js/sprint_table.js' %}"></script>
+<div class="modal fade" id="moveToSprintModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width:400px;">
+        <div class="modal-content bl-modal-content">
+            <div class="bl-modal-header">
+                <h5 class="bl-modal-title">
+                    <i class="fas fa-redo-alt" style="color:#0052cc;"></i> Move to Sprint
+                </h5>
+                <button type="button" class="close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body p-3">
+                <p class="mts-ticket-label" id="mts-ticket-label"></p>
+                <div id="mts-sprint-list">
+                    {% for sprint in sprints %}
+                    {% if sprint.status != 'completed' and sprint.status != 'closed' %}
+                    <button type="button" class="mts-sprint-btn" onclick="doMoveToSprint(document.getElementById('mts-ticket-id').value, {{ sprint.pk }})">
+                        <span class="mts-sprint-dot {% if sprint.status == 'active' %}mts-sprint-dot--active{% else %}mts-sprint-dot--planned{% endif %}"></span>
+                        <span class="mts-sprint-name">{{ sprint.name }}</span>
+                        <span class="mts-sprint-count">{{ sprint.total_issues }} issues</span>
+                        {% if sprint.status == 'active' %}<span class="mts-sprint-badge">ACTIVE</span>{% endif %}
+                    </button>
+                    {% endif %}
+                    {% empty %}
+                    <p class="mts-empty-msg">No sprints available. Create a sprint first.</p>
+                    {% endfor %}
+                </div>
+                <input type="hidden" id="mts-ticket-id">
+            </div>
+        </div>
+    </div>
+</div>
 
-    <script>
-        const TICKET_CREATE_URL = "{% url 'ticket-quick-create' project.pk %}";
-        const PROJECT_PK = {{ project.pk }};    </script>
+<div class="modal fade" id="editTicketModal" tabindex="-1">
+    <div class="modal-dialog modal-lg modal-dialog-centered">
+        <div class="modal-content bl-modal-content">
+            <div class="bl-modal-header">
+                <h5 class="bl-modal-title">Edit Issue — <span id="editTicketKey"></span></h5>
+                <button type="button" class="close" data-dismiss="modal"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="editTicketFormContainer">
+                    <div class="text-center py-4"><i class="fas fa-spinner fa-spin" style="color:#6b778c;font-size:24px;"></i></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% include 'scrum/sprint/_sprint_modal.html' %}
+{% include 'scrum/global/confirm_delete_modal.html' %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'scrum/js/backlog.js' %}"></script>
+<script src="{% static 'scrum/js/issue-drawer.js' %}"></script>
+<script src="{% static 'scrum/js/sprint_table.js' %}"></script>
+<script src="{% static 'scrum/js/backlog_epic.js' %}"></script>
+
+<script>
+var TICKET_CREATE_URL = "{% url 'ticket-quick-create' project.pk %}";
+var PROJECT_PK        = {{ project.pk }};
+var CSRF_TOKEN        = "{{ csrf_token }}";
+</script>
+
 {% endblock project_content %}
