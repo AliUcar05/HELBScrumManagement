@@ -1,24 +1,32 @@
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
-from django.http import JsonResponse, HttpResponseForbidden
 from django.db import transaction
 from django.db.models import Max
+from django.http import JsonResponse, HttpResponseForbidden
 from django.shortcuts import get_object_or_404, redirect, render
 from django.urls import reverse, reverse_lazy
 from django.views import View
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+
+from .forms import (
+    ProjectForm,
+    MembershipForm,
+    TicketForm,
+    TicketEditForm,
+    SprintForm,
+    CommentForm,
+)
+from .models import (
+    Project,
+    Membership,
+    Ticket,
+    Sprint,
+    SprintTicket,
+    Comment,
+    Column,
+)
 from .utils import log_activity
-from .models import Project, Membership, Ticket, Sprint, SprintTicket
-
-
-from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm, SprintForm
-from .models import Project, Membership, Ticket
-from .models import Project, Membership, Ticket, Sprint
-# IMPORT DES FORMULAIRES (CommentForm ajouté)
-from .forms import ProjectForm, MembershipForm, TicketForm, TicketEditForm, CommentForm
-# IMPORT DES MODÈLES (Comment ajouté)
-from .models import Project, Membership, Ticket, Comment
 
 
 def project_queryset_for(user):
@@ -68,6 +76,48 @@ def normalize_backlog_order(project):
     return tickets
 
 
+KANBAN_STATUS_TO_COLUMN = {
+    "todo": "To Do",
+    "in_progress": "In Progress",
+    "in_review": "In Review",
+    "done": "Done",
+    "blocked": "Blocked",
+    "open": "To Do",
+}
+
+COLUMN_TO_KANBAN_STATUS = {
+    "to do": "todo",
+    "in progress": "in_progress",
+    "in review": "in_review",
+    "done": "done",
+    "blocked": "blocked",
+}
+
+
+def get_status_for_column(column_name):
+    return COLUMN_TO_KANBAN_STATUS.get((column_name or "").strip().lower(), "todo")
+
+
+def get_default_column_for_status(board, status):
+    desired_name = KANBAN_STATUS_TO_COLUMN.get(status, "To Do")
+    column = board.columns.filter(name__iexact=desired_name).first()
+    if column:
+        return column
+    return board.columns.order_by("order").first()
+
+
+def ensure_ticket_column(ticket, board=None):
+    board = board or getattr(ticket.project, "board", None)
+    if not board:
+        return None
+
+    expected_column = get_default_column_for_status(board, ticket.status)
+    if expected_column and ticket.column_id != expected_column.id:
+        ticket.column = expected_column
+        ticket.save(update_fields=["column", "updated_at"])
+    return expected_column
+
+
 @login_required
 def project_board(request, pk):
     project = get_object_or_404(Project, pk=pk)
@@ -115,55 +165,53 @@ def active_sprint(request, pk):
     project = get_object_or_404(Project, pk=pk)
     request.session["current_project_id"] = project.id
 
+    if not user_can_access_project(request.user, project):
+        messages.error(request, "You don't have access to this project.")
+        return redirect("project-list")
+
     board = getattr(project, "board", None)
     if not board:
         messages.warning(request, "No board found for this project.")
         return redirect("project-detail", pk=project.pk)
 
-    columns = board.columns.all().order_by("order")
+    columns = list(board.columns.all().order_by("order"))
     membership = project.memberships.filter(user=request.user).first()
+    active_sprint = project.sprints.filter(status="active").first()
 
-    # Sprint actif
-    active_sprint = project.sprints.filter(status='active').first()
+    sprint_tickets = Ticket.objects.none()
 
-    # Calculer les statistiques pour le sprint actif
     if active_sprint:
-        tickets = active_sprint.tickets.all()
-        active_sprint.total_issues = tickets.count()
-        active_sprint.todo_count = tickets.filter(status='todo').count()
-        active_sprint.inprogress_count = tickets.filter(status='in_progress').count()
-        active_sprint.inreview_count = tickets.filter(status='in_review').count()
-        active_sprint.done_count = tickets.filter(status='done').count()
-        active_sprint.blocked_count = tickets.filter(status='blocked').count()
+        sprint_tickets = (
+            active_sprint.tickets
+            .select_related("assignee", "assignee__profile", "column", "parent")
+            .order_by("board_order", "created_at", "pk")
+            .distinct()
+        )
 
-        # Calculer le pourcentage de progression
-        if active_sprint.total_issues > 0:
-            active_sprint.completion_percentage = int((active_sprint.done_count / active_sprint.total_issues) * 100)
-        else:
-            active_sprint.completion_percentage = 0
+        for ticket in sprint_tickets:
+            ensure_ticket_column(ticket, board)
 
-        # Calculer les jours restants
+        active_sprint.total_issues = sprint_tickets.count()
+        active_sprint.todo_count = sprint_tickets.filter(status="todo").count()
+        active_sprint.inprogress_count = sprint_tickets.filter(status="in_progress").count()
+        active_sprint.inreview_count = sprint_tickets.filter(status="in_review").count()
+        active_sprint.done_count = sprint_tickets.filter(status="done").count()
+        active_sprint.blocked_count = sprint_tickets.filter(status="blocked").count()
+        active_sprint.completion_percentage = (
+            int((active_sprint.done_count / active_sprint.total_issues) * 100)
+            if active_sprint.total_issues else 0
+        )
+
         if active_sprint.end_date:
             from datetime import date
             today = date.today()
             active_sprint.days_remaining = max((active_sprint.end_date - today).days, 0)
+        else:
+            active_sprint.days_remaining = None
 
-        # Ajouter les tickets filtrés à chaque colonne
-        for column in columns:
-            # Mapper le nom de la colonne au statut du ticket
-            status_map = {
-                'To Do': 'todo',
-                'In Progress': 'in_progress',
-                'In Review': 'in_review',
-                'Done': 'done',
-                'Blocked': 'blocked'
-            }
-
-            # Chercher le statut correspondant
-            ticket_status = status_map.get(column.name, column.name.lower())
-
-            # Filtrer les tickets du sprint par statut
-            column.tickets = tickets.filter(status=ticket_status)
+    for column in columns:
+        ticket_status = get_status_for_column(column.name)
+        column.tickets = sprint_tickets.filter(status=ticket_status).order_by("board_order", "created_at", "pk")
 
     context = {
         "project": project,
@@ -172,6 +220,8 @@ def active_sprint(request, pk):
         "membership": membership,
         "active_sprint": active_sprint,
         "planned_sprints": project.sprints.filter(status="planned").order_by("start_date"),
+        "can_manage_sprint": bool(membership and membership.team_role == "scrum_master") or is_project_admin(request.user, project),
+        "can_edit_board": is_contributor_or_admin(request.user, project),
     }
     return render(request, "scrum/sprint/active_sprint.html", context)
 
@@ -547,13 +597,13 @@ class TicketCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
 
         self.object = form.save()
 
-        # Si un sprint a ete selectionne dans le modal, y ajouter le ticket
         sprint_id = self.request.POST.get("_sprint_id", "").strip()
         if sprint_id:
-            from .models import SprintTicket
             sprint = Sprint.objects.filter(pk=sprint_id, project=project).first()
             if sprint:
                 SprintTicket.objects.get_or_create(sprint=sprint, ticket=self.object)
+                if sprint.status == "active":
+                    ensure_ticket_column(self.object, project.board)
 
         log_activity(
             self.request.user, project, "create_ticket",
@@ -658,6 +708,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             assignee_ids = tickets.exclude(assignee=None).values_list('assignee_id', flat=True).distinct()
             sprint.assignees = list(User.objects.filter(id__in=assignee_ids).select_related('profile'))
         context["sprints"] = list(sprints)
+        context["active_sprint"] = self.project.sprints.filter(status="active").first()
 
         return context
 
@@ -881,6 +932,53 @@ def ticket_inline_update(request, pk, ticket_pk):
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
 
+@login_required
+def move_ticket_kanban(request, pk, ticket_pk):
+    project = get_object_or_404(Project, pk=pk)
+    ticket = get_object_or_404(Ticket, pk=ticket_pk, project=project)
+
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "POST only"}, status=405)
+
+    if not is_contributor_or_admin(request.user, project):
+        return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
+
+    active_sprint = project.sprints.filter(status="active").first()
+    if not active_sprint or not SprintTicket.objects.filter(sprint=active_sprint, ticket=ticket).exists():
+        return JsonResponse({"success": False, "error": "Ticket is not in the active sprint"}, status=400)
+
+    column_id = request.POST.get("column_id")
+    target_column = get_object_or_404(Column, pk=column_id, board=project.board)
+    new_status = get_status_for_column(target_column.name)
+
+    max_order = (
+        Ticket.objects.filter(project=project, column=target_column, sprints=active_sprint)
+        .exclude(pk=ticket.pk)
+        .aggregate(max_value=Max("board_order"))["max_value"] or 0
+    )
+
+    ticket.column = target_column
+    ticket.status = new_status
+    ticket.board_order = max_order + 1
+    ticket.save(update_fields=["column", "status", "board_order", "updated_at"])
+
+    log_activity(
+        request.user,
+        project,
+        "status_change",
+        ticket=ticket,
+        sprint=active_sprint,
+        message=f"moved {ticket.title} to {target_column.name}",
+    )
+
+    return JsonResponse({
+        "success": True,
+        "ticket_id": ticket.pk,
+        "status": ticket.status,
+        "column_id": target_column.id,
+        "column_name": target_column.name,
+    })
+
 #Sprint ======================
 class SprintCreateView(LoginRequiredMixin, UserPassesTestMixin, CreateView):
     model = Sprint
@@ -974,20 +1072,26 @@ def sprint_start(request, pk, sprint_pk):
     if not is_contributor_or_admin(request.user, project):
         messages.error(request, "Permission denied.")
         return redirect("product-backlog", pk=pk)
+
     sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+
     if request.method == "POST":
-        # Close any currently active sprint first (optional safety)
-        project.sprints.filter(status='active').update(status='closed')
+        project.sprints.filter(status='active').update(status='completed')
         sprint.status = 'active'
         sprint.save()
+
+        for ticket in sprint.tickets.all():
+            ensure_ticket_column(ticket, project.board)
+
         log_activity(
             request.user,
             project,
-            "start_sprint",
+            "create_sprint",
             sprint=sprint,
             message=f"started sprint {sprint.name}"
         )
         messages.success(request, f'Sprint "{sprint.name}" started.')
+
     return redirect("product-backlog", pk=pk)
 
 
@@ -997,35 +1101,69 @@ def sprint_complete(request, pk, sprint_pk):
     if not is_contributor_or_admin(request.user, project):
         messages.error(request, "Permission denied.")
         return redirect("product-backlog", pk=pk)
+
     sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+
     if request.method == "POST":
-        sprint.status = 'closed'
+        sprint.status = 'completed'
         sprint.save()
         log_activity(
             request.user,
             project,
-            "complete_sprint",
+            "create_sprint",
             sprint=sprint,
             message=f"completed sprint {sprint.name}"
         )
         messages.success(request, f'Sprint "{sprint.name}" completed.')
+
     return redirect("product-backlog", pk=pk)
 
 
 @login_required
 def ticket_remove_from_sprint(request, pk):
-    """POST {ticket_id} — removes a ticket from all sprints (back to backlog)."""
     project = get_object_or_404(Project, pk=pk)
+
+    if request.method != "POST":
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": "POST only"}, status=405)
+        return redirect("product-backlog", pk=pk)
+
     if not is_contributor_or_admin(request.user, project):
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
         messages.error(request, "Permission denied.")
         return redirect("product-backlog", pk=pk)
 
-    if request.method == "POST":
-        ticket_id = request.POST.get("ticket_id")
-        ticket = get_object_or_404(Ticket, pk=ticket_id, project=project)
-        ticket.sprints.clear()  # Supprime le ticket de tous les sprints
-        messages.success(request, f'"{ticket.title}" moved back to backlog.')
+    ticket_id = request.POST.get("ticket_id")
+    sprint_id = request.POST.get("sprint_id")
 
+    ticket = get_object_or_404(Ticket, pk=ticket_id, project=project)
+
+    sprint = None
+    if sprint_id:
+        sprint = Sprint.objects.filter(pk=sprint_id, project=project).first()
+    if sprint is None:
+        sprint = project.sprints.filter(status="active").first()
+
+    if sprint:
+        SprintTicket.objects.filter(sprint=sprint, ticket=ticket).delete()
+        log_activity(
+            request.user,
+            project,
+            "update_description",
+            ticket=ticket,
+            sprint=sprint,
+            message=f"moved {ticket.title} back to backlog",
+        )
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "success": True,
+            "ticket_id": ticket.id,
+            "sprint_id": sprint.id if sprint else None,
+        })
+
+    messages.success(request, f'"{ticket.title}" moved back to backlog.')
     return redirect("product-backlog", pk=pk)
 
 
@@ -1094,9 +1232,39 @@ def add_ticket_to_sprint(request, pk, ticket_pk):
     project = get_object_or_404(Project, pk=pk)
     ticket = get_object_or_404(Ticket, pk=ticket_pk, project=project)
 
+    if request.method != "POST":
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": "POST only"}, status=405)
+        return redirect("product-backlog", pk=pk)
+
     if not is_contributor_or_admin(request.user, project):
+        if request.headers.get("x-requested-with") == "XMLHttpRequest":
+            return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
         messages.error(request, "You don't have permission to add issues to a sprint.")
         return redirect("product-backlog", pk=pk)
+
+    sprint_pk = request.POST.get("sprint_id")
+    sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+
+    link, created = SprintTicket.objects.get_or_create(sprint=sprint, ticket=ticket)
+
+    if sprint.status == "active":
+        ensure_ticket_column(ticket, project.board)
+
+    if request.headers.get("x-requested-with") == "XMLHttpRequest":
+        return JsonResponse({
+            "success": True,
+            "created": created,
+            "ticket_id": ticket.id,
+            "sprint_id": sprint.id,
+        })
+
+    if created:
+        messages.success(request, f'Issue "{ticket.title}" added to sprint "{sprint.name}".')
+    else:
+        messages.warning(request, f'Issue already in sprint "{sprint.name}".')
+
+    return redirect("product-backlog", pk=pk)
 
     if request.method == "POST":
         sprint_pk = request.POST.get("sprint_id")

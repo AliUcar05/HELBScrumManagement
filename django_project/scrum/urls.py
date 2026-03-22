@@ -47,6 +47,7 @@ urlpatterns = [
     path('projects/<int:pk>/ticket/<int:ticket_pk>/reorder/<str:direction>/', TicketReorderView.as_view(), name='ticket-reorder'),
 
     path('projects/<int:pk>/ticket/<int:ticket_pk>/inline-update/',views.ticket_inline_update, name='ticket-inline-update'),
+    path('projects/<int:pk>/ticket/<int:ticket_pk>/move-kanban/', views.move_ticket_kanban, name='ticket-move-kanban'),
     path('projects/<int:pk>/members-json/', views.project_members_json, name='project-members-json'),
 
     path("projects/<int:pk>/tickets/<int:ticket_pk>/add-to-sprint/", views.add_ticket_to_sprint, name="add-ticket-to-sprint"),

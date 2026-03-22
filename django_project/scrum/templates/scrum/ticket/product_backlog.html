@@ -9,6 +9,26 @@
 <link rel="stylesheet" href="{% static 'scrum/css/epic_panel.css' %}">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
+<style>
+    .drag-ticket-card { cursor: grab; }
+    .drag-ticket-card.dragging,
+    .backlog-draggable-row.dragging {
+        opacity: .5;
+    }
+
+    .sprint-dropzone.drag-over,
+    #backlog-tbody.drag-over {
+        outline: 2px dashed #0052cc;
+        outline-offset: 4px;
+        border-radius: 8px;
+        background: rgba(0, 82, 204, 0.04);
+    }
+
+    .backlog-draggable-row {
+        cursor: grab;
+    }
+</style>
+
 <h1 class="page-title">Product Backlog</h1>
 
 <div class="backlog-quick-filters">
@@ -205,11 +225,19 @@
                         {% if sprint.goals %}<span class="spt-goal">{{ sprint.goals }}</span>{% endif %}
                     </div>
 
-                    <div class="spt-body" id="spt-body-{{ sprint.pk }}" data-sprint-id="{{ sprint.pk }}">
+                    <div class="spt-body sprint-dropzone"
+                         id="spt-body-{{ sprint.pk }}"
+                         data-sprint-id="{{ sprint.pk }}"
+                         data-target="sprint">
                         {% with sprint_tickets=sprint.tickets.all %}
                         {% if sprint_tickets %}
                         {% for ticket in sprint_tickets %}
-                        <div class="spt-row" data-ticket-id="{{ ticket.pk }}" data-sprint-id="{{ sprint.pk }}" data-draggable="true">
+                        <div class="spt-row drag-ticket-card"
+                             data-ticket-id="{{ ticket.pk }}"
+                             data-sprint-id="{{ sprint.pk }}"
+                             data-draggable="true"
+                             data-drag-origin="sprint"
+                             draggable="{% if can_create %}true{% else %}false{% endif %}">
                             <div class="spt-row-left">
                                 <span class="drag-handle" title="Drag to reorder"><i class="fas fa-grip-vertical"></i></span>
                                 <span class="spt-type-icon">
@@ -336,7 +364,7 @@
                                 <th style="width:40px;"></th>
                             </tr>
                         </thead>
-                        <tbody id="backlog-tbody">
+                        <tbody id="backlog-tbody" data-target="backlog" data-sprint-id="{% if active_sprint %}{{ active_sprint.id }}{% endif %}">
                             {% for ticket in tickets %}
                             {% include 'scrum/ticket/ticket_row.html' with ticket=ticket %}
                             {% empty %}
@@ -526,6 +554,115 @@
 var TICKET_CREATE_URL = "{% url 'ticket-quick-create' project.pk %}";
 var PROJECT_PK        = {{ project.pk }};
 var CSRF_TOKEN        = "{{ csrf_token }}";
+</script>
+
+
+<script>
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+}
+
+(function () {
+    let draggedElement = null;
+
+    function attachDnD() {
+        document.querySelectorAll('.drag-ticket-card, .backlog-draggable-row').forEach(el => {
+            el.addEventListener('dragstart', () => {
+                draggedElement = el;
+                el.classList.add('dragging');
+            });
+
+            el.addEventListener('dragend', () => {
+                el.classList.remove('dragging');
+                draggedElement = null;
+            });
+        });
+
+        document.querySelectorAll('.sprint-dropzone, #backlog-tbody').forEach(zone => {
+            zone.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                zone.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', () => {
+                zone.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', async (e) => {
+                e.preventDefault();
+                zone.classList.remove('drag-over');
+
+                if (!draggedElement) return;
+
+                const ticketId = draggedElement.dataset.ticketId;
+                const origin = draggedElement.dataset.dragOrigin;
+                const target = zone.dataset.target;
+
+                if (!ticketId || !target) return;
+
+                try {
+                    if (target === 'sprint') {
+                        const sprintId = zone.dataset.sprintId;
+                        const url = "{% url 'add-ticket-to-sprint' project.pk 0 %}".replace('/0/', `/${ticketId}/`);
+
+                        const formData = new URLSearchParams();
+                        formData.append('sprint_id', sprintId);
+
+                        const response = await fetch(url, {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                            },
+                            body: formData.toString(),
+                        });
+
+                        const data = await response.json();
+                        if (!data.success) {
+                            alert(data.error || 'Unable to move ticket to sprint.');
+                            return;
+                        }
+                    }
+
+                    if (target === 'backlog' && origin === 'sprint') {
+                        const sprintId = draggedElement.dataset.sprintId || zone.dataset.sprintId || "";
+
+                        const formData = new URLSearchParams();
+                        formData.append('ticket_id', ticketId);
+                        if (sprintId) {
+                            formData.append('sprint_id', sprintId);
+                        }
+
+                        const response = await fetch("{% url 'ticket-remove-from-sprint' project.pk %}", {
+                            method: 'POST',
+                            headers: {
+                                'X-CSRFToken': getCookie('csrftoken'),
+                                'X-Requested-With': 'XMLHttpRequest',
+                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                            },
+                            body: formData.toString(),
+                        });
+
+                        const data = await response.json();
+                        if (!data.success) {
+                            alert(data.error || 'Unable to move ticket back to backlog.');
+                            return;
+                        }
+                    }
+
+                    window.location.reload();
+                } catch (error) {
+                    alert('An error occurred during drag and drop.');
+                }
+            });
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', attachDnD);
+})();
 </script>
 
 {% endblock project_content %}

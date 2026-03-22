@@ -1,136 +1,256 @@
 {% extends 'scrum/project_board.html' %}
 {% load static %}
 {% block project_content %}
-    <link rel="stylesheet" href="{% static 'scrum/css/active_sprint.css' %}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-    <div>
-        {% if active_sprint %}
-            <div class="as-banner">
-                <div class="as-banner-left">
-                    <div class="as-banner-title">
-                        <span class="as-label">Active Sprint</span>
-                        <h2 class="as-sprint-name">{{ active_sprint.name }}</h2>
-                        {% if active_sprint.goals %}
-                            <p class="as-goal">{{ active_sprint.goals }}</p>
-                        {% endif %}
-                    </div>
-                    <div class="as-banner-meta">
-                        {% if active_sprint.start_date and active_sprint.end_date %}
-                        <span class="as-meta-item">
-                            <i class="far fa-calendar-alt"></i>
-                            {{ active_sprint.start_date|date:"M d" }} — {{ active_sprint.end_date|date:"M d, Y" }}
-                        </span>
-                        {% endif %}
-                        {% if active_sprint.days_remaining %}
-                        <span class="as-meta-item as-meta-item--warning">
-                            <i class="far fa-clock"></i>
-                            {{ active_sprint.days_remaining }} days remaining
-                        </span>
-                        {% endif %}
-                        <span class="as-meta-item">
-                            <i class="fas fa-ticket-alt"></i>
-                            {{ active_sprint.total_issues|default:0 }} issues
-                        </span>
-                    </div>
+<link rel="stylesheet" href="{% static 'scrum/css/active_sprint.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+    .kanban-board { display:flex; gap:15px; overflow-x:auto; align-items:flex-start; padding-bottom:20px; }
+    .kanban-column { min-width:360px; width:360px; min-height:72vh; background:#f4f5f7; display:flex; flex-direction:column; border-radius:14px; }
+    .kanban-dropzone { min-height:180px; display:flex; flex-direction:column; gap:12px; }
+    .kanban-card { border:1px solid #e6e9ef; border-radius:12px; cursor:grab; }
+    .kanban-card.dragging { opacity:.55; transform:rotate(1deg); }
+    .kanban-dropzone.drag-over { outline:2px dashed #4f46e5; outline-offset:4px; border-radius:10px; }
+    .ticket-meta { font-size:.78rem; color:#6b7280; }
+    .ticket-badge { display:inline-flex; align-items:center; padding:.2rem .45rem; border-radius:999px; background:#eef2ff; font-size:.72rem; font-weight:600; }
+    .ticket-actions { display:flex; justify-content:space-between; align-items:center; gap:8px; margin-top:10px; }
+    .ticket-title-link { color:inherit; text-decoration:none; }
+    .ticket-title-link:hover { text-decoration:none; color:inherit; }
+    .column-count { margin-left:auto; font-size:.8rem; color:#6b7280; background:#fff; padding:.15rem .5rem; border-radius:999px; }
+    .btn-backlog-inline { border:none; background:#fff3cd; color:#856404; border-radius:8px; padding:.35rem .55rem; font-size:.78rem; }
+    .btn-backlog-inline:hover { background:#ffe69c; }
+</style>
+
+<div>
+    {% if active_sprint %}
+        <div class="as-banner">
+            <div class="as-banner-left">
+                <div class="as-banner-title">
+                    <span class="as-label">Active Sprint</span>
+                    <h2 class="as-sprint-name">{{ active_sprint.name }}</h2>
+                    {% if active_sprint.goals %}
+                        <p class="as-goal">{{ active_sprint.goals }}</p>
+                    {% endif %}
                 </div>
-                <div class="as-banner-right">
-                    <div class="as-progress-block">
-                        <div class="as-progress-labels">
-                            <span>Progress</span>
-                            <span class="as-progress-pct">{{ active_sprint.completion_percentage|default:0 }}%</span>
-                        </div>
-                        <div class="as-progress-track">
-                            <div class="as-progress-fill" style="width: {{ active_sprint.completion_percentage|default:0 }}%;"></div>
-                        </div>
-                        <div class="as-progress-stats">
-                            <span class="as-stat as-stat--todo">
-                                <span class="as-stat-dot"></span>
-                                {{ active_sprint.todo_count|default:0 }} To Do
-                            </span>
-                            <span class="as-stat as-stat--inprogress">
-                                <span class="as-stat-dot"></span>
-                                {{ active_sprint.inprogress_count|default:0 }} In Progress
-                            </span>
-                            <span class="as-stat as-stat--done">
-                                <span class="as-stat-dot"></span>
-                                {{ active_sprint.done_count|default:0 }} Done
-                            </span>
-                        </div>
-                    </div>
-                    <form method="POST" action="{% url 'sprint-complete' project.pk active_sprint.pk %}">
-                        {% csrf_token %}
-                        <button type="submit" class="as-complete-btn">
-                            <i class="fas fa-flag-checkered"></i> Complete Sprint
-                        </button>
-                    </form>
+                <div class="as-banner-meta">
+                    {% if active_sprint.start_date and active_sprint.end_date %}
+                    <span class="as-meta-item">
+                        <i class="far fa-calendar-alt"></i>
+                        {{ active_sprint.start_date|date:"M d" }} — {{ active_sprint.end_date|date:"M d, Y" }}
+                    </span>
+                    {% endif %}
+                    {% if active_sprint.days_remaining != None %}
+                    <span class="as-meta-item as-meta-item--warning">
+                        <i class="far fa-clock"></i>
+                        {{ active_sprint.days_remaining }} days remaining
+                    </span>
+                    {% endif %}
+                    <span class="as-meta-item">
+                        <i class="fas fa-ticket-alt"></i>
+                        {{ active_sprint.total_issues|default:0 }} issues
+                    </span>
                 </div>
             </div>
-        {% else %}
-            <div class="as-empty-banner">
-                <div class="as-empty-icon"><i class="fas fa-running"></i></div>
-                <div class="as-empty-text">
-                    <strong>No active sprint</strong>
-                    <span>Create and start a sprint from the backlog to begin tracking work.</span>
+            <div class="as-banner-right">
+                <div class="as-progress-block">
+                    <div class="as-progress-labels">
+                        <span>Progress</span>
+                        <span class="as-progress-pct">{{ active_sprint.completion_percentage|default:0 }}%</span>
+                    </div>
+                    <div class="as-progress-track">
+                        <div class="as-progress-fill" style="width: {{ active_sprint.completion_percentage|default:0 }}%;"></div>
+                    </div>
+                    <div class="as-progress-stats">
+                        <span class="as-stat as-stat--todo"><span class="as-stat-dot"></span>{{ active_sprint.todo_count|default:0 }} To Do</span>
+                        <span class="as-stat as-stat--inprogress"><span class="as-stat-dot"></span>{{ active_sprint.inprogress_count|default:0 }} In Progress</span>
+                        <span class="as-stat as-stat--done"><span class="as-stat-dot"></span>{{ active_sprint.done_count|default:0 }} Done</span>
+                    </div>
                 </div>
-                {% if membership.role|lower != 'read-only' %}
-                <a href="{% url 'product-backlog' project.pk %}" class="as-go-backlog-btn">
-                    <i class="fas fa-arrow-right"></i> Go to Backlog
-                </a>
+                {% if can_manage_sprint %}
+                <form method="POST" action="{% url 'sprint-complete' project.pk active_sprint.pk %}">
+                    {% csrf_token %}
+                    <button type="submit" class="as-complete-btn">
+                        <i class="fas fa-flag-checkered"></i> Complete Sprint
+                    </button>
+                </form>
                 {% endif %}
             </div>
-        {% endif %}
-
-        <div class="backlog-quick-filters">
-            <span class="bqf-label">Quick Filters:</span>
-            <button class="bqf-btn" onclick="applyQuickFilter('mine')">Only My Issues</button>
-            <button class="bqf-btn" onclick="applyQuickFilter('recent')">Recently Updated</button>
-            <button class="bqf-btn" onclick="applyQuickFilter('blocked')">Blocked</button>
         </div>
+    {% else %}
+        <div class="as-empty-banner">
+            <div class="as-empty-icon"><i class="fas fa-running"></i></div>
+            <div class="as-empty-text">
+                <strong>No active sprint</strong>
+                <span>Create and start a sprint from the backlog to begin tracking work.</span>
+            </div>
+            {% if membership.role|lower != 'read-only' %}
+            <a href="{% url 'product-backlog' project.pk %}" class="as-go-backlog-btn">
+                <i class="fas fa-arrow-right"></i> Go to Backlog
+            </a>
+            {% endif %}
+        </div>
+    {% endif %}
+
+    <div class="backlog-quick-filters">
+        <span class="bqf-label">Quick Filters:</span>
+        <button class="bqf-btn" type="button" onclick="applyQuickFilter('mine')">Only My Issues</button>
+        <button class="bqf-btn" type="button" onclick="applyQuickFilter('recent')">Recently Updated</button>
+        <button class="bqf-btn" type="button" onclick="applyQuickFilter('blocked')">Blocked</button>
     </div>
+</div>
 
-    <hr>
+<hr>
 
-    <div style="display:flex; gap:15px; overflow-x:auto; align-items:flex-start; padding-bottom: 20px;">
-        {% for column in columns %}
-            <div class="card p-3" style="min-width:420px; width:420px; min-height: 75vh; background:#f4f5f7; display:flex; flex-direction:column;">
-                <div class="d-flex align-items-center mb-3">
-                    <h6 class="font-weight-bold mb-0">{{ column.name }}</h6>
-                </div>
+<div class="kanban-board" id="kanbanBoard">
+    {% for column in columns %}
+        <div class="card p-3 kanban-column">
+            <div class="d-flex align-items-center mb-3">
+                <h6 class="font-weight-bold mb-0">{{ column.name }}</h6>
+                <span class="column-count">{{ column.tickets|length }}</span>
+            </div>
 
-                {% for ticket in column.ticket_set.all %}
-                    <div class="card p-2 mb-2 shadow-sm">
-                        {{ ticket.title }}
+            <div class="kanban-dropzone" data-column-id="{{ column.id }}">
+                {% for ticket in column.tickets %}
+                    <div class="card p-3 shadow-sm kanban-card"
+                         draggable="{% if can_edit_board %}true{% else %}false{% endif %}"
+                         data-ticket-id="{{ ticket.id }}"
+                         data-assignee="{% if ticket.assignee %}{{ ticket.assignee.username }}{% endif %}"
+                         data-updated="{{ ticket.updated_at|date:'U' }}"
+                         data-status="{{ ticket.status }}">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <a href="{% url 'ticket-detail' project.pk ticket.pk %}" class="ticket-title-link">
+                                <strong>{{ ticket.ticket_id }} — {{ ticket.title }}</strong>
+                            </a>
+                            <span class="ticket-badge">{{ ticket.get_type_display }}</span>
+                        </div>
+
+                        {% if ticket.description %}
+                            <div class="ticket-meta mb-2">{{ ticket.description|truncatechars:100 }}</div>
+                        {% endif %}
+
+                        <div class="ticket-meta d-flex justify-content-between align-items-center">
+                            <span>
+                                {% if ticket.assignee %}
+                                    <i class="far fa-user"></i> {{ ticket.assignee.username }}
+                                {% else %}
+                                    <i class="far fa-user"></i> Unassigned
+                                {% endif %}
+                            </span>
+                            <span>
+                                {% if ticket.story_points %}
+                                    <i class="fas fa-bolt"></i> {{ ticket.story_points }} pts
+                                {% endif %}
+                            </span>
+                        </div>
+
+                        <div class="ticket-actions">
+                            <small class="text-muted text-uppercase">{{ ticket.get_priority_display }}</small>
+                            {% if can_manage_sprint %}
+                            <form method="POST" action="{% url 'ticket-remove-from-sprint' project.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
+                                <input type="hidden" name="sprint_id" value="{{ active_sprint.id }}">
+                                <button type="submit" class="btn-backlog-inline">
+                                    <i class="fas fa-undo"></i> Backlog
+                                </button>
+                            </form>
+                            {% endif %}
+                        </div>
                     </div>
                 {% empty %}
-                    <div style="flex:1; display:flex; align-items:center; justify-content:center;">
-                        <small class="text-muted">No issues</small>
+                    <div class="d-flex align-items-center justify-content-center flex-grow-1 text-muted py-5 empty-column-state">
+                        <small>No issues</small>
                     </div>
                 {% endfor %}
-
-                {% if user.profile.global_role|lower != 'read-only' %}
-                    <div class="pt-2 border-top mt-2">
-                        <a href="#" class="text-muted text-decoration-none">
-                            <i class="bi bi-plus"></i> Add Issue
-                        </a>
-                    </div>
-                {% endif %}
-
             </div>
-        {% endfor %}
-
-        {% if user.profile.global_role|lower != 'read-only' %}
-        <div>
-            <a href="#" class="btn btn-outline-secondary" style="min-width:200px; height:60px; border-style:dashed;">
-                + Add Column
-            </a>
         </div>
-        {% endif %}
-    </div>
-    <script>
-        setTimeout(function()
-        {
-            location.reload();
-        }, 30000); // 30 secondes
-    </script>
-    {% include 'scrum/sprint/_sprint_modal.html' %}
-{% endblock project_content%}
+    {% endfor %}
+</div>
+
+<script>
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+    }
+
+    function applyQuickFilter(filterName) {
+        const cards = document.querySelectorAll('.kanban-card');
+        const currentUser = "{{ request.user.username }}";
+        const now = Math.floor(Date.now() / 1000);
+
+        cards.forEach(card => {
+            let visible = true;
+            if (filterName === 'mine') {
+                visible = card.dataset.assignee === currentUser;
+            } else if (filterName === 'recent') {
+                visible = (now - Number(card.dataset.updated || 0)) < 7 * 24 * 3600;
+            } else if (filterName === 'blocked') {
+                visible = card.dataset.status === 'blocked';
+            }
+            card.style.display = visible ? '' : 'none';
+        });
+    }
+
+    {% if can_edit_board and active_sprint %}
+    let draggedCard = null;
+
+    document.querySelectorAll('.kanban-card').forEach(card => {
+        card.addEventListener('dragstart', () => {
+            draggedCard = card;
+            card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => {
+            card.classList.remove('dragging');
+            draggedCard = null;
+        });
+    });
+
+    document.querySelectorAll('.kanban-dropzone').forEach(zone => {
+        zone.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            zone.classList.add('drag-over');
+        });
+
+        zone.addEventListener('dragleave', () => {
+            zone.classList.remove('drag-over');
+        });
+
+        zone.addEventListener('drop', async (event) => {
+            event.preventDefault();
+            zone.classList.remove('drag-over');
+            if (!draggedCard) return;
+
+            const originalZone = draggedCard.parentElement;
+            zone.appendChild(draggedCard);
+
+            const formData = new URLSearchParams();
+            formData.append('column_id', zone.dataset.columnId);
+
+            const url = "{% url 'ticket-move-kanban' project.pk 0 %}".replace('/0/', `/${draggedCard.dataset.ticketId}/`);
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                },
+                body: formData.toString(),
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                originalZone.appendChild(draggedCard);
+                alert(data.error || 'Unable to move ticket.');
+                return;
+            }
+
+            window.location.reload();
+        });
+    });
+    {% endif %}
+</script>
+
+{% include 'scrum/sprint/_sprint_modal.html' %}
+{% endblock project_content %}
