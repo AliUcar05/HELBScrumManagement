@@ -189,13 +189,35 @@ function quickCreateIssue() {
     window.location.href = url;
 }
 
+var currentMtsTicketId = null;
+
 function moveToSprint(ticketId) {
-    var form = document.getElementById('moveToSprintModal');
-    if (form) {
-        document.getElementById('moveToSprintForm').action = 
-            '/projects/' + PROJECT_PK + '/tickets/' + ticketId + '/add-to-sprint/';
-        $('#moveToSprintModal').modal('show');
-    }
+    currentMtsTicketId = ticketId;
+    $('#moveToSprintModal').modal('show');
+}
+
+
+function addTicketToSprint(ticketId, sprintId) {
+    console.log('ticketId:', ticketId, 'sprintId:', sprintId);
+
+    var form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '/projects/' + PROJECT_PK + '/tickets/' + ticketId + '/add-to-sprint/';
+    
+    var csrf = document.createElement('input');
+    csrf.type = 'hidden';
+    csrf.name = 'csrfmiddlewaretoken';
+    csrf.value = CSRF_TOKEN;
+    form.appendChild(csrf);
+    
+    var sprint = document.createElement('input');
+    sprint.type = 'hidden';
+    sprint.name = 'sprint_id';
+    sprint.value = sprintId;
+    form.appendChild(sprint);
+    
+    document.body.appendChild(form);
+    form.submit();
 }
 
 
