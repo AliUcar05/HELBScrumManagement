@@ -1,4 +1,328 @@
 {% extends 'scrum/project_board.html' %}
+{% load static %}
 {% block project_content %}
-  <h1>Open Issues</h1>
+
+<link rel="stylesheet" href="{% static 'scrum/css/issues.css' %}">
+<link rel="stylesheet" href="{% static 'scrum/css/issue-drawer.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<div class="issues-page">
+
+    <div class="issues-page-header">
+        <h1 class="issues-page-title">Issues</h1>
+        {% if can_create %}
+        <button class="btn btn-dark" data-toggle="modal" data-target="#globalCreateTicketModal">
+            <i class="fas fa-plus mr-1"></i> Create Issue
+        </button>
+        {% endif %}
+    </div>
+
+    <div class="issues-toolbar">
+        <form method="GET" id="issuesFilterForm" class="issues-filter-bar">
+            <div class="issues-search-wrap">
+                <i class="fas fa-search issues-search-icon"></i>
+                <input type="text" name="q" value="{{ search }}" placeholder="Search issues…" class="issues-search-input" oninput="debounceSubmit()">
+            </div>
+
+            <select name="type" class="issues-select" onchange="this.form.submit()">
+                <option value="">All Types</option>
+                <option value="epic"       {% if f_type == "epic" %}selected{% endif %}>Epic</option>
+                <option value="user story" {% if f_type == "user story" %}selected{% endif %}>Story</option>
+                <option value="task"       {% if f_type == "task" %}selected{% endif %}>Task</option>
+                <option value="bug"        {% if f_type == "bug" %}selected{% endif %}>Bug</option>
+            </select>
+
+            <select name="priority" class="issues-select" onchange="this.form.submit()">
+                <option value="">All Priorities</option>
+                <option value="highest" {% if f_priority == "highest" %}selected{% endif %}>Highest</option>
+                <option value="high"    {% if f_priority == "high" %}selected{% endif %}>High</option>
+                <option value="medium"  {% if f_priority == "medium" %}selected{% endif %}>Medium</option>
+                <option value="low"     {% if f_priority == "low" %}selected{% endif %}>Low</option>
+                <option value="lowest"  {% if f_priority == "lowest" %}selected{% endif %}>Lowest</option>
+            </select>
+
+            <select name="assignee" class="issues-select" onchange="this.form.submit()">
+                <option value="">All Assignees</option>
+                {% for m in members %}
+                <option value="{{ m.pk }}" {% if f_assignee == m.pk|stringformat:"s" %}selected{% endif %}>
+                    {{ m.get_full_name|default:m.username }}
+                </option>
+                {% endfor %}
+            </select>
+
+            {% if search or f_type or f_status or f_priority or f_assignee %}
+            <a href="{% url 'project-issues' project.pk %}" class="issues-clear-btn">
+                <i class="fas fa-times"></i> Clear
+            </a>
+            {% endif %}
+        </form>
+
+        <div class="issues-view-toggle">
+            <button class="ivt-btn active" id="btnGrouped" onclick="setView('grouped')">
+                <i class="fas fa-layer-group"></i> Grouped
+            </button>
+            <button class="ivt-btn" id="btnList" onclick="setView('list')">
+                <i class="fas fa-list"></i> List
+            </button>
+        </div>
+    </div>
+
+    <div class="issues-summary-bar">
+        <span class="isb-total"><strong>{{ total }}</strong> issue{{ total|pluralize }}</span>
+        <span class="isb-dot isb-dot--todo"></span><span class="isb-label">To Do: <strong>{{ count_todo }}</strong></span>
+        <span class="isb-dot isb-dot--progress"></span><span class="isb-label">In Progress: <strong>{{ count_inprogress }}</strong></span>
+        <span class="isb-dot isb-dot--review"></span><span class="isb-label">In Review: <strong>{{ count_inreview }}</strong></span>
+        <span class="isb-dot isb-dot--done"></span><span class="isb-label">Done: <strong>{{ count_done }}</strong></span>
+        <span class="isb-dot isb-dot--blocked"></span><span class="isb-label">Blocked: <strong>{{ count_blocked }}</strong></span>
+    </div>
+
+    <!-- GROUPED VIEW -->
+    <div id="viewGrouped">
+
+        {% for group in status_groups %}
+        {% if group.tickets %}
+        <div class="issue-group" id="group-{{ group.key }}">
+            <div class="issue-group-header" onclick="toggleGroup('{{ group.key }}')">
+                <span class="igh-chevron" id="chev-{{ group.key }}"><i class="fas fa-chevron-down"></i></span>
+                <span class="igh-dot igh-dot--{{ group.key }}"></span>
+                <span class="igh-name">{{ group.label }}</span>
+                <span class="igh-count">{{ group.tickets|length }}</span>
+            </div>
+
+            <div class="issue-group-body" id="body-{{ group.key }}">
+                <table class="issues-table">
+                    <thead>
+                        <tr>
+                            <th class="it-th-type">Type</th>
+                            <th class="it-th-key">Key</th>
+                            <th class="it-th-title">Summary</th>
+                            <th class="it-th-priority">Priority</th>
+                            <th class="it-th-assignee">Assignee</th>
+                            <th class="it-th-epic">Epic</th>
+                            <th class="it-th-sprint">Sprint</th>
+                            <th class="it-th-updated">Updated</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ticket in group.tickets %}
+                        <tr class="it-row" onclick="openTicketDrawer({{ ticket.pk }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1')">
+                            <td class="it-td-type">
+                                {% if ticket.type == 'epic' %}<span class="it-type-badge it-type--epic"><i class="fas fa-bolt"></i></span>
+                                {% elif ticket.type == 'user story' %}<span class="it-type-badge it-type--story"><i class="fas fa-bookmark"></i></span>
+                                {% elif ticket.type == 'task' %}<span class="it-type-badge it-type--task"><i class="fas fa-check-square"></i></span>
+                                {% elif ticket.type == 'bug' %}<span class="it-type-badge it-type--bug"><i class="fas fa-bug"></i></span>
+                                {% endif %}
+                            </td>
+                            <td class="it-td-key">
+                                <a href="#" onclick="event.stopPropagation(); openTicketDrawer({{ ticket.pk }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1'); return false;" class="it-key-link">
+                                    {{ ticket.ticket_id }}
+                                </a>
+                            </td>
+                            <td class="it-td-title">
+                                <span class="it-title">{{ ticket.title }}</span>
+                                {% if ticket.subtickets.count > 0 %}
+                                <span class="it-sub-badge"><i class="fas fa-sitemap"></i> {{ ticket.subtickets.count }}</span>
+                                {% endif %}
+                            </td>
+                            <td class="it-td-priority">
+                                {% if ticket.priority == 'highest' %}
+                                    <span class="it-prio it-prio--highest"><i class="fas fa-angle-double-up"></i> Highest</span>
+                                {% elif ticket.priority == 'high' %}
+                                    <span class="it-prio it-prio--high"><i class="fas fa-arrow-up"></i> High</span>
+                                {% elif ticket.priority == 'medium' %}
+                                    <span class="it-prio it-prio--medium"><i class="fas fa-equals"></i> Medium</span>
+                                {% elif ticket.priority == 'low' %}
+                                    <span class="it-prio it-prio--low"><i class="fas fa-arrow-down"></i> Low</span>
+                                {% elif ticket.priority == 'lowest' %}
+                                    <span class="it-prio it-prio--lowest"><i class="fas fa-angle-double-down"></i> Lowest</span>
+                                {% endif %}
+                            </td>
+                            <td class="it-td-assignee">
+                                {% if ticket.assignee %}
+                                <div class="it-avatar" title="{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}">
+                                    {% if ticket.assignee.profile.image %}
+                                    <img src="{{ ticket.assignee.profile.image.url }}" alt="">
+                                    {% else %}
+                                    {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
+                                    {% endif %}
+                                </div>
+                                {% else %}
+                                <div class="it-avatar it-avatar--empty" title="Unassigned"><i class="fas fa-user"></i></div>
+                                {% endif %}
+                            </td>
+                            <td class="it-td-epic">
+                                {% if ticket.parent %}
+                                <span class="it-epic-tag">
+                                    <i class="fas fa-bolt"></i> {{ ticket.parent.title|truncatechars:18 }}
+                                </span>
+                                {% else %}
+                                <span class="it-empty">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="it-td-sprint">
+                                {% with sprint=ticket.sprints.first %}
+                                {% if sprint %}
+                                <span class="it-sprint-tag {% if sprint.status == 'active' %}it-sprint-tag--active{% endif %}">
+                                    {% if sprint.status == 'active' %}<span class="it-sprint-dot"></span>{% endif %}
+                                    {{ sprint.name|truncatechars:16 }}
+                                </span>
+                                {% else %}
+                                <span class="it-empty">Backlog</span>
+                                {% endif %}
+                                {% endwith %}
+                            </td>
+                            <td class="it-td-updated">
+                                <span class="it-date" title="{{ ticket.updated_at }}">{{ ticket.updated_at|timesince }} ago</span>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        {% if not tickets %}
+        <div class="issues-empty">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No issues found{% if search or f_type or f_priority or f_assignee %} matching your filters{% endif %}.</p>
+            {% if can_create %}
+            <button class="btn btn-dark mt-2" data-toggle="modal" data-target="#globalCreateTicketModal">Create your first issue</button>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div>
+
+    <!-- LIST VIEW (flat, sortable) -->
+    <div id="viewList" style="display:none;">
+        {% if tickets %}
+        <table class="issues-table issues-table--flat">
+            <thead>
+                <tr>
+                    <th class="it-th-type">Type</th>
+                    <th class="it-th-key">Key</th>
+                    <th class="it-th-title">Summary</th>
+                    <th class="it-th-status">Status</th>
+                    <th class="it-th-priority">Priority</th>
+                    <th class="it-th-assignee">Assignee</th>
+                    <th class="it-th-epic">Epic</th>
+                    <th class="it-th-sprint">Sprint</th>
+                    <th class="it-th-updated">Updated</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for ticket in tickets %}
+                <tr class="it-row" onclick="openTicketDrawer({{ ticket.pk }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1')">
+                    <td class="it-td-type">
+                        {% if ticket.type == 'epic' %}<span class="it-type-badge it-type--epic"><i class="fas fa-bolt"></i></span>
+                        {% elif ticket.type == 'user story' %}<span class="it-type-badge it-type--story"><i class="fas fa-bookmark"></i></span>
+                        {% elif ticket.type == 'task' %}<span class="it-type-badge it-type--task"><i class="fas fa-check-square"></i></span>
+                        {% elif ticket.type == 'bug' %}<span class="it-type-badge it-type--bug"><i class="fas fa-bug"></i></span>
+                        {% endif %}
+                    </td>
+                    <td class="it-td-key">
+                        <a href="#" onclick="event.stopPropagation(); openTicketDrawer({{ ticket.pk }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1'); return false;" class="it-key-link">
+                            {{ ticket.ticket_id }}
+                        </a>
+                    </td>
+                    <td class="it-td-title"><span class="it-title">{{ ticket.title }}</span></td>
+                    <td class="it-td-status">
+                        <span class="it-status-badge it-status--{{ ticket.status }}">
+                            {{ ticket.get_status_display }}
+                        </span>
+                    </td>
+                    <td class="it-td-priority">
+                        {% if ticket.priority == 'highest' %}<span class="it-prio it-prio--highest"><i class="fas fa-angle-double-up"></i> Highest</span>
+                        {% elif ticket.priority == 'high' %}<span class="it-prio it-prio--high"><i class="fas fa-arrow-up"></i> High</span>
+                        {% elif ticket.priority == 'medium' %}<span class="it-prio it-prio--medium"><i class="fas fa-equals"></i> Medium</span>
+                        {% elif ticket.priority == 'low' %}<span class="it-prio it-prio--low"><i class="fas fa-arrow-down"></i> Low</span>
+                        {% elif ticket.priority == 'lowest' %}<span class="it-prio it-prio--lowest"><i class="fas fa-angle-double-down"></i> Lowest</span>
+                        {% endif %}
+                    </td>
+                    <td class="it-td-assignee">
+                        {% if ticket.assignee %}
+                        <div class="it-avatar" title="{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}">
+                            {% if ticket.assignee.profile.image %}<img src="{{ ticket.assignee.profile.image.url }}" alt="">
+                            {% else %}{{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}{% endif %}
+                        </div>
+                        {% else %}
+                        <div class="it-avatar it-avatar--empty" title="Unassigned"><i class="fas fa-user"></i></div>
+                        {% endif %}
+                    </td>
+                    <td class="it-td-epic">
+                        {% if ticket.parent %}<span class="it-epic-tag"><i class="fas fa-bolt"></i> {{ ticket.parent.title|truncatechars:18 }}</span>
+                        {% else %}<span class="it-empty">—</span>{% endif %}
+                    </td>
+                    <td class="it-td-sprint">
+                        {% with sprint=ticket.sprints.first %}
+                        {% if sprint %}<span class="it-sprint-tag {% if sprint.status == 'active' %}it-sprint-tag--active{% endif %}">{% if sprint.status == 'active' %}<span class="it-sprint-dot"></span>{% endif %}{{ sprint.name|truncatechars:16 }}</span>
+                        {% else %}<span class="it-empty">Backlog</span>{% endif %}
+                        {% endwith %}
+                    </td>
+                    <td class="it-td-updated">
+                        <span class="it-date" title="{{ ticket.updated_at }}">{{ ticket.updated_at|timesince }} ago</span>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div class="issues-empty">
+            <i class="fas fa-clipboard-list"></i>
+            <p>No issues found.</p>
+        </div>
+        {% endif %}
+    </div>
+
+</div>
+
+<div class="tdr-overlay" id="tdrOverlay" onclick="closeTicketDrawer()"></div>
+<div class="ticket-drawer" id="ticketDrawer">
+    <div class="tdr-loading" id="tdrLoading"><i class="fas fa-spinner fa-spin"></i></div>
+    <div id="tdrContent"></div>
+</div>
+
+{% include 'scrum/global/confirm_delete_modal.html' %}
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="{% static 'scrum/js/issue-drawer.js' %}"></script>
+<script src="{% static 'scrum/js/backlog.js' %}"></script>
+
+<script>
+var PROJECT_PK  = {{ project.pk }};
+var CSRF_TOKEN  = "{{ csrf_token }}";
+
+var _debounceTimer = null;
+function debounceSubmit() {
+    clearTimeout(_debounceTimer);
+    _debounceTimer = setTimeout(function () {
+        document.getElementById('issuesFilterForm').submit();
+    }, 400);
+}
+
+function toggleGroup(key) {
+    var body  = document.getElementById('body-' + key);
+    var chev  = document.getElementById('chev-' + key);
+    if (!body) return;
+    var open = body.style.display !== 'none';
+    body.style.display  = open ? 'none' : '';
+    chev.style.transform = open ? 'rotate(-90deg)' : '';
+}
+
+function setView(v) {
+    document.getElementById('viewGrouped').style.display = v === 'grouped' ? '' : 'none';
+    document.getElementById('viewList').style.display    = v === 'list'    ? '' : 'none';
+    document.getElementById('btnGrouped').classList.toggle('active', v === 'grouped');
+    document.getElementById('btnList').classList.toggle('active', v === 'list');
+    localStorage.setItem('issuesView_{{ project.pk }}', v);
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var saved = localStorage.getItem('issuesView_{{ project.pk }}') || 'grouped';
+    setView(saved);
+});
+</script>
+
 {% endblock project_content %}

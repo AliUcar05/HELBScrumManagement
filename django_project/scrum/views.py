@@ -1,3 +1,7 @@
+import os
+import uuid
+from io import BytesIO
+
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
@@ -284,7 +288,10 @@ class ProjectIssuesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     context_object_name = "tickets"
 
     def test_func(self):
-        return user_can_access_project(self.request.user, get_object_or_404(Project, pk=self.kwargs["pk"]))
+        return user_can_access_project(
+            self.request.user,
+            get_object_or_404(Project, pk=self.kwargs["pk"])
+        )
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have access to this project.")
@@ -292,13 +299,19 @@ class ProjectIssuesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_queryset(self):
         self.project = get_object_or_404(Project, pk=self.kwargs["pk"])
-        qs = Ticket.objects.filter(project=self.project).select_related(
-            "assignee", "assignee__profile", "parent", "requester"
-        ).order_by("-created_at")
+        self.request.session["current_project_id"] = self.project.id
 
-        self.search     = self.request.GET.get("q", "").strip()
-        self.f_type     = self.request.GET.get("type", "")
-        self.f_status   = self.request.GET.get("status", "")
+        qs = (
+            Ticket.objects
+            .filter(project=self.project)
+            .select_related("assignee", "assignee__profile", "parent")
+            .prefetch_related("sprints")
+            .order_by("-updated_at")  # most recently updated first
+        )
+
+        self.search = self.request.GET.get("q", "").strip()
+        self.f_type = self.request.GET.get("type", "")
+        self.f_status = self.request.GET.get("status", "")
         self.f_priority = self.request.GET.get("priority", "")
         self.f_assignee = self.request.GET.get("assignee", "")
 
@@ -317,17 +330,47 @@ class ProjectIssuesView(LoginRequiredMixin, UserPassesTestMixin, ListView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context["project"]    = self.project
+        tickets = self.get_queryset()
+
+        # Status groups — ordered: open/todo first, done/closed last
+        STATUS_ORDER = [
+            ("todo", "To Do"),
+            ("in_progress", "In Progress"),
+            ("in_review", "In Review"),
+            ("open", "Open"),
+            ("blocked", "Blocked"),
+            ("done", "Done"),
+        ]
+
+        status_groups = []
+        for key, label in STATUS_ORDER:
+            group_tickets = [t for t in tickets if t.status == key]
+            status_groups.append({
+                "key": key,
+                "label": label,
+                "tickets": group_tickets,
+            })
+
+        context["project"] = self.project
         context["membership"] = self.project.memberships.filter(user=self.request.user).first()
         context["can_create"] = is_contributor_or_admin(self.request.user, self.project)
         context["can_delete"] = is_project_admin(self.request.user, self.project)
-        context["members"]    = self.project.members.select_related("profile")
-        context["search"]     = self.search
-        context["f_type"]     = self.f_type
-        context["f_status"]   = self.f_status
+        context["members"] = self.project.members.select_related("profile")
+        context["search"] = self.search
+        context["f_type"] = self.f_type
+        context["f_status"] = self.f_status
         context["f_priority"] = self.f_priority
         context["f_assignee"] = self.f_assignee
-        context["total"]      = self.get_queryset().count()
+        context["total"] = tickets.count()
+        context["status_groups"] = status_groups
+
+        # Counts for summary bar
+        context["count_todo"] = tickets.filter(status="todo").count()
+        context["count_inprogress"] = tickets.filter(status="in_progress").count()
+        context["count_inreview"] = tickets.filter(status="in_review").count()
+        context["count_done"] = tickets.filter(status="done").count()
+        context["count_blocked"] = tickets.filter(status="blocked").count()
+
         return context
 
 
@@ -753,6 +796,7 @@ class TicketDetailView(LoginRequiredMixin, UserPassesTestMixin, DetailView):
             "can_edit":  is_contributor_or_admin(self.request.user, project),
             "can_delete": is_project_admin(self.request.user, project),
             "edit_form": edit_form,
+            "ticket_form": edit_form,
             "membership": project.memberships.filter(user=self.request.user).first(),
         })
         return context
@@ -901,6 +945,7 @@ def quick_create_ticket(request, pk):
     messages.success(request, f'Issue "{ticket.title}" created.')
     return redirect("product-backlog", pk=pk)
 
+
 @login_required
 def ticket_inline_update(request, pk, ticket_pk):
     project = get_object_or_404(Project, pk=pk)
@@ -915,22 +960,38 @@ def ticket_inline_update(request, pk, ticket_pk):
     field = request.POST.get("field")
     value = request.POST.get("value", "")
 
-    ALLOWED_FIELDS = ["title", "description", "priority", "status", "story_points"]
+    ALLOWED_FIELDS = [
+        "title", "description", "priority", "status", "story_points",
+        "assignee_id", "due_date", "parent_id", "labels", "type"
+    ]
 
     if field not in ALLOWED_FIELDS:
         return JsonResponse({"success": False, "error": f"Field '{field}' not allowed"}, status=400)
 
     try:
         if field == "story_points":
-            setattr(ticket, field, int(value) if value else None)
+            ticket.story_points = int(value) if value else None
+            ticket.save(update_fields=["story_points"])
+        elif field == "assignee_id":
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            ticket.assignee = User.objects.get(pk=value) if value else None
+            ticket.save(update_fields=["assignee"])
+        elif field == "parent_id":
+            ticket.parent = Ticket.objects.get(pk=value, project=project) if value else None
+            ticket.save(update_fields=["parent"])
+        elif field == "due_date":
+            ticket.due_date = value if value else None
+            ticket.save(update_fields=["due_date"])
         else:
             setattr(ticket, field, value)
-        ticket.save(update_fields=[field])
+            ticket.save(update_fields=[field])
         log_activity(request.user, project, "update_ticket",
                      ticket=ticket, message=f"updated {field} on {ticket.title}")
         return JsonResponse({"success": True})
     except Exception as e:
         return JsonResponse({"success": False, "error": str(e)}, status=400)
+
 
 @login_required
 def move_ticket_kanban(request, pk, ticket_pk):
@@ -1278,3 +1339,67 @@ def add_ticket_to_sprint(request, pk, ticket_pk):
         messages.success(request, f'Issue "{ticket.title}" added to sprint "{sprint.name}".')
 
     return redirect("product-backlog", pk=pk)
+
+
+#═══════════════════════════════════════════════════════════════
+@login_required
+def upload_description_image(request, pk):
+    """
+    Upload + redimensionne une image pour Quill (description ticket).
+    - Max 900px de large (préserve le ratio)
+    - Max 5MB en entrée
+    - Retourne {"url": "..."} pour Quill
+    """
+    project = get_object_or_404(Project, pk=pk)
+
+    if not is_contributor_or_admin(request.user, project):
+        return JsonResponse({"error": "Permission denied"}, status=403)
+
+    if request.method != "POST":
+        return JsonResponse({"error": "POST only"}, status=405)
+
+    image_file = request.FILES.get("image")
+    if not image_file:
+        return JsonResponse({"error": "No image provided"}, status=400)
+
+    allowed_types = ["image/jpeg", "image/png", "image/gif", "image/webp"]
+    if image_file.content_type not in allowed_types:
+        return JsonResponse({"error": "Use JPG, PNG, GIF or WebP."}, status=400)
+
+    if image_file.size > 5 * 1024 * 1024:
+        return JsonResponse({"error": "Max 5MB."}, status=400)
+
+    try:
+        from PIL import Image as PilImage
+        img = PilImage.open(image_file)
+
+        # Convertir en RGB si nécessaire (PNG avec transparence → garder RGBA)
+        if img.mode not in ("RGB", "RGBA"):
+            img = img.convert("RGBA" if img.format == "PNG" else "RGB")
+
+        # Redimensionner si plus large que 900px
+        MAX_WIDTH = 900
+        if img.width > MAX_WIDTH:
+            ratio = MAX_WIDTH / img.width
+            new_h = int(img.height * ratio)
+            img = img.resize((MAX_WIDTH, new_h), PilImage.LANCZOS)
+
+        # Sauvegarder en mémoire
+        output = BytesIO()
+        fmt = "PNG" if img.mode == "RGBA" else "JPEG"
+        ext = ".png" if fmt == "PNG" else ".jpg"
+        save_kwargs = {"quality": 85, "optimize": True} if fmt == "JPEG" else {"optimize": True}
+        img.save(output, format=fmt, **save_kwargs)
+        output.seek(0)
+
+        filename = f"{uuid.uuid4().hex}{ext}"
+        save_path = os.path.join("description_images", filename)
+
+        from django.core.files.storage import default_storage
+        saved = default_storage.save(save_path, ContentFile(output.read()))
+        url = default_storage.url(saved)
+
+        return JsonResponse({"url": url})
+
+    except Exception as e:
+        return JsonResponse({"error": f"Image processing failed: {str(e)}"}, status=500)

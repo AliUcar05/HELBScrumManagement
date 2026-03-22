@@ -1,231 +1,597 @@
 {% load static %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
 
-<div class="tdr-inner" id="tdrInner" data-ticket-id="{{ ticket.id }}" data-project-id="{{ project.id }}">
+<div class="tdr-inner" id="tdrInner"
+     data-ticket-id="{{ ticket.id }}"
+     data-project-id="{{ project.id }}"
+     data-drawer-url="{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1"
+     data-update-url="/projects/{{ project.id }}/ticket/{{ ticket.id }}/inline-update/"
+     data-members-url="/projects/{{ project.id }}/members-json/"
+     data-backlog-url="{% url 'product-backlog' project.pk %}">
 
+    <!-- HEADER -->
     <div class="tdr-header">
         <div class="tdr-header-left">
-            <span class="tdr-key">{{ project.code }}-{{ ticket.id }}</span>
+            <span class="tdr-key">{{ ticket.ticket_id }}</span>
             <span class="tdr-type type-{{ ticket.type }}">
-                {% if ticket.type == "bug" %}<i class="fas fa-bug"></i> Bug
-                {% elif ticket.type == "user story" %}<i class="fas fa-book-open"></i> Story
-                {% elif ticket.type == "task" %}<i class="fas fa-check-square"></i> Task
-                {% elif ticket.type == "epic" %}<i class="fas fa-layer-group"></i> Epic
+                {% if ticket.type == 'bug' %}<i class="fas fa-bug"></i> Bug
+                {% elif ticket.type == 'user story' %}<i class="fas fa-bookmark"></i> Story
+                {% elif ticket.type == 'task' %}<i class="fas fa-check-square"></i> Task
+                {% elif ticket.type == 'epic' %}<i class="fas fa-bolt"></i> Epic
                 {% endif %}
             </span>
         </div>
         <div class="tdr-header-actions">
             {% if can_delete %}
-                <button class="tdr-action-btn tdr-action-btn--danger" onclick="openDeleteModal({{ ticket.id }}, '{{ project.code }}-{{ ticket.id }}', '{{ ticket.title|escapejs }}', '{% url 'ticket-delete' project.pk ticket.pk %}')">
-                    <i class="fas fa-trash"></i>
-                </button>
-            {% endif %}
-            <button class="tdr-close-btn" onclick="closeTicketDrawer()">
-                <i class="fas fa-times"></i>
+            <button class="tdr-action-btn tdr-action-btn--danger" title="Delete"
+                    onclick="openDeleteModal({{ ticket.id }},'{{ ticket.ticket_id }}','{{ ticket.title|escapejs }}','{% url 'ticket-delete' project.pk ticket.pk %}')">
+                <i class="fas fa-trash"></i>
             </button>
+            {% endif %}
+            <button class="tdr-close-btn" onclick="closeTicketDrawer()"><i class="fas fa-times"></i></button>
         </div>
     </div>
 
+    <!-- TITLE -->
     <div class="tdr-title-section">
-        <div class="tdr-title-container">
-            <h2 class="tdr-title" id="tdrTitle">{{ ticket.title }}</h2>
-            <button class="tdr-inline-edit" onclick="editField('title')">
-                <i class="fas fa-pencil-alt"></i>
-            </button>
+        {% if can_edit %}
+        <div class="tdr-editable-title" id="tdrTitleDisplay" onclick="tdrEditTitle()" title="Click to edit">
+            <h2 class="tdr-title">{{ ticket.title }}</h2>
+            <span class="tdr-edit-hint"><i class="fas fa-pencil-alt"></i></span>
         </div>
-        <div class="tdr-status-container">
-            <span class="tdr-status status-{{ ticket.status }}" onclick="editField('status')">
-                {{ ticket.get_status_display }}
-                <i class="fas fa-chevron-down"></i>
-            </span>
+        <div id="tdrTitleEdit" style="display:none;">
+            <input type="text" id="tdrTitleInput" class="tdr-field-input" value="{{ ticket.title|escapejs }}">
+            <div class="tdr-inline-actions">
+                <button class="tdr-save-btn" onclick="tdrSaveField('title',document.getElementById('tdrTitleInput').value)"><i class="fas fa-check"></i> Save</button>
+                <button class="tdr-cancel-btn" onclick="tdrShowDisplay('Title')"><i class="fas fa-times"></i></button>
+            </div>
         </div>
-    </div>
+        {% else %}
+        <h2 class="tdr-title">{{ ticket.title }}</h2>
+        {% endif %}
 
-    <div class="tdr-body" style="max-height: 55vh; overflow-y: auto; overflow-x: hidden; padding-right: 10px; padding-bottom: 20px;">
-
-        <div class="tdr-meta-grid">
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Priority</span>
-                <span class="tdr-meta-value priority priority-{{ ticket.priority }}" onclick="editField('priority')">
-                    {% if ticket.priority == "highest" %}<i class="fas fa-arrow-up"></i> Highest
-                    {% elif ticket.priority == "high" %}<i class="fas fa-arrow-up"></i> High
-                    {% elif ticket.priority == "medium" %}<i class="fas fa-minus"></i> Medium
-                    {% elif ticket.priority == "low" %}<i class="fas fa-arrow-down"></i> Low
+        <div class="tdr-status-row">
+            <!-- STATUS dropdown -->
+            <div class="tdr-status-dropdown-wrap">
+                <span class="tdr-status-badge tdr-status--{{ ticket.status }} {% if can_edit %}tdr-clickable{% endif %}"
+                      {% if can_edit %}onclick="tdrToggleDropdown('statusDrop')" title="Change status"{% endif %}>
+                    {{ ticket.get_status_display }}
+                    {% if can_edit %}<i class="fas fa-chevron-down" style="font-size:8px;margin-left:3px;opacity:.6;"></i>{% endif %}
+                </span>
+                {% if can_edit %}
+                <div class="tdr-dropdown" id="statusDrop">
+                    {% for val, lbl in ticket.TICKET_STATUSES %}{% if val != ticket.status %}
+                    <button class="tdr-dropdown-item tdr-sq--{{ val }}"
+                            onclick="tdrSaveField('status','{{ val }}');tdrCloseDropdown('statusDrop');">{{ lbl }}</button>
+                    {% endif %}{% endfor %}
+                </div>
+                {% endif %}
+            </div>
+            <!-- PRIORITY dropdown -->
+            <div class="tdr-prio-dropdown-wrap">
+                <span class="tdr-prio-badge tdr-prio--{{ ticket.priority }} {% if can_edit %}tdr-clickable{% endif %}"
+                      {% if can_edit %}onclick="tdrToggleDropdown('prioDrop')" title="Change priority"{% endif %}>
+                    {% if ticket.priority == 'highest' %}<i class="fas fa-angle-double-up"></i> Highest
+                    {% elif ticket.priority == 'high' %}<i class="fas fa-arrow-up"></i> High
+                    {% elif ticket.priority == 'medium' %}<i class="fas fa-equals"></i> Medium
+                    {% elif ticket.priority == 'low' %}<i class="fas fa-arrow-down"></i> Low
+                    {% elif ticket.priority == 'lowest' %}<i class="fas fa-angle-double-down"></i> Lowest
                     {% endif %}
-                    <i class="fas fa-chevron-down"></i>
+                    {% if can_edit %}<i class="fas fa-chevron-down" style="font-size:8px;margin-left:3px;opacity:.6;"></i>{% endif %}
                 </span>
-            </div>
-
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Assignee</span>
-                <span class="tdr-meta-value assignee-selector" onclick="editField('assignee')">
-                    {% if ticket.assignee %}
-                        <div class="tdr-user">
-                            {% if ticket.assignee.profile.image %}
-                                <img src="{{ ticket.assignee.profile.image.url }}" class="tdr-avatar" alt="">
-                            {% else %}
-                                <div class="tdr-avatar tdr-avatar--initials">
-                                    {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
-                                </div>
-                            {% endif %}
-                            <span>{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}</span>
-                        </div>
-                    {% else %}
-                        <span style="color:#94a3b8;">Unassigned</span>
-                    {% endif %}
-                    <i class="fas fa-chevron-down"></i>
-                </span>
-            </div>
-
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Reporter</span>
-                <span class="tdr-meta-value">
-                    <div class="tdr-user">
-                        {% if ticket.requester.profile.image %}
-                            <img src="{{ ticket.requester.profile.image.url }}" class="tdr-avatar" alt="">
-                        {% else %}
-                            <div class="tdr-avatar tdr-avatar--initials">
-                                {{ ticket.requester.first_name|first|upper }}{{ ticket.requester.last_name|first|upper }}
-                            </div>
-                        {% endif %}
-                        <span>{{ ticket.requester.get_full_name|default:ticket.requester.username }}</span>
-                    </div>
-                </span>
-            </div>
-
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Story Points</span>
-                <span class="tdr-meta-value" onclick="editField('story_points')">
-                    <span class="tdr-points">{{ ticket.story_points|default:"—" }}</span>
-                    <i class="fas fa-chevron-down"></i>
-                </span>
-            </div>
-
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Due Date</span>
-                <span class="tdr-meta-value" onclick="editField('due_date')">
-                    {{ ticket.due_date|date:"M d, Y"|default:"—" }}
-                    <i class="fas fa-chevron-down"></i>
-                </span>
-            </div>
-
-            {% if ticket.parent %}
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Parent</span>
-                <span class="tdr-meta-value">
-                    <span class="tdr-parent-link">
-                        <i class="fas fa-layer-group"></i>
-                        {{ project.code }}-{{ ticket.parent.id }} — {{ ticket.parent.title|truncatechars:30 }}
-                    </span>
-                </span>
-            </div>
-            {% endif %}
-
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Created</span>
-                <span class="tdr-meta-value">{{ ticket.created_at|date:"M d, Y" }}</span>
-            </div>
-            <div class="tdr-meta-item">
-                <span class="tdr-meta-label">Updated</span>
-                <span class="tdr-meta-value">{{ ticket.updated_at|date:"M d, Y" }}</span>
-            </div>
-        </div>
-
-        <div class="tdr-divider"></div>
-
-        <div class="tdr-section">
-            <div class="tdr-section-header">
-                <h4 class="tdr-section-title">Description</h4>
-                <button class="tdr-inline-edit" onclick="editField('description')">
-                    <i class="fas fa-pencil-alt"></i> Edit
-                </button>
-            </div>
-            <div class="tdr-description" id="tdrDescription">
-                {% if ticket.description %}
-                    {{ ticket.description|linebreaks }}
-                {% else %}
-                    <span class="tdr-empty-text">Add a description...</span>
+                {% if can_edit %}
+                <div class="tdr-dropdown" id="prioDrop">
+                    {% for val, lbl in ticket.TICKET_PRIORITIES %}{% if val != ticket.priority %}
+                    <button class="tdr-dropdown-item tdr-prio-opt--{{ val }}"
+                            onclick="tdrSaveField('priority','{{ val }}');tdrCloseDropdown('prioDrop');">{{ lbl }}</button>
+                    {% endif %}{% endfor %}
+                </div>
                 {% endif %}
             </div>
         </div>
+    </div>
 
+    <!-- BODY -->
+    <div class="tdr-body">
+
+        <!-- META GRID -->
+        <div class="tdr-meta-grid">
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Assignee</span>
+                <div class="tdr-meta-value {% if can_edit %}tdr-clickable{% endif %}" id="tdrAssigneeDisplay"
+                     {% if can_edit %}onclick="tdrEditAssignee()" title="Click to change"{% endif %}>
+                    {% if ticket.assignee %}
+                    <div class="tdr-user">
+                        {% if ticket.assignee.profile.image %}<img src="{{ ticket.assignee.profile.image.url }}" class="tdr-avatar" alt="">
+                        {% else %}<div class="tdr-avatar tdr-avatar--initials">{{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}</div>{% endif %}
+                        <span>{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}</span>
+                    </div>
+                    {% else %}<span class="tdr-unassigned"><i class="fas fa-user-plus"></i> Assign…</span>{% endif %}
+                    {% if can_edit %}<i class="fas fa-pencil-alt tdr-field-edit-icon"></i>{% endif %}
+                </div>
+                {% if can_edit %}
+                <div id="tdrAssigneeEdit" style="display:none;">
+                    <select id="tdrAssigneeSelect" class="tdr-field-select">
+                        <option value="">— Unassigned —</option>
+                    </select>
+                    <div class="tdr-inline-actions">
+                        <button class="tdr-save-btn" onclick="tdrSaveField('assignee_id',document.getElementById('tdrAssigneeSelect').value)"><i class="fas fa-check"></i></button>
+                        <button class="tdr-cancel-btn" onclick="tdrShowDisplay('Assignee')"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Reporter</span>
+                <div class="tdr-meta-value">
+                    <div class="tdr-user">
+                        {% if ticket.requester.profile.image %}<img src="{{ ticket.requester.profile.image.url }}" class="tdr-avatar" alt="">
+                        {% else %}<div class="tdr-avatar tdr-avatar--initials">{{ ticket.requester.first_name|first|upper }}{{ ticket.requester.last_name|first|upper }}</div>{% endif %}
+                        <span>{{ ticket.requester.get_full_name|default:ticket.requester.username }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Story Points</span>
+                <div class="tdr-meta-value {% if can_edit %}tdr-clickable{% endif %}" id="tdrPointsDisplay"
+                     {% if can_edit %}onclick="tdrShowEdit('Points')" title="Click to edit"{% endif %}>
+                    {% if ticket.story_points %}<span class="tdr-points">{{ ticket.story_points }}</span>
+                    {% else %}<span class="tdr-empty">— Add</span>{% endif %}
+                    {% if can_edit %}<i class="fas fa-pencil-alt tdr-field-edit-icon"></i>{% endif %}
+                </div>
+                {% if can_edit %}
+                <div id="tdrPointsEdit" style="display:none;">
+                    <input type="number" id="tdrPointsInput" class="tdr-field-input" value="{{ ticket.story_points|default:'' }}" min="0" max="999" style="width:80px;">
+                    <div class="tdr-inline-actions">
+                        <button class="tdr-save-btn" onclick="tdrSaveField('story_points',document.getElementById('tdrPointsInput').value)"><i class="fas fa-check"></i></button>
+                        <button class="tdr-cancel-btn" onclick="tdrShowDisplay('Points')"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Due Date</span>
+                <div class="tdr-meta-value {% if can_edit %}tdr-clickable{% endif %}" id="tdrDueDateDisplay"
+                     {% if can_edit %}onclick="tdrShowEdit('DueDate')" title="Click to edit"{% endif %}>
+                    <span class="tdr-date">{{ ticket.due_date|date:"M d, Y"|default:"— Set date" }}</span>
+                    {% if can_edit %}<i class="fas fa-pencil-alt tdr-field-edit-icon"></i>{% endif %}
+                </div>
+                {% if can_edit %}
+                <div id="tdrDueDateEdit" style="display:none;">
+                    <input type="date" id="tdrDueDateInput" class="tdr-field-input" value="{{ ticket.due_date|date:'Y-m-d'|default:'' }}" style="width:160px;">
+                    <div class="tdr-inline-actions">
+                        <button class="tdr-save-btn" onclick="tdrSaveField('due_date',document.getElementById('tdrDueDateInput').value)"><i class="fas fa-check"></i></button>
+                        <button class="tdr-cancel-btn" onclick="tdrShowDisplay('DueDate')"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">{% if ticket.type == 'user story' %}Epic{% else %}Parent{% endif %}</span>
+                <div class="tdr-meta-value {% if can_edit %}tdr-clickable{% endif %}" id="tdrParentDisplay"
+                     {% if can_edit %}onclick="tdrShowEdit('Parent')" title="Click to change"{% endif %}>
+                    {% if ticket.parent %}
+                    <span class="tdr-parent-link" onclick="event.stopPropagation();openTicketDrawer({{ ticket.parent.pk }},'{% url 'ticket-detail' project.pk ticket.parent.pk %}?drawer=1')">
+                        <i class="fas fa-bolt" style="color:#5243aa;font-size:10px;"></i>
+                        {{ ticket.parent.ticket_id }} — {{ ticket.parent.title|truncatechars:18 }}
+                    </span>
+                    {% else %}<span class="tdr-empty">— Link issue</span>{% endif %}
+                    {% if can_edit %}<i class="fas fa-pencil-alt tdr-field-edit-icon"></i>{% endif %}
+                </div>
+                {% if can_edit %}
+                <div id="tdrParentEdit" style="display:none;">
+                    <select id="tdrParentSelect" class="tdr-field-select">
+                        <option value="">— None —</option>
+                        {% for t in ticket_form.fields.parent.queryset %}
+                        {% if t.type == 'epic' or t.type == 'user story' %}
+                        <option value="{{ t.pk }}" {% if ticket.parent_id == t.pk %}selected{% endif %}>
+                            [{{ t.type|upper }}] {{ t.ticket_id }} — {{ t.title|truncatechars:28 }}
+                        </option>
+                        {% endif %}
+                        {% endfor %}
+                    </select>
+                    <div class="tdr-inline-actions">
+                        <button class="tdr-save-btn" onclick="tdrSaveField('parent_id',document.getElementById('tdrParentSelect').value)"><i class="fas fa-check"></i></button>
+                        <button class="tdr-cancel-btn" onclick="tdrShowDisplay('Parent')"><i class="fas fa-times"></i></button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+            {% with sprint=ticket.sprints.first %}
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Sprint</span>
+                <div class="tdr-meta-value">
+                    {% if sprint %}
+                    <span class="tdr-sprint-badge {% if sprint.status == 'active' %}tdr-sprint--active{% endif %}">
+                        {% if sprint.status == 'active' %}<span class="tdr-sprint-dot"></span>{% endif %}
+                        {{ sprint.name }}
+                    </span>
+                    {% else %}<span class="tdr-empty">Backlog</span>{% endif %}
+                </div>
+            </div>
+            {% endwith %}
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Created</span>
+                <div class="tdr-meta-value tdr-date">{{ ticket.created_at|date:"M d, Y" }}</div>
+            </div>
+            <div class="tdr-meta-item">
+                <span class="tdr-meta-label">Updated</span>
+                <div class="tdr-meta-value tdr-date">{{ ticket.updated_at|timesince }} ago</div>
+            </div>
+        </div>
+
+        {# ── CHANGE 1: description sans #tdrDescEdit, édition = overlay ── #}
+        <div class="tdr-section">
+            <div class="tdr-section-header">
+                <h4 class="tdr-section-title">Description</h4>
+                {% if can_edit %}<button class="tdr-text-btn" id="tdrDescEditBtn" onclick="tdrEditDescription()"><i class="fas fa-pencil-alt"></i> Edit</button>{% endif %}
+            </div>
+            <div class="tdr-description" id="tdrDescDisplay">
+                {% if ticket.description %}{{ ticket.description|safe }}
+                {% else %}<span class="tdr-empty-text">No description yet.{% if can_edit %} Click Edit to add one.{% endif %}</span>{% endif %}
+            </div>
+        </div>
+
+        <!-- LABELS -->
+        <div class="tdr-section">
+            <div class="tdr-section-header">
+                <h4 class="tdr-section-title">Labels</h4>
+                {% if can_edit %}<button class="tdr-text-btn" onclick="tdrShowEdit('Labels')"><i class="fas fa-pencil-alt"></i> Edit</button>{% endif %}
+            </div>
+            <div id="tdrLabelsDisplay">
+                {% if ticket.labels %}
+                <div class="tdr-labels">{% for lbl in ticket.labels.split %}<span class="tdr-label-tag">{{ lbl }}</span>{% endfor %}</div>
+                {% else %}<span class="tdr-empty-text">No labels.</span>{% endif %}
+            </div>
+            {% if can_edit %}
+            <div id="tdrLabelsEdit" style="display:none;">
+                <input type="text" id="tdrLabelsInput" class="tdr-field-input" value="{{ ticket.labels }}" placeholder="frontend auth api">
+                <p style="font-size:11px;color:#6b778c;margin-top:3px;">Separate labels with spaces.</p>
+                <div class="tdr-inline-actions">
+                    <button class="tdr-save-btn" onclick="tdrSaveField('labels',document.getElementById('tdrLabelsInput').value)"><i class="fas fa-check"></i> Save</button>
+                    <button class="tdr-cancel-btn" onclick="tdrShowDisplay('Labels')"><i class="fas fa-times"></i></button>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- CHILD ISSUES -->
         {% if children %}
         <div class="tdr-section">
             <h4 class="tdr-section-title">Child Issues <span class="tdr-count">{{ children|length }}</span></h4>
             <div class="tdr-children">
                 {% for child in children %}
-                <div class="tdr-child-item" onclick="openTicketDrawer({{ child.id }}, '{% url 'ticket-detail' project.pk child.pk %}?drawer=1')">
-                    <span class="tdr-child-key">{{ project.code }}-{{ child.id }}</span>
-                    <span class="tdr-child-title">{{ child.title|truncatechars:40 }}</span>
-                    <span class="tdr-child-status status-{{ child.status }}">{{ child.get_status_display }}</span>
+                <div class="tdr-child-item" onclick="openTicketDrawer({{ child.id }},'{% url 'ticket-detail' project.pk child.pk %}?drawer=1')">
+                    <span class="tdr-child-type">
+                        {% if child.type == 'bug' %}<i class="fas fa-bug" style="color:#de350b;"></i>
+                        {% elif child.type == 'user story' %}<i class="fas fa-bookmark" style="color:#006644;"></i>
+                        {% elif child.type == 'task' %}<i class="fas fa-check-square" style="color:#0747a6;"></i>
+                        {% elif child.type == 'epic' %}<i class="fas fa-bolt" style="color:#5243aa;"></i>
+                        {% endif %}
+                    </span>
+                    <span class="tdr-child-key">{{ child.ticket_id }}</span>
+                    <span class="tdr-child-title">{{ child.title|truncatechars:35 }}</span>
+                    <span class="tdr-child-status tdr-status--{{ child.status }}">{{ child.get_status_display }}</span>
                 </div>
                 {% endfor %}
             </div>
         </div>
         {% endif %}
 
-        <div class="tdr-section" style="margin-top: 30px;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
-                <h4 class="tdr-section-title" style="margin: 0; text-transform: uppercase; font-size: 13px; color: #6b778c;">Comments</h4>
-
-                <button id="btnShowForm" onclick="document.getElementById('formBoite').style.display='block'; this.style.display='none'; setTimeout(function(){ document.querySelector('#formBoite textarea').focus(); document.querySelector('.tdr-body').scrollTop = document.querySelector('.tdr-body').scrollHeight; }, 100);" style="background-color: #0052cc; color: white; border: none; padding: 6px 12px; border-radius: 4px; cursor: pointer; font-weight: 500; font-size: 14px;">
-                    + Add a comment
-                </button>
-            </div>
-
-            <div id="formBoite" style="display: none; background: #fff; padding: 15px; border-radius: 5px; margin-bottom: 20px; border: 1px solid #dfe1e6; box-shadow: 0 1px 3px rgba(0,0,0,0.1);">
-                <form action="{% url 'add_comment' ticket.pk %}" method="POST">
-                    {% csrf_token %}
-                    <div style="margin-bottom: 10px;">
-                        {{ comment_form.content }}
-                    </div>
-                    <div style="text-align: right; margin-top: 10px;">
-                        <button type="button" onclick="document.getElementById('formBoite').style.display='none'; document.getElementById('btnShowForm').style.display='block';" style="background: none; border: none; color: #42526e; cursor: pointer; margin-right: 15px; font-weight: 500;">Cancel</button>
-                        <button type="submit" style="background-color: #0052cc; color: white; border: none; padding: 6px 16px; border-radius: 4px; cursor: pointer; font-weight: 500;">Save</button>
-                    </div>
-                </form>
-            </div>
-
+        <!-- COMMENTS -->
+        <div class="tdr-section">
+            <h4 class="tdr-section-title">Comments <span class="tdr-count">{{ comments|length }}</span></h4>
             <div class="tdr-comments">
                 {% for comment in comments %}
-                <div class="tdr-comment" style="margin-bottom: 1.5rem; border-bottom: 1px solid #eee; padding-bottom: 10px;">
-                    <div class="tdr-comment-header" style="display: flex; align-items: center; margin-bottom: 0.5rem;">
+                <div class="tdr-comment" id="tdrComment-{{ comment.pk }}">
+                    <div class="tdr-comment-meta">
                         <div class="tdr-user">
-                            {% if comment.author.profile.image %}
-                                <img src="{{ comment.author.profile.image.url }}" class="tdr-avatar tdr-avatar--sm" alt="">
-                            {% else %}
-                                <div class="tdr-avatar tdr-avatar--initials tdr-avatar--sm">
-                                    {{ comment.author.first_name|first|upper }}{{ comment.author.last_name|first|upper }}
-                                </div>
-                            {% endif %}
-                            <strong>{{ comment.author.get_full_name|default:comment.author.username }}</strong>
-                            <span class="tdr-comment-date" style="font-size: 0.85em; color: #6b778c; margin-left: 10px;">{{ comment.created_at|date:"M d, Y H:i" }}</span>
+                            {% if comment.author.profile.image %}<img src="{{ comment.author.profile.image.url }}" class="tdr-avatar tdr-avatar--sm" alt="">
+                            {% else %}<div class="tdr-avatar tdr-avatar--initials tdr-avatar--sm">{{ comment.author.first_name|first|upper }}{{ comment.author.last_name|first|upper }}</div>{% endif %}
+                            <strong class="tdr-comment-author">{{ comment.author.get_full_name|default:comment.author.username }}</strong>
+                        </div>
+                        <span class="tdr-comment-date">{{ comment.created_at|timesince }} ago</span>
+                    </div>
+                    <p class="tdr-comment-body" id="tdrCBody-{{ comment.pk }}">{{ comment.content }}</p>
+                    {% if comment.author == request.user %}
+                    <div id="tdrCEdit-{{ comment.pk }}" style="display:none;">
+                        <textarea class="tdr-comment-input" id="tdrCInput-{{ comment.pk }}" rows="3">{{ comment.content }}</textarea>
+                        <div class="tdr-comment-form-actions" style="margin-top:6px;">
+                            <form method="POST" action="{% url 'edit_comment' comment.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <input type="hidden" name="content" id="tdrCContent-{{ comment.pk }}">
+                                <button type="submit" class="tdr-comment-save-btn"
+                                        onclick="document.getElementById('tdrCContent-{{ comment.pk }}').value=document.getElementById('tdrCInput-{{ comment.pk }}').value;">
+                                    <i class="fas fa-check"></i> Save
+                                </button>
+                                <button type="button" class="tdr-comment-cancel-btn"
+                                        onclick="document.getElementById('tdrCBody-{{ comment.pk }}').style.display='';document.getElementById('tdrCActions-{{ comment.pk }}').style.display='';document.getElementById('tdrCEdit-{{ comment.pk }}').style.display='none';">
+                                    Cancel
+                                </button>
+                            </form>
                         </div>
                     </div>
-
-                    <p class="tdr-comment-body" style="white-space: pre-wrap; margin: 0 0 5px 35px;">{{ comment.content }}</p>
-
-                    {% if comment.author == request.user %}
-                    <div class="tdr-comment-actions-bottom" style="margin-left: 35px; font-size: 0.85em;">
-                        <a href="{% url 'edit_comment' comment.pk %}" style="color: #6b778c; margin-right: 15px; text-decoration: none; font-weight: 500;">Edit</a>
-                        <a href="{% url 'delete_comment' comment.pk %}" onclick="return confirm('Delete this comment?');" style="color: #de350b; text-decoration: none; font-weight: 500;">Delete</a>
+                    <div class="tdr-comment-actions" id="tdrCActions-{{ comment.pk }}">
+                        <button class="tdr-comment-action-link"
+                                onclick="document.getElementById('tdrCBody-{{ comment.pk }}').style.display='none';document.getElementById('tdrCActions-{{ comment.pk }}').style.display='none';document.getElementById('tdrCEdit-{{ comment.pk }}').style.display='block';document.getElementById('tdrCInput-{{ comment.pk }}').focus();">
+                            Edit
+                        </button>
+                        <a href="{% url 'delete_comment' comment.pk %}?next={{ request.get_full_path|urlencode }}"
+                           class="tdr-comment-action-link tdr-comment-action-link--danger"
+                           onclick="return confirm('Delete this comment?');">Delete</a>
                     </div>
                     {% endif %}
                 </div>
                 {% empty %}
-                <p class="tdr-empty-text" style="margin-left: 35px; font-style: italic; color: #6b778c;">No comments yet.</p>
+                <p class="tdr-empty-text">No comments yet.</p>
                 {% endfor %}
+            </div>
+            <div class="tdr-add-comment" style="margin-top:10px;">
+                <textarea id="tdrCommentInput" class="tdr-comment-input" placeholder="Add a comment…" rows="2"></textarea>
+                <div class="tdr-comment-form-actions" id="tdrNewCommentActions" style="display:none;">
+                    <form method="POST" action="{% url 'add_comment' ticket.pk %}" id="tdrCommentForm">
+                        {% csrf_token %}
+                        <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                        <input type="hidden" name="content" id="tdrCommentContent">
+                        <button type="submit" class="tdr-comment-save-btn"
+                                onclick="document.getElementById('tdrCommentContent').value=document.getElementById('tdrCommentInput').value;">
+                            <i class="fas fa-paper-plane"></i> Save
+                        </button>
+                        <button type="button" class="tdr-comment-cancel-btn" id="tdrCommentCancelBtn">Cancel</button>
+                    </form>
+                </div>
             </div>
         </div>
 
-    </div>
-</div>
+    </div><!-- fin .tdr-body -->
 
-<script type="text/template" id="editFieldTemplate">
-    <div class="tdr-edit-field">
-        <div class="tdr-edit-input"></div>
-        <div class="tdr-edit-actions">
-            <button class="tdr-edit-save btn btn-primary btn-sm">Save</button>
-            <button class="tdr-edit-cancel btn btn-secondary btn-sm">Cancel</button>
+    {# ── CHANGE 2: overlay description ajouté ici ── #}
+    {% if can_edit %}
+    <div id="tdrDescOverlay" class="tdr-desc-overlay">
+        <div class="tdr-desc-overlay-header">
+            <span style="font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#97a0af;">Edit Description</span>
+            <button class="tdr-close-btn" onclick="tdrCloseDescOverlay()" title="Cancel"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="tdr-desc-overlay-body">
+            <div id="tdrDescQuill"></div>
+        </div>
+        <div class="tdr-desc-overlay-footer">
+            <button class="tdr-save-btn" onclick="tdrSaveDescription()"><i class="fas fa-check"></i> Save</button>
+            <button class="tdr-cancel-btn" onclick="tdrCloseDescOverlay()"><i class="fas fa-times"></i> Cancel</button>
         </div>
     </div>
+    {% endif %}
+
+</div><!-- fin .tdr-inner -->
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.min.js"></script>
+<script>
+(function() {
+    var INNER       = document.getElementById('tdrInner');
+    var TICKET_ID   = INNER.dataset.ticketId;
+    var PROJECT_ID  = INNER.dataset.projectId;
+    var UPDATE_URL  = INNER.dataset.updateUrl;
+    var DRAWER_URL  = INNER.dataset.drawerUrl;
+    var MEMBERS_URL = INNER.dataset.membersUrl;
+    var UPLOAD_URL  = '/projects/' + PROJECT_ID + '/upload-image/';
+    var descQuill   = null;
+
+    function getCookie(name) {
+        var val = null;
+        document.cookie.split(';').forEach(function(c) {
+            c = c.trim();
+            if (c.startsWith(name + '=')) val = decodeURIComponent(c.slice(name.length + 1));
+        });
+        return val;
+    }
+
+    window.tdrSaveField = function(field, value) {
+        fetch(UPDATE_URL, {
+            method: 'POST',
+            headers: {
+                'Content-Type':     'application/x-www-form-urlencoded',
+                'X-CSRFToken':      getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: new URLSearchParams({ field: field, value: value })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) { openTicketDrawer(TICKET_ID, DRAWER_URL); }
+            else { alert('Error: ' + (data.error || 'Unknown error')); }
+        })
+        .catch(function(e) { alert('Network error: ' + e); });
+    };
+
+    window.tdrShowEdit = function(key) {
+        var disp = document.getElementById('tdr' + key + 'Display');
+        var edit = document.getElementById('tdr' + key + 'Edit');
+        if (disp) disp.style.display = 'none';
+        if (edit) { edit.style.display = 'block'; var inp = edit.querySelector('input,select,textarea'); if (inp) inp.focus(); }
+    };
+    window.tdrShowDisplay = function(key) {
+        var disp = document.getElementById('tdr' + key + 'Display');
+        var edit = document.getElementById('tdr' + key + 'Edit');
+        if (disp) disp.style.display = '';
+        if (edit) edit.style.display = 'none';
+    };
+
+    window.tdrEditTitle = function() {
+        document.getElementById('tdrTitleDisplay').style.display = 'none';
+        document.getElementById('tdrTitleEdit').style.display = 'block';
+        var inp = document.getElementById('tdrTitleInput');
+        inp.focus(); inp.select();
+    };
+    var titleInp = document.getElementById('tdrTitleInput');
+    if (titleInp) {
+        titleInp.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter')  { e.preventDefault(); tdrSaveField('title', this.value); }
+            if (e.key === 'Escape') tdrShowDisplay('Title');
+        });
+    }
+
+    window.tdrToggleDropdown = function(id) {
+        var drop = document.getElementById(id);
+        var isOpen = drop.classList.contains('tdr-dropdown--open');
+        document.querySelectorAll('.tdr-dropdown--open').forEach(function(d) { d.classList.remove('tdr-dropdown--open'); });
+        if (!isOpen) drop.classList.add('tdr-dropdown--open');
+    };
+    window.tdrCloseDropdown = function(id) {
+        var d = document.getElementById(id); if (d) d.classList.remove('tdr-dropdown--open');
+    };
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.tdr-status-dropdown-wrap') && !e.target.closest('.tdr-prio-dropdown-wrap'))
+            document.querySelectorAll('.tdr-dropdown--open').forEach(function(d) { d.classList.remove('tdr-dropdown--open'); });
+    });
+
+    function uploadImageToServer(file, callback) {
+        var fd = new FormData();
+        fd.append('image', file);
+        fetch(UPLOAD_URL, {
+            method: 'POST',
+            headers: { 'X-CSRFToken': getCookie('csrftoken') },
+            body: fd
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.url) callback(data.url);
+            else alert('Upload error: ' + (data.error || 'Unknown'));
+        })
+        .catch(function(e) { alert('Upload failed: ' + e); });
+    }
+
+    // ── Description overlay ───────────────────────────────
+    window.tdrEditDescription = function() {
+        var overlay = document.getElementById('tdrDescOverlay');
+        var btn     = document.getElementById('tdrDescEditBtn');
+        if (!overlay) return;
+        overlay.classList.add('tdr-desc-overlay--open');
+        if (btn) btn.style.display = 'none';
+
+        if (!descQuill) {
+            descQuill = new Quill('#tdrDescQuill', {
+                theme: 'snow',
+                placeholder: 'Add a description… (paste or drag images)',
+                modules: {
+                    toolbar: {
+                        container: [
+                            [{ header: [1,2,3,false] }],
+                            ['bold','italic','underline','strike'],
+                            [{ color:[] },{ background:[] }],
+                            [{ list:'ordered' },{ list:'bullet' }],
+                            ['blockquote','code-block'],
+                            ['link','image'],
+                            ['clean']
+                        ],
+                        handlers: {
+                            image: function() {
+                                var inp = document.createElement('input');
+                                inp.type = 'file';
+                                inp.accept = 'image/png,image/jpeg,image/gif,image/webp';
+                                inp.click();
+                                inp.onchange = function() {
+                                    var f = inp.files[0];
+                                    if (!f) return;
+                                    uploadImageToServer(f, function(url) {
+                                        var r = descQuill.getSelection(true);
+                                        descQuill.insertEmbed(r.index, 'image', url);
+                                        descQuill.setSelection(r.index + 1);
+                                    });
+                                };
+                            }
+                        }
+                    }
+                }
+            });
+            descQuill.root.addEventListener('paste', function(e) {
+                var items = (e.clipboardData || e.originalEvent.clipboardData).items;
+                for (var i = 0; i < items.length; i++) {
+                    if (items[i].type.indexOf('image') !== -1) {
+                        e.preventDefault();
+                        uploadImageToServer(items[i].getAsFile(), function(url) {
+                            var r = descQuill.getSelection(true);
+                            descQuill.insertEmbed(r ? r.index : 0, 'image', url);
+                        });
+                        break;
+                    }
+                }
+            });
+            descQuill.root.addEventListener('drop', function(e) {
+                var files = e.dataTransfer && e.dataTransfer.files;
+                if (!files || !files.length || !files[0].type.match(/^image\//)) return;
+                e.preventDefault();
+                uploadImageToServer(files[0], function(url) {
+                    var r = descQuill.getSelection(true);
+                    descQuill.insertEmbed(r ? r.index : 0, 'image', url);
+                });
+            });
+            var existing = document.getElementById('tdrDescDisplay').innerHTML;
+            if (existing && !existing.includes('tdr-empty-text')) {
+                descQuill.root.innerHTML = existing;
+            }
+        }
+        setTimeout(function() { descQuill.focus(); }, 50);
+    };
+
+    window.tdrCloseDescOverlay = function() {
+        var overlay = document.getElementById('tdrDescOverlay');
+        var btn     = document.getElementById('tdrDescEditBtn');
+        if (overlay) overlay.classList.remove('tdr-desc-overlay--open');
+        if (btn) btn.style.display = '';
+    };
+
+    window.tdrSaveDescription = function() {
+        tdrSaveField('description', descQuill ? descQuill.root.innerHTML : '');
+    };
+
+    // ── Lightbox ──────────────────────────────────────────
+    (function initLightbox() {
+        var desc = document.getElementById('tdrDescDisplay');
+        if (!desc) return;
+        desc.addEventListener('click', function(e) {
+            if (e.target.tagName !== 'IMG') return;
+            var lb = document.createElement('div');
+            lb.className = 'tdr-img-lightbox';
+            var img = document.createElement('img');
+            img.src = e.target.src;
+            lb.appendChild(img);
+            lb.addEventListener('click', function() { document.body.removeChild(lb); });
+            document.addEventListener('keydown', function esc(ev) {
+                if (ev.key === 'Escape') { document.body.removeChild(lb); document.removeEventListener('keydown', esc); }
+            });
+            document.body.appendChild(lb);
+        });
+    })();
+
+    window.tdrEditAssignee = function() {
+        document.getElementById('tdrAssigneeDisplay').style.display = 'none';
+        document.getElementById('tdrAssigneeEdit').style.display = 'block';
+        var sel = document.getElementById('tdrAssigneeSelect');
+        if (sel && sel.options.length <= 1) {
+            fetch(MEMBERS_URL, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    sel.innerHTML = '<option value="">— Unassigned —</option>';
+                    (data.members || []).forEach(function(m) {
+                        var o = document.createElement('option');
+                        o.value = m.id; o.textContent = m.name; sel.appendChild(o);
+                    });
+                    sel.focus();
+                });
+        } else if (sel) { sel.focus(); }
+    };
+
+    var newInp     = document.getElementById('tdrCommentInput');
+    var newActions = document.getElementById('tdrNewCommentActions');
+    var newCancel  = document.getElementById('tdrCommentCancelBtn');
+    var newForm    = document.getElementById('tdrCommentForm');
+    if (newInp)    newInp.addEventListener('focus', function() { newActions.style.display = 'block'; newInp.rows = 4; });
+    if (newCancel) newCancel.addEventListener('click', function() { newInp.value = ''; newInp.rows = 2; newActions.style.display = 'none'; });
+    if (newForm)   newForm.addEventListener('submit', function(e) {
+        if (!newInp.value.trim()) { e.preventDefault(); return; }
+        document.getElementById('tdrCommentContent').value = newInp.value.trim();
+    });
+
+})();
 </script>

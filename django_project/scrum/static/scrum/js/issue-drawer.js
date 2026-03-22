@@ -3,38 +3,69 @@
 let currentDrawerTicketId = null;
 
 function openTicketDrawer(ticketId, drawerUrl) {
-    const drawer  = document.getElementById('ticketDrawer');
-    const overlay = document.getElementById('tdrOverlay');
-    const loading = document.getElementById('tdrLoading');
-    const content = document.getElementById('tdrContent');
+    var drawer  = document.getElementById('ticketDrawer');
+    var loading = document.getElementById('tdrLoading');
+    var content = document.getElementById('tdrContent');
+    if (!drawer) return;
 
-    document.querySelectorAll('.ticket-row').forEach(r => r.classList.remove('drawer-active'));
-    const row = document.querySelector(`.ticket-row[data-ticket-id="${ticketId}"]`);
+    document.querySelectorAll('.ticket-row, .it-row, .spt-row').forEach(function(r) {
+        r.classList.remove('drawer-active');
+    });
+    var row = document.querySelector('[data-ticket-id="' + ticketId + '"]');
     if (row) row.classList.add('drawer-active');
 
     loading.style.display = 'flex';
     content.innerHTML = '';
     drawer.classList.add('open');
-    overlay.classList.add('active');
+
+    // Push main content left — Jira style
+    var pushEl = document.getElementById('backlogMain') ||
+                 document.querySelector('.backlog-main') ||
+                 document.querySelector('.backlog-layout') ||
+                 document.querySelector('.it-layout') ||
+                 document.querySelector('.project-content');
+    if (pushEl) {
+        pushEl.style.transition = 'padding-right .25s cubic-bezier(.4,0,.2,1)';
+        pushEl.style.paddingRight = '488px';
+    }
+
     currentDrawerTicketId = ticketId;
+    currentDrawerUrl      = drawerUrl;
 
     fetch(drawerUrl, { headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(r => r.text())
-        .then(html => {
+        .then(function(r) { return r.text(); })
+        .then(function(html) {
             loading.style.display = 'none';
             content.innerHTML = html;
+            content.querySelectorAll('script').forEach(function(s) {
+                var ns = document.createElement('script');
+                ns.textContent = s.textContent;
+                document.body.appendChild(ns);
+            });
         })
-        .catch(() => {
+        .catch(function() {
             loading.style.display = 'none';
-            content.innerHTML = '<div class="p-4 text-danger">Failed to load ticket details.</div>';
+            content.innerHTML = '<div style="padding:24px;color:#de350b;text-align:center;">Failed to load issue.</div>';
         });
 }
 
 function closeTicketDrawer() {
-    document.getElementById('ticketDrawer').classList.remove('open');
-    document.getElementById('tdrOverlay').classList.remove('active');
-    document.querySelectorAll('.ticket-row').forEach(r => r.classList.remove('drawer-active'));
+    var drawer = document.getElementById('ticketDrawer');
+    if (drawer) drawer.classList.remove('open');
+
+    // Restore pushed content
+    var pushEl = document.getElementById('backlogMain') ||
+                 document.querySelector('.backlog-main') ||
+                 document.querySelector('.backlog-layout') ||
+                 document.querySelector('.it-layout') ||
+                 document.querySelector('.project-content');
+    if (pushEl) pushEl.style.paddingRight = '';
+
+    document.querySelectorAll('.ticket-row, .it-row, .spt-row').forEach(function(r) {
+        r.classList.remove('drawer-active');
+    });
     currentDrawerTicketId = null;
+    currentDrawerUrl      = null;
 }
 
 document.addEventListener('keydown', function(e) {
