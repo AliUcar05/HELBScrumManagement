@@ -267,7 +267,7 @@
                                 </div>
                                 {% if ticket.story_points %}<span class="spt-points">{{ ticket.story_points }}</span>{% endif %}
                                 {% if can_create %}
-                                <button class="spt-remove-btn" title="Move back to backlog" onclick="event.stopPropagation(); doRemoveFromSprint({{ ticket.pk }});">
+                                <button class="spt-remove-btn" title="Move back to backlog" onclick="event.stopPropagation(); removeTicketFromSprint({{ ticket.pk }}, {{ sprint.pk }});">
                                     <i class="fas fa-times"></i>
                                 </button>
                                 {% endif %}

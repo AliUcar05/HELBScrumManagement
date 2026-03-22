@@ -49,7 +49,6 @@ document.addEventListener('click', function (e) {
 
 // ===== TICKET DRAWER =====
 
-let currentDrawerTicketId = null;
 
 function openTicketDrawer(ticketId, drawerUrl) {
     const drawer  = document.getElementById('ticketDrawer');
@@ -221,28 +220,31 @@ function addTicketToSprint(ticketId, sprintId) {
 }
 
 
-function doRemoveFromSprint(ticketId) {
-    if (!confirm('Move this ticket back to the backlog?')) return;
+function removeTicketFromSprint(ticketId, sprintId) {
+    var form = document.getElementById('confirmDeleteForm');
+    
+    var existing = form.querySelector('input[name="ticket_id"]');
+    if (existing) existing.remove();
+    var existingSprint = form.querySelector('input[name="sprint_id"]');
+    if (existingSprint) existingSprint.remove();
+    
+    var input = document.createElement('input');
+    input.type = 'hidden';
+    input.name = 'ticket_id';
+    input.value = ticketId;
+    form.appendChild(input);
 
-    // Créer un formulaire pour envoyer la requête POST
-    var form = document.createElement('form');
-    form.method = 'POST';
-    form.action = '/projects/' + PROJECT_PK + '/ticket/remove-from-sprint/';
+    var sprintInput = document.createElement('input');
+    sprintInput.type = 'hidden';
+    sprintInput.name = 'sprint_id';
+    sprintInput.value = sprintId;
+    form.appendChild(sprintInput);
 
-    // Ajouter CSRF token
-    var csrfInput = document.createElement('input');
-    csrfInput.type = 'hidden';
-    csrfInput.name = 'csrfmiddlewaretoken';
-    csrfInput.value = CSRF_TOKEN;
-    form.appendChild(csrfInput);
-
-    // Ajouter ticket_id
-    var ticketInput = document.createElement('input');
-    ticketInput.type = 'hidden';
-    ticketInput.name = 'ticket_id';
-    ticketInput.value = ticketId;
-    form.appendChild(ticketInput);
-
-    document.body.appendChild(form);
-    form.submit();
+    confirmDelete({
+        title: 'Remove from sprint?',
+        message: 'This issue will be moved back to the backlog.',
+        warning: 'You can add it to a sprint again later.',
+        action: '/projects/' + PROJECT_PK + '/ticket/remove-from-sprint/',
+        btnLabel: 'Remove'
+    });
 }
