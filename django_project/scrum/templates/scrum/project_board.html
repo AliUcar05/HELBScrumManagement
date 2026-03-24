@@ -126,49 +126,55 @@
     {% include 'scrum/global/_sidebar_modals.html' %}
     <script>
 
-       document.getElementById('toggleBtn').onclick = function() {
+      // Au chargement, restaurer l'état de la sidebar
+        document.addEventListener('DOMContentLoaded', function() {
             const sidebar = document.getElementById('sidebar');
-            sidebar.classList.toggle('collapsed');
-
-            const icon = this.querySelector('i');
+            const main = document.querySelector('.main');
+            const btn = document.getElementById('toggleBtn');
+            const icon = btn.querySelector('i');
             const avatar = sidebar.querySelector('.project-avatar');
             const cover = sidebar.querySelector('.project-cover') || sidebar.querySelector('.project-fallback');
-            const main = document.querySelector('.main');
 
-            if (sidebar.classList.contains('collapsed'))
-            {
+            const isCollapsed = localStorage.getItem('sidebarCollapsed') === 'true';
+
+            if (isCollapsed) {
+                sidebar.classList.add('collapsed');
                 sidebar.style.width = '56px';
                 sidebar.style.minWidth = '56px';
                 sidebar.style.maxWidth = '56px';
                 main.style.marginLeft = '56px';
                 avatar.style.width = '32px';
                 avatar.style.height = '32px';
-
-                if (cover)
-                {
-                    cover.style.width = '32px';
-                    cover.style.height = '32px';
-                }
+                if (cover) { cover.style.width = '32px'; cover.style.height = '32px'; }
                 icon.classList.replace('fa-angle-double-left', 'fa-angle-double-right');
             }
-            else
-            {
-                sidebar.style.width = '250px';
-                main.style.marginLeft = '250px';
-                sidebar.style.minWidth = '';
-                sidebar.style.maxWidth = '';
-                avatar.style.width = '48px';
-                avatar.style.height = '48px';
 
-                if (cover)
-                {
-                    cover.style.width = '48px';
-                    cover.style.height = '48px';
+            btn.onclick = function() {
+                sidebar.classList.toggle('collapsed');
+                const collapsed = sidebar.classList.contains('collapsed');
+                localStorage.setItem('sidebarCollapsed', collapsed);
+
+                if (collapsed) {
+                    sidebar.style.width = '56px';
+                    sidebar.style.minWidth = '56px';
+                    sidebar.style.maxWidth = '56px';
+                    main.style.marginLeft = '56px';
+                    avatar.style.width = '32px';
+                    avatar.style.height = '32px';
+                    if (cover) { cover.style.width = '32px'; cover.style.height = '32px'; }
+                    icon.classList.replace('fa-angle-double-left', 'fa-angle-double-right');
+                } else {
+                    sidebar.style.width = '250px';
+                    sidebar.style.minWidth = '';
+                    sidebar.style.maxWidth = '';
+                    main.style.marginLeft = '250px';
+                    avatar.style.width = '48px';
+                    avatar.style.height = '48px';
+                    if (cover) { cover.style.width = '48px'; cover.style.height = '48px'; }
+                    icon.classList.replace('fa-angle-double-right', 'fa-angle-double-left');
                 }
-                icon.classList.replace('fa-angle-double-right', 'fa-angle-double-left');
-            }
-
-        }
+            };
+        });
 
     </script>
 {% endblock content %}

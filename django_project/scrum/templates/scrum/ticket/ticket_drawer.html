@@ -1,4 +1,6 @@
 {% load static %}
+{% url 'ticket-delete' project.pk ticket.pk as ticket_delete_url %}
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
 
 <div class="tdr-inner" id="tdrInner"
@@ -24,7 +26,12 @@
         <div class="tdr-header-actions">
             {% if can_delete %}
             <button class="tdr-action-btn tdr-action-btn--danger" title="Delete"
-                    onclick="openDeleteModal({{ ticket.id }},'{{ ticket.ticket_id }}','{{ ticket.title|escapejs }}','{% url 'ticket-delete' project.pk ticket.pk %}')">
+                   onclick="confirmDelete({
+                            title: 'Delete issue?',
+                            message: '<strong>{{ project.code }}-{{ ticket.id }}</strong> — {{ ticket.title|escapejs }}',
+                            warning: 'Child issues will be detached but not deleted.',
+                            action: '{{ ticket_delete_url }}'
+                        }); return false;">
                 <i class="fas fa-trash"></i>
             </button>
             {% endif %}

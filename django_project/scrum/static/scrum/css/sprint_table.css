@@ -419,3 +419,11 @@
     margin: 0;
     font-size: 13px;
 }
+
+.spt-body.collapsed {
+    display: none;
+}
+
+.spt-subinfo.collapsed {
+    display: none;
+}

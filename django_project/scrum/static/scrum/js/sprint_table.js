@@ -11,10 +11,12 @@ function toggleSprint(sprintId) {
         body.classList.remove('collapsed');
         if (subinfo) subinfo.classList.remove('collapsed');
         chevron.classList.remove('collapsed');
+        localStorage.setItem('sprint_' + sprintId, 'open');
     } else {
         body.classList.add('collapsed');
         if (subinfo) subinfo.classList.add('collapsed');
         chevron.classList.add('collapsed');
+        localStorage.setItem('sprint_' + sprintId, 'closed');
     }
 }
 
