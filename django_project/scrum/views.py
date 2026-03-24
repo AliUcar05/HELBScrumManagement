@@ -236,13 +236,51 @@ def project_roadmap(request, pk):
         messages.error(request, "You don't have access to this project.")
         return redirect("project-list")
 
-    epics = Ticket.objects.filter(project=project, type='epic').order_by('created_at')
     membership = project.memberships.filter(user=request.user).first()
 
+    # Epics avec stats
+    raw_epics = Ticket.objects.filter(
+        project=project, type='epic'
+    ).order_by("created_at")
+
+    epics = []
+    for epic in raw_epics:
+        subs = epic.subtickets.all()
+        epic.stat_total = subs.count()
+        epic.stat_done = subs.filter(status='done').count()
+        epic.stat_pts = sum(t.story_points for t in subs if t.story_points)
+        epics.append(epic)
+
+    # Sprints avec stats
+    sprints = project.sprints.all().order_by('start_date')
+    for sprint in sprints:
+        tickets = sprint.tickets.all()
+        sprint.total_issues = tickets.count()
+        sprint.done_issues = tickets.filter(status='done').count()
+
+    # Calculer la progression globale du projet
+    all_tickets = project.tickets.exclude(type='epic')
+    total_tickets = all_tickets.count()
+    done_tickets = all_tickets.filter(status='done').count()
+    project_completion = int((done_tickets / total_tickets * 100)) if total_tickets > 0 else 0
+
+    # Calculer les jours restants jusqu'à la deadline
+    from datetime import date
+    today = date.today()
+    days_remaining = None
+    if project.end_date:
+        days_remaining = max((project.end_date - today).days, 0)
+
     context = {
-        "project": project,
+        "project":    project,
         "membership": membership,
-        "epics": epics,
+        "epics":      epics,
+        "sprints":    sprints,
+        "can_create": is_contributor_or_admin(request.user, project),
+        "project_completion": project_completion,
+        "days_remaining": days_remaining,
+        "total_tickets": total_tickets,
+        "done_tickets": done_tickets,
     }
     return render(request, "scrum/project_roadmap.html", context)
 
@@ -664,7 +702,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
     context_object_name = "tickets"
 
     def test_func(self):
-        return user_can_access_project(self.request.user,get_object_or_404(Project, pk=self.kwargs["pk"]))
+        return user_can_access_project(self.request.user, get_object_or_404(Project, pk=self.kwargs["pk"]))
 
     def handle_no_permission(self):
         messages.error(self.request, "You don't have access to this project.")
@@ -681,6 +719,8 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             .exclude(type='epic')
             # EXCLURE LES TICKETS QUI SONT DANS UN SPRINT ACTIF OU PLANNED
             .exclude(sprints__status__in=['active', 'planned'])
+            # EXCLURE LES TICKETS DONE DU BACKLOG
+            .exclude(status='done')
             .select_related("assignee", "assignee__profile", "parent")
             .prefetch_related("sprints")
             .order_by("backlog_order", "created_at")
@@ -690,6 +730,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         type_filter = self.request.GET.get("type", "")
         priority_filter = self.request.GET.get("priority", "")
         epic_filter = self.request.GET.get("epic", "")
+        status_filter = self.request.GET.get("status", "")
 
         if epic_filter:
             qs = qs.filter(parent__id=epic_filter)
@@ -697,6 +738,8 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             qs = qs.filter(type=type_filter)
         if priority_filter:
             qs = qs.filter(priority=priority_filter)
+        if status_filter:
+            qs = qs.filter(status=status_filter)
 
         return qs
 
@@ -717,7 +760,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             context["filter_status"],
         ])
 
-        # EPICS — avec stats calculées en Python (pas de méthodes custom sur le modèle)
+        # EPICS avec stats
         raw_epics = Ticket.objects.filter(
             project=self.project, type='epic'
         ).order_by("backlog_order", "created_at")
@@ -729,7 +772,6 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             done = subs.filter(status='done').count()
             pts = sum(t.story_points for t in subs if t.story_points)
             unest = subs.filter(story_points__isnull=True).count()
-            # Attacher les stats directement à l'objet epic pour le template
             epic.stat_total = total
             epic.stat_done = done
             epic.stat_pts = pts

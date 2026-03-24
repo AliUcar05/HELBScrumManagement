@@ -1,9 +1,11 @@
 {% load static %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
+
 <tr class="ticket-row backlog-draggable-row"
     data-ticket-id="{{ ticket.id }}"
     data-ticket-order="{{ ticket.backlog_order|default:forloop.counter }}"
-    draggable="{% if can_reorder %}true{% else %}false{% endif %}"
     data-drag-origin="backlog"
+    draggable="{% if can_reorder %}true{% else %}false{% endif %}"
     onclick="openTicketDrawer({{ ticket.id }}, '{% url 'ticket-detail' project.pk ticket.pk %}?drawer=1')">
 
     <td class="reorder-cell" onclick="event.stopPropagation();">

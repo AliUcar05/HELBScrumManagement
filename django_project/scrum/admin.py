@@ -1,6 +1,6 @@
 from django.contrib import admin
 
-from scrum.models import Project, Membership, Sprint, Ticket, SprintTicket, Column, Board
+from scrum.models import Project, Membership, Sprint, Ticket, SprintTicket, Column, Board, Activity
 
 # Register your models here.
 admin.site.register(Project)
@@ -10,6 +10,7 @@ admin.site.register(Ticket)
 admin.site.register(SprintTicket)
 admin.site.register(Column)
 admin.site.register(Board)
+admin.site.register(Activity)
 
 
 

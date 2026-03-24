@@ -1,5 +1,1307 @@
 {% extends 'scrum/project_board.html' %}
 {% load static %}
+
 {% block project_content %}
-  <h1>Road Map</h1>
+
+<link rel="stylesheet" href="{% static 'scrum/css/issues.css' %}">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+/* Styles spécifiques à la roadmap */
+.roadmap-page {
+    padding: 24px 28px;
+    background: #f4f5f7;
+    min-height: calc(100vh - 65px);
+}
+
+.roadmap-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+
+.roadmap-page-title {
+    font-size: 22px;
+    font-weight: 700;
+    color: #172b4d;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+}
+
+.roadmap-stats {
+    display: flex;
+    gap: 20px;
+    font-size: 13px;
+    font-weight: normal;
+    color: #6b778c;
+}
+
+.roadmap-stats span {
+    color: #172b4d;
+    font-weight: 600;
+    margin-left: 4px;
+}
+
+.roadmap-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 14px;
+}
+
+.roadmap-controls {
+    display: flex;
+    gap: 8px;
+}
+
+.roadmap-btn {
+    padding: 7px 14px;
+    font-size: 13px;
+    border: 1px solid #dfe1e6;
+    border-radius: 6px;
+    background: #fff;
+    color: #42526e;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.roadmap-btn:hover {
+    background: #f4f5f7;
+    border-color: #c1c7d0;
+}
+
+.roadmap-btn-primary {
+    background: #0052cc;
+    color: white;
+    border-color: #0052cc;
+}
+
+.roadmap-btn-primary:hover {
+    background: #0747a6;
+}
+
+/* Stats Cards */
+.stats-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 20px;
+}
+
+.stat-card {
+    background: #fff;
+    border: 1px solid #dfe1e6;
+    border-radius: 8px;
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+}
+
+.stat-card:hover {
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    border-color: #c1c7d0;
+}
+
+.stat-card:has(.fa-calendar-times) {
+    border-left: 3px solid #de350b;
+}
+
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    background: #f4f5f7;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+}
+
+.stat-info h4 {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: #6b778c;
+    margin: 0 0 4px;
+}
+
+.stat-number {
+    font-size: 24px;
+    font-weight: 700;
+    color: #172b4d;
+    line-height: 1;
+}
+
+.stat-unit {
+    font-size: 12px;
+    color: #6b778c;
+    margin-left: 4px;
+}
+
+.stat-sub {
+    font-size: 11px;
+    color: #6b778c;
+    margin-top: 4px;
+}
+
+.deadline-warning {
+    color: #de350b;
+    font-weight: 600;
+    font-size: 11px;
+    margin-top: 4px;
+}
+
+/* Summary Bar */
+.roadmap-summary-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    padding: 12px 16px;
+    background: #fff;
+    border: 1px solid #dfe1e6;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    font-size: 13px;
+}
+
+.summary-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.summary-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.dot-epic { background: #5243aa; }
+.dot-sprint { background: #0052cc; }
+.dot-milestone { background: #f79232; }
+.dot-today { background: #de350b; }
+.dot-completed { background: #36b37e; }
+.dot-deadline { background: #de350b; }
+
+.summary-label {
+    color: #42526e;
+}
+
+/* Gantt Container */
+.gantt-container {
+    background: #fff;
+    border: 1px solid #dfe1e6;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+
+.gantt-wrapper {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: calc(100vh - 420px);
+    position: relative;
+}
+
+.gantt-inner {
+    display: flex;
+    min-width: max-content;
+}
+
+/* Labels Panel */
+.gantt-labels {
+    width: 320px;
+    min-width: 320px;
+    flex-shrink: 0;
+    position: sticky;
+    left: 0;
+    z-index: 10;
+    background: #fff;
+    border-right: 1px solid #dfe1e6;
+}
+
+.gantt-labels-header {
+    height: 56px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 2px solid #dfe1e6;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6b778c;
+    background: #fafbfc;
+}
+
+.label-section-header {
+    height: 36px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: #6b778c;
+    background: #fafbfc;
+    border-bottom: 1px solid #dfe1e6;
+    border-top: 1px solid #dfe1e6;
+}
+
+.label-section-header i {
+    margin-right: 8px;
+}
+
+.label-row {
+    height: 48px;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    border-bottom: 1px solid #f0f1f3;
+    gap: 10px;
+    font-size: 13px;
+    cursor: pointer;
+    transition: background 0.1s;
+}
+
+.label-row:hover {
+    background: #f8f9fa;
+}
+
+.label-row .row-icon {
+    width: 28px;
+    height: 28px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+
+.row-icon.epic-icon {
+    background: #eae6ff;
+    color: #5243aa;
+}
+
+.row-icon.sprint-icon {
+    background: #deebff;
+    color: #0052cc;
+}
+
+.row-icon.deadline-icon {
+    background: #ffebe6;
+    color: #de350b;
+}
+
+.label-row .row-name {
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #172b4d;
+    font-weight: 500;
+}
+
+.label-row .row-progress {
+    font-size: 11px;
+    color: #36b37e;
+    font-weight: 600;
+    margin-left: 8px;
+}
+
+.label-row .row-dates {
+    font-size: 10px;
+    color: #6b778c;
+    white-space: nowrap;
+}
+
+/* Grid Panel */
+.gantt-grid {
+    flex: 1;
+    position: relative;
+    background: #fff;
+}
+
+/* Month Header */
+.gantt-months {
+    height: 56px;
+    display: flex;
+    border-bottom: 2px solid #dfe1e6;
+    background: #fafbfc;
+    position: sticky;
+    top: 0;
+    z-index: 5;
+}
+
+.month-cell {
+    border-right: 1px solid #dfe1e6;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 0 12px;
+    min-width: 0;
+}
+
+.month-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: #172b4d;
+    white-space: nowrap;
+}
+
+.month-year {
+    font-size: 10px;
+    color: #6b778c;
+}
+
+/* Rows */
+.gantt-rows {
+    position: relative;
+}
+
+.grid-section-header {
+    height: 36px;
+    border-bottom: 1px solid #dfe1e6;
+    border-top: 1px solid #dfe1e6;
+    background: #fafbfc;
+    display: flex;
+    align-items: center;
+    padding: 0 16px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: #6b778c;
+}
+
+.gantt-row {
+    height: 48px;
+    border-bottom: 1px solid #f0f1f3;
+    position: relative;
+}
+
+.gantt-row:hover {
+    background: #f8f9fa;
+}
+
+/* Vertical grid lines */
+.gantt-row::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: repeating-linear-gradient(
+        90deg,
+        transparent,
+        transparent calc(38px - 1px),
+        rgba(223, 225, 230, 0.5) calc(38px - 1px),
+        rgba(223, 225, 230, 0.5) 38px
+    );
+    pointer-events: none;
+}
+
+/* Sprint background band */
+.sprint-band {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    background: rgba(0, 82, 204, 0.06);
+    border-left: 2px solid rgba(0, 82, 204, 0.25);
+    border-right: 2px solid rgba(0, 82, 204, 0.25);
+    z-index: 0;
+    pointer-events: none;
+}
+
+/* Gantt Bar */
+.gantt-bar {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    height: 32px;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    padding: 0 12px;
+    font-size: 11px;
+    font-weight: 600;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: 2;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.12);
+}
+
+.gantt-bar:hover {
+    filter: brightness(0.95);
+    transform: translateY(-50%) scaleY(1.03);
+    z-index: 3;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+}
+
+.gantt-bar.bar-epic {
+    background: linear-gradient(135deg, #5243aa, #6b47c9);
+    color: #fff;
+}
+
+.gantt-bar.bar-sprint {
+    background: linear-gradient(135deg, #0052cc, #1a6bdd);
+    color: #fff;
+    height: 26px;
+    border-radius: 4px;
+}
+
+.gantt-bar.bar-sprint.bar-completed {
+    background: linear-gradient(135deg, #36b37e, #4c9a6e);
+    opacity: 0.8;
+}
+
+.gantt-bar.bar-deadline {
+    background: linear-gradient(135deg, #de350b, #ff6b3e);
+    color: #fff;
+}
+
+/* Progress overlay */
+.bar-progress {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    background: rgba(255, 255, 255, 0.25);
+    border-radius: 6px 0 0 6px;
+    pointer-events: none;
+}
+
+/* Milestone */
+.gantt-milestone {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%) rotate(45deg);
+    width: 14px;
+    height: 14px;
+    background: #f79232;
+    z-index: 3;
+    cursor: pointer;
+    transition: all 0.2s;
+    box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+.gantt-milestone:hover {
+    transform: translateY(-50%) rotate(45deg) scale(1.25);
+    background: #ff9f4a;
+}
+
+.gantt-milestone-label {
+    position: absolute;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 10px;
+    font-weight: 600;
+    color: #f79232;
+    white-space: nowrap;
+    z-index: 3;
+    padding-left: 8px;
+}
+
+/* Today line */
+.today-line {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 2px;
+    background: #de350b;
+    z-index: 4;
+    pointer-events: none;
+}
+
+.today-line::before {
+    content: 'TODAY';
+    position: absolute;
+    top: -24px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 9px;
+    font-weight: 800;
+    color: #de350b;
+    letter-spacing: 0.5px;
+    white-space: nowrap;
+    background: rgba(255,255,255,0.9);
+    padding: 2px 6px;
+    border-radius: 3px;
+}
+
+/* Tooltip */
+.roadmap-tooltip {
+    position: fixed;
+    background: #172b4d;
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-size: 12px;
+    color: #fff;
+    z-index: 9999;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.15s;
+    max-width: 280px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+}
+
+.roadmap-tooltip.visible {
+    opacity: 1;
+}
+
+.roadmap-tooltip .tt-title {
+    font-weight: 700;
+    font-size: 13px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.roadmap-tooltip .tt-row {
+    color: #b3bac5;
+    display: flex;
+    gap: 8px;
+    margin-top: 6px;
+    font-size: 11px;
+}
+
+.roadmap-tooltip .tt-row span:last-child {
+    color: #fff;
+    font-weight: 500;
+}
+
+.roadmap-tooltip .tt-progress {
+    margin-top: 8px;
+    padding-top: 8px;
+    border-top: 1px solid rgba(255,255,255,0.1);
+}
+
+.progress-bar-mini {
+    height: 4px;
+    background: rgba(255,255,255,0.2);
+    border-radius: 2px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+
+.progress-fill-mini {
+    height: 100%;
+    background: #36b37e;
+    border-radius: 2px;
+}
+
+/* Empty State */
+.roadmap-empty {
+    text-align: center;
+    padding: 80px 32px;
+    color: #6b778c;
+    background: #fff;
+    border: 1px solid #dfe1e6;
+    border-radius: 8px;
+}
+
+.roadmap-empty i {
+    font-size: 56px;
+    color: #c1c7d0;
+    margin-bottom: 20px;
+    display: block;
+}
+
+.roadmap-empty h3 {
+    font-size: 18px;
+    color: #172b4d;
+    margin-bottom: 8px;
+}
+
+.roadmap-empty p {
+    font-size: 14px;
+    margin: 0 0 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .roadmap-page {
+        padding: 16px;
+    }
+
+    .stats-cards {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        gap: 12px;
+    }
+
+    .gantt-labels {
+        width: 260px;
+        min-width: 260px;
+    }
+
+    .label-row .row-dates {
+        display: none;
+    }
+}
+</style>
+
+<div class="roadmap-page">
+
+    <div class="roadmap-page-header">
+        <div class="roadmap-page-title">
+            <i class="fas fa-road" style="color: #0052cc;"></i>
+            Project Roadmap
+            <div class="roadmap-stats">
+                <div><i class="fas fa-chart-line"></i> Progress: <span id="overallProgress">0</span>%</div>
+                <div><i class="fas fa-calendar-week"></i> Timeline: <span id="timelineRange">-</span></div>
+            </div>
+        </div>
+        <div class="roadmap-controls">
+            <button class="roadmap-btn" onclick="zoomOut()">
+                <i class="fas fa-search-minus"></i> Zoom Out
+            </button>
+            <button class="roadmap-btn" onclick="zoomIn()">
+                <i class="fas fa-search-plus"></i> Zoom In
+            </button>
+            <button class="roadmap-btn roadmap-btn-primary" onclick="goToToday()">
+                <i class="fas fa-calendar-day"></i> Today
+            </button>
+        </div>
+    </div>
+
+    <!-- Quick Stats Cards -->
+    <div class="stats-cards">
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #eae6ff; color: #5243aa;">
+                <i class="fas fa-bolt"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Epics</h4>
+                <div class="stat-number">{{ epics|length }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #deebff; color: #0052cc;">
+                <i class="fas fa-bicycle"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Sprints</h4>
+                <div class="stat-number">{{ sprints|length }}</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #e3fcef; color: #36b37e;">
+                <i class="fas fa-check-circle"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Completion</h4>
+                <div class="stat-number">{{ project_completion }}<span class="stat-unit">%</span></div>
+                <div class="stat-sub">{{ done_tickets }}/{{ total_tickets }} issues</div>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #fff0e0; color: #ff8b00;">
+                <i class="fas fa-hourglass-half"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Active Sprint</h4>
+                <div class="stat-number" id="activeSprintName">-</div>
+            </div>
+        </div>
+        {% if project.end_date %}
+        <div class="stat-card">
+            <div class="stat-icon" style="background: #ffebe6; color: #de350b;">
+                <i class="fas fa-calendar-times"></i>
+            </div>
+            <div class="stat-info">
+                <h4>Project Deadline</h4>
+                <div class="stat-number">{{ project.end_date|date:"d/m/Y" }}</div>
+                {% if days_remaining > 0 %}
+                <div class="deadline-warning">
+                    <i class="fas fa-hourglass-half"></i> {{ days_remaining }} days left
+                </div>
+                {% elif days_remaining == 0 %}
+                <div class="deadline-warning">
+                    <i class="fas fa-exclamation-triangle"></i> Due today!
+                </div>
+                {% elif days_remaining < 0 %}
+                <div class="deadline-warning">
+                    <i class="fas fa-exclamation-circle"></i> Overdue
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Legend -->
+    <div class="roadmap-summary-bar">
+        <div class="summary-item">
+            <span class="summary-dot dot-epic"></span>
+            <span class="summary-label">Epics (duration + progress)</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot dot-sprint"></span>
+            <span class="summary-label">Sprints</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot dot-milestone"></span>
+            <span class="summary-label">Milestones (sprint end)</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot dot-today"></span>
+            <span class="summary-label">Today</span>
+        </div>
+        <div class="summary-item">
+            <span class="summary-dot dot-completed"></span>
+            <span class="summary-label">Completed</span>
+        </div>
+        {% if project.end_date %}
+        <div class="summary-item">
+            <span class="summary-dot dot-deadline"></span>
+            <span class="summary-label">Project Deadline: <strong>{{ project.end_date|date:"d M Y" }}</strong></span>
+            {% if days_remaining <= 7 and days_remaining > 0 %}
+            <span class="deadline-warning ml-1">⚠️ {{ days_remaining }} days left!</span>
+            {% endif %}
+        </div>
+        {% endif %}
+    </div>
+
+    {% if not epics and not sprints %}
+    <div class="roadmap-empty">
+        <i class="fas fa-map-marked-alt"></i>
+        <h3>No roadmap data yet</h3>
+        <p>Create epics with due dates and sprints to visualize your project timeline and track progress.</p>
+        <div style="display: flex; gap: 12px; justify-content: center;">
+            {% if can_create %}
+            <button class="btn btn-dark" data-toggle="modal" data-target="#createEpicModal">
+                <i class="fas fa-bolt"></i> Create Epic
+            </button>
+            <button class="btn btn-primary" data-toggle="modal" data-target="#createSprintModal">
+                <i class="fas fa-bicycle"></i> Create Sprint
+            </button>
+            {% endif %}
+        </div>
+    </div>
+    {% else %}
+
+    <div class="gantt-container">
+        <div class="gantt-wrapper" id="ganttWrapper">
+            <div class="gantt-inner" id="ganttInner">
+
+                <!-- Labels Panel -->
+                <div class="gantt-labels" id="ganttLabels">
+                    <div class="gantt-labels-header">
+                        <i class="fas fa-list-ul mr-2"></i> Timeline Items
+                    </div>
+
+                    {% if project.end_date %}
+                    <div class="label-section-header">
+                        <i class="fas fa-flag-checkered mr-2"></i> Project Timeline
+                    </div>
+                    <div class="label-row" onclick="scrollToDeadline()">
+                        <div class="row-icon deadline-icon">
+                            <i class="fas fa-flag-checkered"></i>
+                        </div>
+                        <span class="row-name">Project Deadline</span>
+                        <span class="row-progress">{{ project_completion }}%</span>
+                        <span class="row-dates">
+                            {{ project.start_date|date:"d/m/Y" }} → {{ project.end_date|date:"d/m/Y" }}
+                        </span>
+                    </div>
+                    {% endif %}
+
+                    {% if sprints %}
+                    <div class="label-section-header">
+                        <i class="fas fa-bicycle mr-2"></i> Sprints
+                    </div>
+                    {% for sprint in sprints %}
+                    <div class="label-row" onclick="scrollToSprint({{ sprint.pk }})">
+                        <div class="row-icon sprint-icon">
+                            <i class="fas fa-bicycle"></i>
+                        </div>
+                        <span class="row-name">{{ sprint.name }}</span>
+                        {% if sprint.status == 'active' %}
+                        <span class="row-progress"><i class="fas fa-play-circle"></i> Active</span>
+                        {% endif %}
+                        <span class="row-dates">
+                            {% if sprint.start_date and sprint.end_date %}
+                                {{ sprint.start_date|date:"d/m" }} → {{ sprint.end_date|date:"d/m" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                    {% if epics %}
+                    <div class="label-section-header">
+                        <i class="fas fa-bolt mr-2"></i> Epics
+                    </div>
+                    {% for epic in epics %}
+                    <div class="label-row" onclick="openTicketDrawer({{ epic.pk }}, '{% url 'ticket-detail' project.pk epic.pk %}?drawer=1')">
+                        <div class="row-icon epic-icon">
+                            <i class="fas fa-bolt"></i>
+                        </div>
+                        <span class="row-name">{{ epic.title }}</span>
+                        {% if epic.stat_total > 0 %}
+                        <span class="row-progress">{{ epic.stat_done }}/{{ epic.stat_total }}</span>
+                        {% endif %}
+                        <span class="row-dates">
+                            {% if epic.due_date %}
+                                Due: {{ epic.due_date|date:"d/m/Y" }}
+                            {% endif %}
+                        </span>
+                    </div>
+                    {% endfor %}
+                    {% endif %}
+
+                </div>
+
+                <!-- Grid Panel -->
+                <div class="gantt-grid" id="ganttGrid"></div>
+
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+
+</div>
+
+<!-- Tooltip -->
+<div class="roadmap-tooltip" id="roadmapTooltip"></div>
+
+<script>
+// Données depuis Django
+const PROJECT_DEADLINE = {% if project.end_date %}"{{ project.end_date|date:'Y-m-d' }}"{% else %}null{% endif %};
+const PROJECT_START = "{{ project.start_date|date:'Y-m-d' }}";
+const PROJECT_COMPLETION = {{ project_completion }};
+
+const SPRINTS = [
+    {% for sprint in sprints %}
+    {
+        id: {{ sprint.pk }},
+        name: "{{ sprint.name|escapejs }}",
+        status: "{{ sprint.status }}",
+        start: {% if sprint.start_date %}"{{ sprint.start_date|date:'Y-m-d' }}"{% else %}null{% endif %},
+        end: {% if sprint.end_date %}"{{ sprint.end_date|date:'Y-m-d' }}"{% else %}null{% endif %},
+        totalIssues: {{ sprint.total_issues|default:0 }},
+        doneIssues: {{ sprint.done_issues|default:0 }},
+    },
+    {% endfor %}
+];
+
+const EPICS = [
+    {% for epic in epics %}
+    {
+        id: {{ epic.pk }},
+        name: "{{ epic.title|escapejs }}",
+        start: "{{ epic.created_at|date:'Y-m-d' }}",
+        end: {% if epic.due_date %}"{{ epic.due_date|date:'Y-m-d' }}"{% else %}null{% endif %},
+        total: {{ epic.stat_total|default:0 }},
+        done: {{ epic.stat_done|default:0 }},
+        pts: {{ epic.stat_pts|default:0 }},
+    },
+    {% endfor %}
+];
+
+// Constantes
+const DAY_MS = 86400000;
+let CELL_W = 38;
+const MIN_CELL_W = 24;
+const MAX_CELL_W = 58;
+const today = new Date();
+today.setHours(0, 0, 0, 0);
+
+function parseDate(s) {
+    if (!s) return null;
+    const [y, m, d] = s.split('-').map(Number);
+    return new Date(y, m - 1, d);
+}
+
+function addDays(date, n) {
+    return new Date(date.getTime() + n * DAY_MS);
+}
+
+function diffDays(a, b) {
+    return Math.round((b - a) / DAY_MS);
+}
+
+function fmtDate(d) {
+    if (!d) return '—';
+    return d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Calculer la plage de dates visible
+function computeRange() {
+    let min = addDays(today, -45);
+    let max = addDays(today, 120);
+
+    if (PROJECT_DEADLINE) {
+        const deadlineDate = parseDate(PROJECT_DEADLINE);
+        if (deadlineDate > max) max = deadlineDate;
+    }
+
+    SPRINTS.forEach(s => {
+        if (s.start) { const d = parseDate(s.start); if (d < min) min = d; }
+        if (s.end) { const d = parseDate(s.end); if (d > max) max = d; }
+    });
+    EPICS.forEach(e => {
+        if (e.start) { const d = parseDate(e.start); if (d < min) min = d; }
+        if (e.end) { const d = parseDate(e.end); if (d > max) max = d; }
+    });
+
+    min = addDays(min, -21);
+    max = addDays(max, 30);
+    return { min, max };
+}
+
+let viewRange = computeRange();
+
+function dateToX(date) {
+    return diffDays(viewRange.min, date) * CELL_W;
+}
+
+function totalDays() {
+    return diffDays(viewRange.min, viewRange.max);
+}
+
+// Zoom functions
+function zoomIn() {
+    CELL_W = Math.min(CELL_W + 8, MAX_CELL_W);
+    render();
+}
+
+function zoomOut() {
+    CELL_W = Math.max(CELL_W - 8, MIN_CELL_W);
+    render();
+}
+
+// Construire l'en-tête des mois
+function buildMonthHeader() {
+    const div = document.createElement('div');
+    div.className = 'gantt-months';
+    div.style.width = totalDays() * CELL_W + 'px';
+
+    let cur = new Date(viewRange.min);
+    cur.setDate(1);
+
+    while (cur <= viewRange.max) {
+        const monthStart = new Date(cur);
+        const monthEnd = new Date(cur.getFullYear(), cur.getMonth() + 1, 0);
+        const visStart = cur < viewRange.min ? viewRange.min : cur;
+        const visEnd = monthEnd > viewRange.max ? viewRange.max : monthEnd;
+        const days = diffDays(visStart, visEnd) + 1;
+        const w = days * CELL_W;
+
+        const cell = document.createElement('div');
+        cell.className = 'month-cell';
+        cell.style.width = w + 'px';
+        cell.style.minWidth = w + 'px';
+        cell.innerHTML = `
+            <div class="month-name">${cur.toLocaleDateString('fr-FR', { month: 'long' })}</div>
+            <div class="month-year">${cur.getFullYear()}</div>
+        `;
+        div.appendChild(cell);
+
+        cur = new Date(cur.getFullYear(), cur.getMonth() + 1, 1);
+    }
+    return div;
+}
+
+function buildRow() {
+    const row = document.createElement('div');
+    row.className = 'gantt-row';
+    row.style.width = totalDays() * CELL_W + 'px';
+    return row;
+}
+
+function buildSectionHeaderRow(title, icon) {
+    const div = document.createElement('div');
+    div.className = 'grid-section-header';
+    div.style.width = totalDays() * CELL_W + 'px';
+    div.innerHTML = `<i class="${icon} mr-2"></i> ${title}`;
+    return div;
+}
+
+function buildBar(startDate, endDate, label, cls, tooltipHtml, progress = null) {
+    if (!startDate) return null;
+    if (!endDate) endDate = addDays(startDate, 5);
+
+    const x = dateToX(startDate);
+    const w = Math.max(diffDays(startDate, endDate) * CELL_W, CELL_W * 2);
+
+    const bar = document.createElement('div');
+    bar.className = `gantt-bar ${cls}`;
+    bar.style.left = x + 'px';
+    bar.style.width = w + 'px';
+    bar.textContent = label;
+    bar.setAttribute('data-tooltip', tooltipHtml);
+
+    if (progress !== null && progress > 0) {
+        const progressDiv = document.createElement('div');
+        progressDiv.className = 'bar-progress';
+        progressDiv.style.width = progress + '%';
+        bar.appendChild(progressDiv);
+    }
+
+    bar.addEventListener('mouseenter', showTooltip);
+    bar.addEventListener('mousemove', moveTooltip);
+    bar.addEventListener('mouseleave', hideTooltip);
+
+    return bar;
+}
+
+function buildMilestone(date, label, tooltipHtml, color = '#f79232') {
+    if (!date) return null;
+    const x = dateToX(date);
+
+    const diamond = document.createElement('div');
+    diamond.className = 'gantt-milestone';
+    diamond.style.left = (x - 7) + 'px';
+    diamond.style.background = color;
+    diamond.setAttribute('data-tooltip', tooltipHtml);
+    diamond.addEventListener('mouseenter', showTooltip);
+    diamond.addEventListener('mousemove', moveTooltip);
+    diamond.addEventListener('mouseleave', hideTooltip);
+
+    const lbl = document.createElement('div');
+    lbl.className = 'gantt-milestone-label';
+    lbl.style.left = (x + 10) + 'px';
+    lbl.style.color = color;
+    lbl.textContent = label;
+
+    return [diamond, lbl];
+}
+
+function buildSprintBands(row) {
+    SPRINTS.forEach(s => {
+        if (!s.start || !s.end) return;
+        const start = parseDate(s.start);
+        const end = parseDate(s.end);
+        if (end < viewRange.min || start > viewRange.max) return;
+
+        const band = document.createElement('div');
+        band.className = 'sprint-band';
+        band.style.left = dateToX(start) + 'px';
+        band.style.width = Math.max(diffDays(start, end) * CELL_W, 4) + 'px';
+        row.appendChild(band);
+    });
+}
+
+function buildTodayLine(container) {
+    if (today < viewRange.min || today > viewRange.max) return;
+    const line = document.createElement('div');
+    line.className = 'today-line';
+    line.style.left = dateToX(today) + 'px';
+    container.appendChild(line);
+}
+
+// Mettre à jour les stats
+function updateStats() {
+    const totalEpics = EPICS.length;
+    const totalDone = EPICS.reduce((sum, e) => sum + e.done, 0);
+    const totalIssues = EPICS.reduce((sum, e) => sum + e.total, 0);
+    const overallProgress = totalIssues > 0 ? Math.round((totalDone / totalIssues) * 100) : PROJECT_COMPLETION;
+
+    document.getElementById('overallProgress').textContent = overallProgress;
+
+    const activeSprint = SPRINTS.find(s => s.status === 'active');
+    if (activeSprint) {
+        document.getElementById('activeSprintName').textContent = activeSprint.name;
+    }
+
+    const timelineRangeText = `${fmtDate(viewRange.min)} - ${fmtDate(viewRange.max)}`;
+    document.getElementById('timelineRange').textContent = timelineRangeText;
+}
+
+// Scroll functions
+function scrollToSprint(sprintId) {
+    const sprint = SPRINTS.find(s => s.id === sprintId);
+    if (sprint && sprint.start) {
+        const wrapper = document.getElementById('ganttWrapper');
+        if (wrapper) {
+            const x = dateToX(parseDate(sprint.start));
+            wrapper.scrollLeft = Math.max(0, x - 100);
+        }
+    }
+}
+
+function scrollToDeadline() {
+    if (PROJECT_DEADLINE) {
+        const wrapper = document.getElementById('ganttWrapper');
+        if (wrapper) {
+            const x = dateToX(parseDate(PROJECT_DEADLINE));
+            wrapper.scrollLeft = Math.max(0, x - 200);
+        }
+    }
+}
+
+// Rendu principal
+function render() {
+    const grid = document.getElementById('ganttGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+
+    const totalW = totalDays() * CELL_W;
+
+    grid.appendChild(buildMonthHeader());
+
+    const rowsDiv = document.createElement('div');
+    rowsDiv.className = 'gantt-rows';
+    rowsDiv.style.width = totalW + 'px';
+    rowsDiv.style.position = 'relative';
+
+    // Project Timeline Row
+    if (PROJECT_DEADLINE) {
+        rowsDiv.appendChild(buildSectionHeaderRow('PROJECT TIMELINE', 'fas fa-flag-checkered'));
+
+        const row = buildRow();
+        buildSprintBands(row);
+
+        const start = parseDate(PROJECT_START);
+        const end = parseDate(PROJECT_DEADLINE);
+
+        const tt = `<div class="tt-title"><i class="fas fa-flag-checkered"></i> Project Deadline</div>
+            <div class="tt-row"><span>📅 Start:</span><span>${fmtDate(start)}</span></div>
+            <div class="tt-row"><span>🏁 Deadline:</span><span>${fmtDate(end)}</span></div>
+            <div class="tt-row"><span>📊 Progress:</span><span>${PROJECT_COMPLETION}%</span></div>
+            <div class="tt-row"><span>✅ Issues:</span><span>${PROJECT_COMPLETION > 0 ? Math.round(PROJECT_COMPLETION) : 0}% complete</span></div>
+            <div class="tt-progress"><div class="progress-bar-mini"><div class="progress-fill-mini" style="width:${PROJECT_COMPLETION}%"></div></div></div>`;
+
+        const bar = buildBar(start, end, 'Project Timeline', 'bar-deadline', tt, PROJECT_COMPLETION);
+        if (bar) row.appendChild(bar);
+
+        const deadlineTt = `<div class="tt-title">🏁 Project Deadline</div><div class="tt-row"><span>Date:</span><span>${fmtDate(end)}</span></div>
+            <div class="tt-row"><span>Days left:</span><span>${Math.max(0, Math.round((end - today) / DAY_MS))}</span></div>`;
+        const ms = buildMilestone(end, '🏁', deadlineTt, '#de350b');
+        if (ms) { ms.forEach(el => row.appendChild(el)); }
+
+        rowsDiv.appendChild(row);
+    }
+
+    // Sprint rows
+    if (SPRINTS.length) {
+        rowsDiv.appendChild(buildSectionHeaderRow('SPRINTS', 'fas fa-bicycle'));
+
+        SPRINTS.forEach(s => {
+            const row = buildRow();
+            buildSprintBands(row);
+
+            if (s.start && s.end) {
+                const start = parseDate(s.start);
+                const end = parseDate(s.end);
+                const completion = s.totalIssues > 0 ? Math.round((s.doneIssues / s.totalIssues) * 100) : 0;
+                const barClass = s.status === 'completed' ? 'bar-sprint bar-completed' : 'bar-sprint';
+
+                const tt = `<div class="tt-title"><i class="fas fa-bicycle"></i> ${s.name}</div>
+                    <div class="tt-row"><span>📅 Start:</span><span>${fmtDate(start)}</span></div>
+                    <div class="tt-row"><span>🏁 End:</span><span>${fmtDate(end)}</span></div>
+                    <div class="tt-row"><span>📊 Issues:</span><span>${s.doneIssues}/${s.totalIssues}</span></div>
+                    <div class="tt-row"><span>✅ Completion:</span><span>${completion}%</span></div>
+                    <div class="tt-progress"><div class="progress-bar-mini"><div class="progress-fill-mini" style="width:${completion}%"></div></div></div>`;
+
+                const bar = buildBar(start, end, s.name, barClass, tt, completion);
+                if (bar) row.appendChild(bar);
+
+                const milestoneTt = `<div class="tt-title">🏁 ${s.name} ends</div><div class="tt-row"><span>Date:</span><span>${fmtDate(end)}</span></div>`;
+                const ms = buildMilestone(end, '🏁', milestoneTt);
+                if (ms) { ms.forEach(el => row.appendChild(el)); }
+            }
+            rowsDiv.appendChild(row);
+        });
+    }
+
+    // Epic rows
+    if (EPICS.length) {
+        rowsDiv.appendChild(buildSectionHeaderRow('EPICS', 'fas fa-bolt'));
+
+        EPICS.forEach(e => {
+            const row = buildRow();
+            buildSprintBands(row);
+
+            const start = parseDate(e.start);
+            const end = e.end ? parseDate(e.end) : addDays(today, 60);
+            const completion = e.total > 0 ? Math.round((e.done / e.total) * 100) : 0;
+
+            const tt = `<div class="tt-title"><i class="fas fa-bolt"></i> ${e.name}</div>
+                <div class="tt-row"><span>📅 Created:</span><span>${fmtDate(start)}</span></div>
+                <div class="tt-row"><span>🎯 Due:</span><span>${e.end ? fmtDate(parseDate(e.end)) : 'No due date'}</span></div>
+                <div class="tt-row"><span>📊 Issues:</span><span>${e.done}/${e.total}</span></div>
+                <div class="tt-row"><span>⚡ Points:</span><span>${e.pts}</span></div>
+                <div class="tt-progress"><div class="progress-bar-mini"><div class="progress-fill-mini" style="width:${completion}%"></div></div></div>`;
+
+            const bar = buildBar(start, end, e.name, 'bar-epic', tt, completion);
+            if (bar) row.appendChild(bar);
+
+            rowsDiv.appendChild(row);
+        });
+    }
+
+    buildTodayLine(rowsDiv);
+    grid.appendChild(rowsDiv);
+    updateStats();
+}
+
+function goToToday() {
+    viewRange = computeRange();
+    render();
+    setTimeout(() => {
+        const wrapper = document.getElementById('ganttWrapper');
+        if (wrapper) {
+            const x = dateToX(today);
+            wrapper.scrollLeft = Math.max(0, x - wrapper.clientWidth / 2);
+        }
+    }, 50);
+}
+
+// Tooltip
+const tooltip = document.getElementById('roadmapTooltip');
+
+function showTooltip(e) {
+    tooltip.innerHTML = this.getAttribute('data-tooltip') || '';
+    tooltip.classList.add('visible');
+    moveTooltip.call(this, e);
+}
+
+function moveTooltip(e) {
+    let x = e.clientX + 14;
+    let y = e.clientY + 14;
+    if (x + 300 > window.innerWidth) x = e.clientX - 300;
+    if (y + 200 > window.innerHeight) y = e.clientY - 200;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+}
+
+function hideTooltip() {
+    tooltip.classList.remove('visible');
+}
+
+// Initialisation
+document.addEventListener('DOMContentLoaded', () => {
+    render();
+    setTimeout(() => {
+        const wrapper = document.getElementById('ganttWrapper');
+        if (wrapper) {
+            const x = dateToX(today);
+            wrapper.scrollLeft = Math.max(0, x - 300);
+        }
+    }, 100);
+});
+</script>
+
 {% endblock project_content %}
