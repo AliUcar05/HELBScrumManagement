@@ -558,6 +558,23 @@ var CSRF_TOKEN        = "{{ csrf_token }}";
 
 
 <script>
+
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.sprint-table-block').forEach(function(block) {
+            var sprintId = block.id.replace('sprint-block-', '');
+            var saved = localStorage.getItem('sprint_' + sprintId);
+            console.log('Sprint', sprintId, '→', saved); // debug
+
+            if (saved === 'closed') {
+                var body    = document.getElementById('spt-body-' + sprintId);
+                var subinfo = document.getElementById('subinfo-' + sprintId);
+                var chevron = document.getElementById('chevron-' + sprintId);
+                if (body)    body.classList.add('collapsed');
+                if (subinfo) subinfo.classList.add('collapsed');
+                if (chevron) chevron.classList.add('collapsed');
+            }
+        });
+    });
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
