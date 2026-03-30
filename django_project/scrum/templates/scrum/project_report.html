@@ -1,4 +1,136 @@
-{% extends 'scrum/project_board.html' %}
-{% block project_content %}
-    <h1>Reports</h1>
-{% endblock project_content %}
+{% extends "blog/base.html" %}
+{% load static %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<div style="flex:1; padding:32px 40px; background:#fff; min-height: calc(100vh - 65px);">
+
+    <div class="mb-4">
+        <a href="{% url 'project-board' project.pk %}" class="btn btn-light btn-sm" style="color:#42526e; font-weight:500; border: 1px solid #dfe1e6;">
+            <i class="fas fa-arrow-left mr-1"></i> Back to Board
+        </a>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h4 class="font-weight-bold mb-1" style="color:#172b4d;">Burndown Chart</h4>
+            <p class="text-muted mb-0" style="font-size:0.9rem;">
+                Project: <strong style="color:#0052cc;">{{ project.name }}</strong> | 
+                Sprint: <strong>{{ active_sprint.name|default:"No active sprint" }}</strong>
+            </p>
+        </div>
+    </div>
+
+    <div class="card shadow-sm" style="border: 1px solid #dfe1e6; border-radius: 8px;">
+        <div class="card-body" style="padding: 24px;">
+            {% if active_sprint %}
+                <div class="mb-4">
+                    <span class="text-uppercase text-muted font-weight-bold" style="font-size:0.75rem; letter-spacing:0.08em;">
+                        Total Story Points: 
+                    </span>
+                    <span class="badge badge-primary ml-2" style="font-size:14px; background-color:#0052cc;">
+                        {{ total_points }}
+                    </span>
+                </div>
+                
+                <div style="position: relative; height: 60vh; width: 100%;">
+                    <canvas id="burndownChart"></canvas>
+                </div>
+            {% else %}
+                <div class="text-center py-5 text-muted">
+                    <i class="fas fa-chart-line fa-3x mb-3" style="color: #dfe1e6;"></i>
+                    <h5>No active sprint</h5>
+                    <p style="font-size: 0.9rem;">Start a sprint to see the burndown chart.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<script>
+    // 1. On récupère les données calculées par Django (views.py)
+    const labels = JSON.parse('{{ labels_json|safe|default:"[]" }}');
+    const guidelineData = JSON.parse('{{ guideline_json|safe|default:"[]" }}');
+    const remainingData = JSON.parse('{{ remaining_json|safe|default:"[]" }}');
+
+    // 2. On vérifie s'il y a des données à afficher
+    if (labels.length > 0) {
+        const ctx = document.getElementById('burndownChart').getContext('2d');
+
+        // 3. Création du graphique
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels, // Les jours en bas (Axe X)
+                datasets: [
+                    {
+                        label: 'Guideline',
+                        data: guidelineData,
+                        borderColor: '#A5B2C0', // Gris clair façon Jira
+                        backgroundColor: 'transparent',
+                        borderDash: [5, 5], // Ligne pointillée
+                        tension: 0, // Ligne parfaitement droite
+                        pointRadius: 0, 
+                        borderWidth: 2,
+                        order: 2
+                    },
+                    {
+                        label: 'Remaining Values',
+                        data: remainingData,
+                        borderColor: '#FF5630', // Orange/Rouge façon Jira
+                        backgroundColor: 'transparent',
+                        stepped: true, // Fait une ligne en escalier !
+                        borderWidth: 2,
+                        pointBackgroundColor: '#FF5630',
+                        pointRadius: 4,
+                        order: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: {
+                    mode: 'index',
+                    intersect: false,
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Story Points',
+                            color: '#6b778c',
+                            font: { weight: 'bold', size: 11 }
+                        },
+                        grid: { borderDash: [2, 4], color: '#ebecf0' }
+                    },
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Timeline',
+                            color: '#6b778c',
+                            font: { weight: 'bold', size: 11 }
+                        },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: { usePointStyle: true, boxWidth: 8, color: '#42526e' }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(23, 43, 77, 0.9)',
+                        titleFont: { size: 13 },
+                        bodyFont: { size: 13 },
+                        padding: 10,
+                        cornerRadius: 4,
+                    }
+                }
+            }
+        });
+    }
+</script>
+{% endblock %}

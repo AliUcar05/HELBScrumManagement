@@ -1,10 +1,13 @@
 import os
 import uuid
+import json
+from datetime import date, timedelta
 from io import BytesIO
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.mixins import LoginRequiredMixin, UserPassesTestMixin
+from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models import Max
 from django.http import JsonResponse, HttpResponseForbidden
@@ -128,15 +131,70 @@ def project_board(request, pk):
     request.session["current_project_id"] = project.id
     return redirect('project-active-sprint', pk=pk)
 
+
+# =========================================================
+# VUE MODIFIÉE POUR LE BURNDOWN CHART
+# =========================================================
+@login_required
 def project_report(request, pk):
     project = get_object_or_404(Project, pk=pk)
     membership = project.memberships.filter(user=request.user).first()
+    
+    # On cherche le sprint en cours
+    active_sprint = project.sprints.filter(status="active").first()
+    
+    # Variables par défaut pour le graphique
+    labels = []
+    guideline_data = []
+    remaining_data = []
+    total_points = 0
+    
+    if active_sprint and active_sprint.start_date and active_sprint.end_date:
+        # 1. Total des points du sprint
+        tickets = active_sprint.tickets.all()
+        total_points = sum(t.story_points for t in tickets if t.story_points)
+        
+        start = active_sprint.start_date
+        end = active_sprint.end_date
+        delta = (end - start).days
+        
+        # 2. Axe X (Les dates du sprint)
+        labels = [(start + timedelta(days=i)).strftime("%b %d") for i in range(delta + 1)]
+        
+        # 3. Ligne Bleue (Guideline) : Descente linéaire
+        burn_rate = (total_points / delta) if delta > 0 else 0
+        guideline_data = [round(total_points - (burn_rate * i), 1) for i in range(delta + 1)]
+        
+        # 4. Ligne Orange (Remaining Values) : La réalité
+        done_tickets = tickets.filter(status='done')
+        today = date.today()
+        
+        for i in range(delta + 1):
+            current_day = start + timedelta(days=i)
+            
+            # Si on est dans le futur, on arrête de tracer la ligne orange
+            if current_day > today:
+                remaining_data.append(None)
+            else:
+                # On additionne les points des tickets terminés "à cette date ou avant"
+                burned_points = sum(
+                    t.story_points 
+                    for t in done_tickets 
+                    if t.story_points and t.updated_at.date() <= current_day
+                )
+                remaining_data.append(total_points - burned_points)
 
     context = {
         "project": project,
         "membership": membership,
+        "active_sprint": active_sprint,
+        "labels_json": json.dumps(labels),
+        "guideline_json": json.dumps(guideline_data),
+        "remaining_json": json.dumps(remaining_data),
+        "total_points": total_points,
     }
-    return render(request,"scrum/project_report.html",context)
+    return render(request, "scrum/project_report.html", context)
+# =========================================================
 
 
 @login_required
