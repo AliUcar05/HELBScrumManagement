@@ -117,6 +117,12 @@
                                             </a>
                                         {% endif %}
                                     </li>
+                                    <li class="nav-item d-flex align-items-center ml-2">
+                                        <button id="darkModeToggle" title="Toggle Dark Mode"
+                                            style="background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:20px;transition:all 0.3s;">
+                                            <i class="fas fa-moon" id="darkModeIcon" style="font-size:1.3rem;color:white;"></i>
+                                        </button>
+                                    </li>
 
                                     <li class="nav-item dropdown ml-2">
                                         <a class="nav-link p-0" href="#" role="button" data-toggle="dropdown">
@@ -229,5 +235,27 @@
             {% include "scrum/ticket/_ticket_modal.html" %}
         {% endif %}
 
+        <script>
+    // Dark mode
+    const darkToggle = document.getElementById('darkModeToggle');
+    const darkIcon = document.getElementById('darkModeIcon');
+
+    // Appliquer le dark mode sauvegardé
+    if (localStorage.getItem('darkMode') === 'true') {
+        document.body.classList.add('dark-mode');
+        darkIcon.classList.replace('fa-moon', 'fa-sun');
+    }
+
+    darkToggle.addEventListener('click', function() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        localStorage.setItem('darkMode', isDark);
+        if (isDark) {
+            darkIcon.classList.replace('fa-moon', 'fa-sun');
+        } else {
+            darkIcon.classList.replace('fa-sun', 'fa-moon');
+        }
+    });
+</script>
     </body>
 </html>
