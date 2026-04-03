@@ -229,12 +229,15 @@
                          id="spt-body-{{ sprint.pk }}"
                          data-sprint-id="{{ sprint.pk }}"
                          data-target="sprint">
-                        {% with sprint_tickets=sprint.tickets.all %}
-                        {% if sprint_tickets %}
-                        {% for ticket in sprint_tickets %}
+                        <div class="spt-dropzone-inner" data-sprint-id="{{ sprint.pk }}">
+                        {% with sprint_links=sprint.ordered_links %}
+                        {% if sprint_links %}
+                        {% for link in sprint_links %}
+                        {% with ticket=link.ticket %}
                         <div class="spt-row drag-ticket-card"
                              data-ticket-id="{{ ticket.pk }}"
                              data-sprint-id="{{ sprint.pk }}"
+                             data-position="{{ link.position|default:forloop.counter }}"
                              data-draggable="true"
                              data-drag-origin="sprint"
                              draggable="{% if can_create %}true{% else %}false{% endif %}">
@@ -273,11 +276,13 @@
                                 {% endif %}
                             </div>
                         </div>
+                        {% endwith %}
                         {% endfor %}
                         {% else %}
                         <div class="spt-empty"><p>Plan your sprint. Drag and drop issues from the backlog below.</p></div>
                         {% endif %}
                         {% endwith %}
+                        </div>
                     </div>
 
                 </div>
@@ -584,6 +589,115 @@ function getCookie(name) {
 (function () {
     let draggedElement = null;
 
+    function getCookie(name) {
+        const value = `; ${document.cookie}`;
+        const parts = value.split(`; ${name}=`);
+        if (parts.length === 2) return parts.pop().split(';').shift();
+        return '';
+    }
+
+    function getDragItems(container) {
+        return Array.from(container.querySelectorAll('.drag-ticket-card, .backlog-draggable-row'));
+    }
+
+    function getInsertAfterElement(container, y) {
+        const elements = getDragItems(container).filter(el => el !== draggedElement);
+        let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+
+        elements.forEach(el => {
+            const box = el.getBoundingClientRect();
+            const offset = y - box.top - box.height / 2;
+            if (offset < 0 && offset > closest.offset) {
+                closest = { offset, element: el };
+            }
+        });
+
+        return closest.element;
+    }
+
+    function insertDraggedElement(container, y) {
+        if (!draggedElement) return;
+        const afterElement = getInsertAfterElement(container, y);
+        if (afterElement) {
+            container.insertBefore(draggedElement, afterElement);
+        } else {
+            container.appendChild(draggedElement);
+        }
+    }
+
+    function refreshSprintEmptyState(sprintBody) {
+        if (!sprintBody) return;
+        const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
+        const rows = inner.querySelectorAll('.drag-ticket-card');
+        const empty = inner.querySelector('.spt-empty');
+
+        if (rows.length === 0) {
+            if (!empty) {
+                const block = document.createElement('div');
+                block.className = 'spt-empty';
+                block.innerHTML = '<p>Plan your sprint. Drag and drop issues from the backlog below.</p>';
+                inner.appendChild(block);
+            }
+        } else if (empty) {
+            empty.remove();
+        }
+    }
+
+    function refreshBacklogEmptyState() {
+        const tbody = document.getElementById('backlog-tbody');
+        if (!tbody) return;
+        const rows = Array.from(tbody.querySelectorAll('.backlog-draggable-row'));
+        const empty = tbody.querySelector('.empty-state')?.closest('tr');
+        if (rows.length === 0) {
+            if (!empty) {
+                const tr = document.createElement('tr');
+                tr.innerHTML = '<td colspan="11" class="empty-state"><i class="fas fa-clipboard-list"></i><p>No issues in backlog</p></td>';
+                tbody.insertBefore(tr, document.getElementById('createIssueTriggerRow'));
+            }
+        } else if (empty) {
+            empty.remove();
+        }
+    }
+
+    async function syncSprintOrder(sprintId, sprintBody) {
+        if (!sprintId || !sprintBody) return;
+        const orderedTicketIds = Array.from((sprintBody.querySelector('.spt-dropzone-inner') || sprintBody).querySelectorAll('.drag-ticket-card'))
+            .map(el => el.dataset.ticketId);
+
+        const formData = new URLSearchParams();
+        orderedTicketIds.forEach(id => formData.append('ordered_ticket_ids[]', id));
+
+        const response = await fetch(`{% url 'sprint-ticket-reorder' project.pk 0 %}`.replace('/0/', `/${sprintId}/`), {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            },
+            body: formData.toString(),
+        });
+
+        const data = await response.json();
+        if (!data.success) {
+            throw new Error(data.error || 'Unable to reorder sprint backlog.');
+        }
+    }
+
+    function moveRowToBacklog(tbody, element) {
+        tbody.insertBefore(element, document.getElementById('createIssueTriggerRow'));
+        element.dataset.dragOrigin = 'backlog';
+        delete element.dataset.sprintId;
+    }
+
+    function moveCardToSprint(sprintBody, element, y) {
+        const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
+        const empty = inner.querySelector('.spt-empty');
+        if (empty) empty.remove();
+        insertDraggedElement(inner, y);
+        element.dataset.dragOrigin = 'sprint';
+        element.dataset.sprintId = sprintBody.dataset.sprintId;
+    }
+
     function attachDnD() {
         document.querySelectorAll('.drag-ticket-card, .backlog-draggable-row').forEach(el => {
             el.addEventListener('dragstart', () => {
@@ -601,6 +715,19 @@ function getCookie(name) {
             zone.addEventListener('dragover', (e) => {
                 e.preventDefault();
                 zone.classList.add('drag-over');
+                if (!draggedElement) return;
+
+                if (zone.dataset.target === 'sprint' && draggedElement.classList.contains('drag-ticket-card')) {
+                    insertDraggedElement(zone.querySelector('.spt-dropzone-inner') || zone, e.clientY);
+                }
+                if (zone.dataset.target === 'backlog' && draggedElement.classList.contains('backlog-draggable-row')) {
+                    const after = getInsertAfterElement(zone, e.clientY);
+                    if (after) {
+                        zone.insertBefore(draggedElement, after);
+                    } else {
+                        zone.insertBefore(draggedElement, document.getElementById('createIssueTriggerRow'));
+                    }
+                }
             });
 
             zone.addEventListener('dragleave', () => {
@@ -616,6 +743,9 @@ function getCookie(name) {
                 const ticketId = draggedElement.dataset.ticketId;
                 const origin = draggedElement.dataset.dragOrigin;
                 const target = zone.dataset.target;
+                const originContainer = draggedElement.parentElement;
+                const originSprintBody = draggedElement.closest('.sprint-dropzone');
+                const originSprintId = draggedElement.dataset.sprintId || '';
 
                 if (!ticketId || !target) return;
 
@@ -624,8 +754,14 @@ function getCookie(name) {
                         const sprintId = zone.dataset.sprintId;
                         const url = "{% url 'add-ticket-to-sprint' project.pk 0 %}".replace('/0/', `/${ticketId}/`);
 
+                        moveCardToSprint(zone, draggedElement, e.clientY);
+                        refreshSprintEmptyState(originSprintBody);
+
                         const formData = new URLSearchParams();
                         formData.append('sprint_id', sprintId);
+                        if (origin === 'sprint' && originSprintId) {
+                            formData.append('source_sprint_id', originSprintId);
+                        }
 
                         const response = await fetch(url, {
                             method: 'POST',
@@ -639,13 +775,28 @@ function getCookie(name) {
 
                         const data = await response.json();
                         if (!data.success) {
-                            alert(data.error || 'Unable to move ticket to sprint.');
-                            return;
+                            if (originContainer) originContainer.appendChild(draggedElement);
+                            refreshSprintEmptyState(zone);
+                            refreshSprintEmptyState(originSprintBody);
+                            throw new Error(data.error || 'Unable to move ticket to sprint.');
+                        }
+
+                        if (origin === 'backlog') {
+                            refreshBacklogEmptyState();
+                        }
+
+                        await syncSprintOrder(sprintId, zone);
+                        if (origin === 'sprint' && originSprintId && originSprintId !== sprintId) {
+                            await syncSprintOrder(originSprintId, originSprintBody);
                         }
                     }
 
                     if (target === 'backlog' && origin === 'sprint') {
-                        const sprintId = draggedElement.dataset.sprintId || zone.dataset.sprintId || "";
+                        const sprintId = originSprintId || zone.dataset.sprintId || "";
+
+                        moveRowToBacklog(zone, draggedElement);
+                        refreshSprintEmptyState(originSprintBody);
+                        refreshBacklogEmptyState();
 
                         const formData = new URLSearchParams();
                         formData.append('ticket_id', ticketId);
@@ -665,14 +816,18 @@ function getCookie(name) {
 
                         const data = await response.json();
                         if (!data.success) {
-                            alert(data.error || 'Unable to move ticket back to backlog.');
-                            return;
+                            if (originContainer) originContainer.appendChild(draggedElement);
+                            refreshSprintEmptyState(originSprintBody);
+                            refreshBacklogEmptyState();
+                            throw new Error(data.error || 'Unable to move ticket back to backlog.');
+                        }
+
+                        if (sprintId) {
+                            await syncSprintOrder(sprintId, originSprintBody);
                         }
                     }
-
-                    window.location.reload();
                 } catch (error) {
-                    alert('An error occurred during drag and drop.');
+                    alert(error.message || 'An error occurred during drag and drop.');
                 }
             });
         });

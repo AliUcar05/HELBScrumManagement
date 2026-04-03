@@ -1,7 +1,9 @@
 from django.contrib.auth import get_user_model
-from .forms import TicketForm, MembershipForm
-from .models import Project
+
 from users.forms import AdminCreateUserForm
+
+from .forms import MembershipForm, TicketForm
+from .models import Project
 
 
 def global_context(request):
@@ -26,17 +28,20 @@ def global_context(request):
         ticket_form.fields["assignee"].queryset = current_project.members.all()
         ticket_form.fields["parent"].queryset = current_project.tickets.all()
 
+    is_platform_admin = (
+        hasattr(request.user, "profile")
+        and request.user.profile.global_role.lower() == "admin"
+    )
+
     create_user_form = None
-    if hasattr(request.user, 'profile') and request.user.profile.global_role.lower() == 'admin':
-        create_user_form = AdminCreateUserForm()
+    if is_platform_admin:
+        create_user_form = AdminCreateUserForm(can_assign_global_role=True)
 
     membership_form_modal = None
     if current_project:
-        membership_form_modal = MembershipForm()
-        membership_form_modal.fields["user"].queryset = (
-            User.objects.exclude(id__in=current_project.members.values_list('id', flat=True))
-                        .exclude(id=request.user.id)
-                        .order_by("username")
+        membership_form_modal = MembershipForm(
+            project=current_project,
+            current_user=request.user,
         )
 
     return {
@@ -45,4 +50,6 @@ def global_context(request):
         "ticket_form": ticket_form,
         "create_user_form": create_user_form,
         "membership_form": membership_form_modal,
+        "can_create_user": is_platform_admin,
+        "is_platform_admin": is_platform_admin,
     }

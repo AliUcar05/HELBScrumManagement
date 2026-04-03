@@ -59,6 +59,7 @@ urlpatterns = [
     path("projects/<int:pk>/sprints/<int:sprint_pk>/start/",    views.sprint_start,    name="sprint-start"),
     path("projects/<int:pk>/sprints/<int:sprint_pk>/complete/", views.sprint_complete, name="sprint-complete"),
     path("projects/<int:pk>/ticket/remove-from-sprint/", views.ticket_remove_from_sprint,name="ticket-remove-from-sprint"),
+    path("projects/<int:pk>/sprints/<int:sprint_pk>/reorder/", views.reorder_sprint_tickets, name="sprint-ticket-reorder"),
 
     #TICKET COMMENTS
     path('ticket/<int:ticket_pk>/comment/add/', views.add_comment, name='add_comment'),

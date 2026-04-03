@@ -83,6 +83,25 @@ def normalize_backlog_order(project):
     return tickets
 
 
+def normalize_sprint_ticket_positions(sprint):
+    links = list(
+        SprintTicket.objects.filter(sprint=sprint)
+        .select_related("ticket")
+        .order_by("position", "added_at", "pk")
+    )
+
+    links_to_update = []
+    for index, link in enumerate(links, start=1):
+        if link.position != index:
+            link.position = index
+            links_to_update.append(link)
+
+    if links_to_update:
+        SprintTicket.objects.bulk_update(links_to_update, ["position"])
+
+    return links
+
+
 KANBAN_STATUS_TO_COLUMN = {
     "todo": "To Do",
     "in_progress": "In Progress",
@@ -504,7 +523,10 @@ class ProjectSettingsView(LoginRequiredMixin, UserPassesTestMixin, UpdateView):
         project = self.object
         self.request.session["current_project_id"] = project.id
         context["memberships"] = project.memberships.select_related("user")
-        context["membership_form"] = MembershipForm()
+        context["membership_form"] = MembershipForm(
+            project=project,
+            current_user=self.request.user,
+        )
         context["membership"] = project.memberships.filter(user=self.request.user).first()
         context["is_admin"] = is_project_admin(self.request.user, project)  # <-- nouveau
         return context
@@ -599,36 +621,27 @@ class MembershipAddView(LoginRequiredMixin, View):
     def post(self, request, pk):
         project = get_object_or_404(Project, pk=pk)
 
-        if project.created_by != request.user:
-            messages.error(request, "Only the project creator can add members.")
-            return redirect("project-board", pk=pk)
+        if not is_project_admin(request.user, project):
+            messages.error(request, "Only project admins can add members.")
+            return redirect("project-settings", pk=pk)
 
-        form = MembershipForm(request.POST)
+        form = MembershipForm(
+            request.POST,
+            project=project,
+            current_user=request.user,
+        )
+
         if form.is_valid():
             membership = form.save(commit=False)
             membership.project = project
             membership.save()
             messages.success(request, "Member added successfully.")
         else:
-            messages.error(request, "Unable to add this member.")
+            error_text = " ".join(
+                [f"{field}: {' '.join(errors)}" for field, errors in form.errors.items()]
+            )
+            messages.error(request, error_text or "Unable to add this member.")
 
-        return redirect("project-settings", pk=pk)
-
-class MembershipUpdateRoleView(LoginRequiredMixin, View):
-    def post(self, request, pk, membership_pk):
-        project = get_object_or_404(Project, pk=pk)
-        if project.created_by != request.user:
-            messages.error(request, "Only the project creator can change member roles.")
-            return redirect("project-board", pk=pk)
-        membership = get_object_or_404(Membership, pk=membership_pk, project=project)
-        new_role = request.POST.get("role")
-        new_team_role = request.POST.get("team_role")
-        if new_role in ["admin", "contributor", "read-only"]:
-            membership.role = new_role
-        if new_team_role in ["developer", "scrum_master", "product_owner", "tester", "designer", "other"]:
-            membership.team_role = new_team_role
-        membership.save()
-        messages.success(request, "Role updated successfully.")
         return redirect("project-settings", pk=pk)
 
 
@@ -636,9 +649,9 @@ class MembershipDeleteView(LoginRequiredMixin, View):
     def post(self, request, pk, membership_pk):
         project = get_object_or_404(Project, pk=pk)
 
-        if project.created_by != request.user:
-            messages.error(request, "Only the project creator can remove members.")
-            return redirect("project-board", pk=pk)
+        if not is_project_admin(request.user, project):
+            messages.error(request, "Only project admins can remove members.")
+            return redirect("project-settings", pk=pk)
 
         membership = get_object_or_404(Membership, pk=membership_pk, project=project)
         membership.delete()
@@ -650,22 +663,23 @@ class MembershipUpdateRoleView(LoginRequiredMixin, View):
     def post(self, request, pk, membership_pk):
         project = get_object_or_404(Project, pk=pk)
 
-        if project.created_by != request.user:
-            messages.error(request, "Only the project creator can change member roles.")
-            return redirect("project-board", pk=pk)
+        if not is_project_admin(request.user, project):
+            messages.error(request, "Only project admins can change member roles.")
+            return redirect("project-settings", pk=pk)
 
         membership = get_object_or_404(Membership, pk=membership_pk, project=project)
         new_role = request.POST.get("role")
+        new_team_role = request.POST.get("team_role")
 
         if new_role in ["admin", "contributor", "read-only"]:
             membership.role = new_role
-            membership.save()
-            messages.success(request, "Role updated successfully.")
-        else:
-            messages.error(request, "Invalid role.")
 
+        if new_team_role in ["developer", "scrum_master", "product_owner", "tester", "designer", "other"]:
+            membership.team_role = new_team_role
+
+        membership.save()
+        messages.success(request, "Role updated successfully.")
         return redirect("project-settings", pk=pk)
-
 
 
 #TICKET LOGIC 
@@ -843,12 +857,15 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
         User = get_user_model()
         sprints = self.project.sprints.all().order_by('-created_at')
         for sprint in sprints:
-            tickets = sprint.tickets.all()
-            sprint.total_issues = tickets.count()
-            sprint.todo_count = tickets.filter(status='todo').count()
-            sprint.inprogress_count = tickets.filter(status='in_progress').count()
-            sprint.done_count = tickets.filter(status='done').count()
-            assignee_ids = tickets.exclude(assignee=None).values_list('assignee_id', flat=True).distinct()
+            sprint_links = normalize_sprint_ticket_positions(sprint)
+            tickets = [link.ticket for link in sprint_links]
+            sprint.ordered_links = sprint_links
+            sprint.ordered_tickets = tickets
+            sprint.total_issues = len(tickets)
+            sprint.todo_count = sum(1 for ticket in tickets if ticket.status == 'todo')
+            sprint.inprogress_count = sum(1 for ticket in tickets if ticket.status == 'in_progress')
+            sprint.done_count = sum(1 for ticket in tickets if ticket.status == 'done')
+            assignee_ids = {ticket.assignee_id for ticket in tickets if ticket.assignee_id}
             sprint.assignees = list(User.objects.filter(id__in=assignee_ids).select_related('profile'))
         context["sprints"] = list(sprints)
         context["active_sprint"] = self.project.sprints.filter(status="active").first()
@@ -1303,11 +1320,16 @@ def ticket_remove_from_sprint(request, pk):
     sprint = None
     if sprint_id:
         sprint = Sprint.objects.filter(pk=sprint_id, project=project).first()
-    if sprint is None:
-        sprint = project.sprints.filter(status="active").first()
 
-    if sprint:
-        SprintTicket.objects.filter(sprint=sprint, ticket=ticket).delete()
+    if sprint is not None:
+        deleted_count, _ = SprintTicket.objects.filter(sprint=sprint, ticket=ticket).delete()
+    else:
+        deleted_count, _ = SprintTicket.objects.filter(sprint__project=project, ticket=ticket).delete()
+
+    if sprint and deleted_count:
+        normalize_sprint_ticket_positions(sprint)
+
+    if deleted_count:
         log_activity(
             request.user,
             project,
@@ -1326,6 +1348,55 @@ def ticket_remove_from_sprint(request, pk):
 
     messages.success(request, f'"{ticket.title}" moved back to backlog.')
     return redirect("product-backlog", pk=pk)
+
+
+@login_required
+def reorder_sprint_tickets(request, pk, sprint_pk):
+    project = get_object_or_404(Project, pk=pk)
+    sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+
+    if request.method != "POST":
+        return JsonResponse({"success": False, "error": "POST only"}, status=405)
+
+    if not is_contributor_or_admin(request.user, project):
+        return JsonResponse({"success": False, "error": "Permission denied"}, status=403)
+
+    ordered_ticket_ids = request.POST.getlist("ordered_ticket_ids[]") or request.POST.getlist("ordered_ticket_ids")
+    if not ordered_ticket_ids:
+        raw_ids = request.POST.get("ordered_ticket_ids", "")
+        if raw_ids:
+            ordered_ticket_ids = [value for value in raw_ids.split(",") if value]
+
+    links = list(SprintTicket.objects.filter(sprint=sprint).order_by("position", "added_at", "pk"))
+    link_map = {str(link.ticket_id): link for link in links}
+
+    next_position = 1
+    updated_links = []
+    seen = set()
+
+    for ticket_id in ordered_ticket_ids:
+        link = link_map.get(str(ticket_id))
+        if not link:
+            continue
+        seen.add(str(ticket_id))
+        if link.position != next_position:
+            link.position = next_position
+            updated_links.append(link)
+        next_position += 1
+
+    for link in links:
+        if str(link.ticket_id) in seen:
+            continue
+        if link.position != next_position:
+            link.position = next_position
+            updated_links.append(link)
+        next_position += 1
+
+    if updated_links:
+        SprintTicket.objects.bulk_update(updated_links, ["position"])
+
+    normalize_sprint_ticket_positions(sprint)
+    return JsonResponse({"success": True, "sprint_id": sprint.id})
 
 
 ##################comment ticket###########
@@ -1406,8 +1477,36 @@ def add_ticket_to_sprint(request, pk, ticket_pk):
 
     sprint_pk = request.POST.get("sprint_id")
     sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
+    source_sprint_id = request.POST.get("source_sprint_id")
 
-    link, created = SprintTicket.objects.get_or_create(sprint=sprint, ticket=ticket)
+    source_link = None
+    if source_sprint_id:
+        source_link = SprintTicket.objects.filter(
+            sprint__project=project,
+            sprint_id=source_sprint_id,
+            ticket=ticket,
+        ).select_related("sprint").first()
+
+    if source_link and source_link.sprint_id != sprint.id:
+        old_sprint = source_link.sprint
+        source_link.delete()
+        normalize_sprint_ticket_positions(old_sprint)
+
+    max_position = (
+        SprintTicket.objects.filter(sprint=sprint)
+        .aggregate(max_value=Max("position"))["max_value"] or 0
+    )
+
+    link, created = SprintTicket.objects.get_or_create(
+        sprint=sprint,
+        ticket=ticket,
+        defaults={"position": max_position + 1},
+    )
+    if not created and link.position is None:
+        link.position = max_position + 1
+        link.save(update_fields=["position"])
+
+    normalize_sprint_ticket_positions(sprint)
 
     if sprint.status == "active":
         ensure_ticket_column(ticket, project.board)
@@ -1418,9 +1517,10 @@ def add_ticket_to_sprint(request, pk, ticket_pk):
             "created": created,
             "ticket_id": ticket.id,
             "sprint_id": sprint.id,
+            "source_sprint_id": int(source_sprint_id) if source_sprint_id else None,
         })
 
-    if created:
+    if created or (source_link and source_link.sprint_id != sprint.id):
         messages.success(request, f'Issue "{ticket.title}" added to sprint "{sprint.name}".')
     else:
         messages.warning(request, f'Issue already in sprint "{sprint.name}".')

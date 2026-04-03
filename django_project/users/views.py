@@ -13,10 +13,13 @@ from .forms import AdminCreateUserForm, UserUpdateForm, ProfileUpdateForm
 
 
 def is_platform_admin(user):
-    return (
-        user.is_authenticated
-        and hasattr(user, "profile")
-        and user.profile.global_role.lower() == "admin"
+    return user.is_authenticated and (
+        user.is_superuser
+        or user.is_staff
+        or (
+            hasattr(user, "profile")
+            and user.profile.global_role.lower() == "admin"
+        )
     )
 
 

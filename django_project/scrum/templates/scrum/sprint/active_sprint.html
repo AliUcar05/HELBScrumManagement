@@ -47,7 +47,7 @@
                     {% endif %}
                     <span class="as-meta-item">
                         <i class="fas fa-ticket-alt"></i>
-                        {{ active_sprint.total_issues|default:0 }} issues
+                        <span id="asTotalIssues">{{ active_sprint.total_issues|default:0 }}</span> issues
                     </span>
                 </div>
             </div>
@@ -55,15 +55,15 @@
                 <div class="as-progress-block">
                     <div class="as-progress-labels">
                         <span>Progress</span>
-                        <span class="as-progress-pct">{{ active_sprint.completion_percentage|default:0 }}%</span>
+                        <span class="as-progress-pct" id="asProgressPct">{{ active_sprint.completion_percentage|default:0 }}%</span>
                     </div>
                     <div class="as-progress-track">
-                        <div class="as-progress-fill" style="width: {{ active_sprint.completion_percentage|default:0 }}%;"></div>
+                        <div class="as-progress-fill" id="asProgressFill" style="width: {{ active_sprint.completion_percentage|default:0 }}%;"></div>
                     </div>
                     <div class="as-progress-stats">
-                        <span class="as-stat as-stat--todo"><span class="as-stat-dot"></span>{{ active_sprint.todo_count|default:0 }} To Do</span>
-                        <span class="as-stat as-stat--inprogress"><span class="as-stat-dot"></span>{{ active_sprint.inprogress_count|default:0 }} In Progress</span>
-                        <span class="as-stat as-stat--done"><span class="as-stat-dot"></span>{{ active_sprint.done_count|default:0 }} Done</span>
+                        <span class="as-stat as-stat--todo"><span class="as-stat-dot"></span><span id="asTodoCount">{{ active_sprint.todo_count|default:0 }}</span> To Do</span>
+                        <span class="as-stat as-stat--inprogress"><span class="as-stat-dot"></span><span id="asInProgressCount">{{ active_sprint.inprogress_count|default:0 }}</span> In Progress</span>
+                        <span class="as-stat as-stat--done"><span class="as-stat-dot"></span><span id="asDoneCount">{{ active_sprint.done_count|default:0 }}</span> Done</span>
                     </div>
                 </div>
                 {% if can_manage_sprint %}
@@ -106,7 +106,7 @@
         <div class="card p-3 kanban-column">
             <div class="d-flex align-items-center mb-3">
                 <h6 class="font-weight-bold mb-0">{{ column.name }}</h6>
-                <span class="column-count">{{ column.tickets|length }}</span>
+                <span class="column-count" data-column-count-for="{{ column.id }}">{{ column.tickets|length }}</span>
             </div>
 
             <div class="kanban-dropzone" data-column-id="{{ column.id }}">
@@ -195,6 +195,50 @@
     {% if can_edit_board and active_sprint %}
     let draggedCard = null;
 
+    function ensureEmptyColumnState(zone) {
+        const cards = zone.querySelectorAll('.kanban-card');
+        let empty = zone.querySelector('.empty-column-state');
+        if (cards.length === 0) {
+            if (!empty) {
+                empty = document.createElement('div');
+                empty.className = 'd-flex align-items-center justify-content-center flex-grow-1 text-muted py-5 empty-column-state';
+                empty.innerHTML = '<small>No issues</small>';
+                zone.appendChild(empty);
+            }
+        } else if (empty) {
+            empty.remove();
+        }
+    }
+
+    function updateColumnCount(zone) {
+        const count = zone.querySelectorAll('.kanban-card').length;
+        const badge = document.querySelector(`[data-column-count-for="${zone.dataset.columnId}"]`);
+        if (badge) badge.textContent = count;
+    }
+
+    function refreshSprintProgress() {
+        const board = document.getElementById('kanbanBoard');
+        const total = board.querySelectorAll('.kanban-card').length;
+        const todo = board.querySelectorAll('.kanban-card[data-status="todo"]').length;
+        const inProgress = board.querySelectorAll('.kanban-card[data-status="in_progress"]').length;
+        const done = board.querySelectorAll('.kanban-card[data-status="done"]').length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+
+        const totalNode = document.getElementById('asTotalIssues');
+        const todoNode = document.getElementById('asTodoCount');
+        const inProgressNode = document.getElementById('asInProgressCount');
+        const doneNode = document.getElementById('asDoneCount');
+        const pctNode = document.getElementById('asProgressPct');
+        const fillNode = document.getElementById('asProgressFill');
+
+        if (totalNode) totalNode.textContent = total;
+        if (todoNode) todoNode.textContent = todo;
+        if (inProgressNode) inProgressNode.textContent = inProgress;
+        if (doneNode) doneNode.textContent = done;
+        if (pctNode) pctNode.textContent = `${pct}%`;
+        if (fillNode) fillNode.style.width = `${pct}%`;
+    }
+
     document.querySelectorAll('.kanban-card').forEach(card => {
         card.addEventListener('dragstart', () => {
             draggedCard = card;
@@ -222,7 +266,12 @@
             if (!draggedCard) return;
 
             const originalZone = draggedCard.parentElement;
+            const originalStatus = draggedCard.dataset.status;
             zone.appendChild(draggedCard);
+            ensureEmptyColumnState(originalZone);
+            ensureEmptyColumnState(zone);
+            updateColumnCount(originalZone);
+            updateColumnCount(zone);
 
             const formData = new URLSearchParams();
             formData.append('column_id', zone.dataset.columnId);
@@ -242,14 +291,20 @@
             const data = await response.json();
             if (!data.success) {
                 originalZone.appendChild(draggedCard);
+                draggedCard.dataset.status = originalStatus;
+                ensureEmptyColumnState(originalZone);
+                ensureEmptyColumnState(zone);
+                updateColumnCount(originalZone);
+                updateColumnCount(zone);
                 alert(data.error || 'Unable to move ticket.');
                 return;
             }
 
-            window.location.reload();
+            draggedCard.dataset.status = data.status;
+            refreshSprintProgress();
         });
     });
-    {% endif %}
+{% endif %}
 </script>
 
 {% include 'scrum/sprint/_sprint_modal.html' %}

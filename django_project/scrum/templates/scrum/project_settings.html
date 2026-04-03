@@ -80,7 +80,6 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
 
     <div class="ps-body">
 
-        <!-- SUMMARY -->
         <div class="ps-section active" id="pss-summary">
             <div class="ps-title">Project settings</div>
             <div class="ps-sub">
@@ -156,7 +155,6 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
             </div>
         </div>
 
-        <!-- DETAILS -->
         <div class="ps-section" id="pss-general">
             <div class="ps-title">Details</div>
             <div class="ps-sub">Project name, description and timeline.</div>
@@ -196,7 +194,6 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
             </form>
         </div>
 
-        <!-- ISSUE TYPES -->
         <div class="ps-section" id="pss-issue-types">
             <div class="ps-title">Issue types</div>
             <div class="ps-sub">Standard issue types available in this Scrum project.</div>
@@ -210,7 +207,6 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
             </div>
         </div>
 
-        <!-- SPRINTS -->
         <div class="ps-section" id="pss-sprints">
             <div class="ps-title">Sprints</div>
             <div class="ps-sub">Default sprint settings for this project.</div>
@@ -235,7 +231,6 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
             </form>
         </div>
 
-        <!-- TEAM -->
         <div class="ps-section" id="pss-team">
             <div class="d-flex justify-content-between align-items-start mb-4">
                 <div>
@@ -368,12 +363,11 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
             </div>
         </div>
 
-        <!-- USERS AND ROLES — admin only -->
         {% if is_admin %}
         <div class="ps-section" id="pss-members">
             <div class="ps-title">Users and roles</div>
             <div class="ps-sub">Add a user to this project and assign their access level and Scrum role.</div>
-            <div class="ps-panel" style="max-width:500px;">
+            <div class="ps-panel" style="max-width:760px;">
                 <div class="ps-panel-title"><i class="fas fa-user-plus"></i> Add member</div>
                 <form method="POST" action="{% url 'membership-add' object.pk %}">
                     {% csrf_token %}
@@ -418,7 +412,6 @@ fieldset[disabled] { opacity:.6; pointer-events:none; }
             </div>
         </div>
 
-        <!-- DANGER ZONE — admin only -->
         <div class="ps-section" id="pss-danger">
             <div class="ps-title" style="color:#de350b;">Danger zone</div>
             <div class="ps-sub">Irreversible actions — proceed with caution.</div>

@@ -77,23 +77,6 @@
                             </li>
                         {% endif %}
 
-                        {% if user.profile.global_role|lower == 'admin'  %}
-                        <hr>
-                            {% if create_user_form %}
-                                <li>
-                                    <a class="sidebar-link" data-toggle="modal" data-target="#createUserModal" style="cursor:pointer;">
-                                        <i class="fas fa-user-plus"></i>
-                                        <span>Create User</span>
-                                    </a>
-                                </li>
-                            {% endif %}
-                        <li>
-                            <a class="sidebar-link" data-toggle="modal" data-target="#addMemberModal" style="cursor:pointer;">
-                                <i class="fas fa-user-plus"></i>
-                                <span>Add Member</span>
-                            </a>
-                        </li>
-                        {% endif %}
                     </ul>
                  </div>
 
