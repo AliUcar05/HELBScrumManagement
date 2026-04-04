@@ -90,8 +90,39 @@
                                         <a class="nav-link" href="#"><i class="fas fa-search" style="font-size:1.4rem;"></i></a>
                                     </li>
 
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#"><i class="fas fa-bell" style="font-size:1.4rem;"></i></a>
+                                    <li class="nav-item dropdown">
+                                        <a class="nav-link position-relative" href="#" role="button" data-toggle="dropdown" title="Notifications">
+                                            <i class="fas fa-bell" style="font-size:1.4rem;"></i>
+                                            {% if unread_notifications_count > 0 %}
+                                                <span class="badge badge-danger position-absolute" style="top: 4px; right: -2px; font-size: 0.62rem; border-radius: 999px;">
+                                                    {% if unread_notifications_count > 9 %}9+{% else %}{{ unread_notifications_count }}{% endif %}
+                                                </span>
+                                            {% endif %}
+                                        </a>
+                                        <div class="dropdown-menu dropdown-menu-right p-0" style="min-width: 340px; border-radius: 12px; overflow: hidden;">
+                                            <div class="px-3 py-3 border-bottom d-flex justify-content-between align-items-center">
+                                                <strong>Notifications</strong>
+                                                <a href="{% url 'notifications-list' %}" class="small">View all</a>
+                                            </div>
+
+                                            {% for notification in recent_notifications %}
+                                                <a href="{% url 'notifications-list' %}" class="dropdown-item px-3 py-3 {% if not notification.is_read %}bg-light{% endif %}" style="white-space: normal;">
+                                                    <div class="d-flex justify-content-between align-items-start" style="gap: 8px;">
+                                                        <div class="pr-2">
+                                                            <div class="font-weight-bold">{{ notification.title|truncatechars:45 }}</div>
+                                                            <div class="text-muted small mt-1">{{ notification.message|truncatechars:80 }}</div>
+                                                            <div class="small text-muted mt-2">{{ notification.created_at|timesince }} ago</div>
+                                                        </div>
+                                                        {% if not notification.is_read %}<span class="badge badge-primary">New</span>{% endif %}
+                                                    </div>
+                                                </a>
+                                            {% empty %}
+                                                <div class="px-3 py-4 text-center text-muted">
+                                                    <i class="fas fa-bell-slash mb-2" style="font-size: 1.4rem;"></i>
+                                                    <div>No notifications yet.</div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
                                     </li>
 
                                     <li class="nav-item">
@@ -161,6 +192,15 @@
                                             <li>
                                                 <a class="dropdown-item" href="{% url 'profile' %}">
                                                     <i class="fas fa-user-circle mr-2"></i>Profile
+                                                </a>
+                                            </li>
+
+                                            <li>
+                                                <a class="dropdown-item" href="{% url 'notifications-list' %}">
+                                                    <i class="fas fa-bell mr-2"></i>Notifications
+                                                    {% if unread_notifications_count > 0 %}
+                                                        <span class="badge badge-primary ml-2">{{ unread_notifications_count }}</span>
+                                                    {% endif %}
                                                 </a>
                                             </li>
 

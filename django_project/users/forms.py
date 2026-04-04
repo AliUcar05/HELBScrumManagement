@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.models import User
 
-from .models import Profile
+from .models import Notification, Profile
 
 
 class AdminCreateUserForm(forms.ModelForm):
@@ -105,3 +105,55 @@ class ProfileUpdateForm(forms.ModelForm):
             "department",
             "supervisor",
         ]
+
+class NotificationForm(forms.Form):
+    recipients = forms.ModelMultipleChoiceField(
+        queryset=User.objects.none(),
+        required=False,
+        widget=forms.SelectMultiple(attrs={"class": "form-control", "size": 8}),
+        help_text="Hold Ctrl (or Cmd on Mac) to select multiple users.",
+    )
+    send_to_all = forms.BooleanField(required=False, label="Send to all users")
+    title = forms.CharField(
+        max_length=200,
+        widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Notification title"}),
+    )
+    message = forms.CharField(
+        widget=forms.Textarea(attrs={"class": "form-control", "rows": 4, "placeholder": "Write your message..."})
+    )
+
+    def __init__(self, *args, current_user=None, **kwargs):
+        self.current_user = current_user
+        super().__init__(*args, **kwargs)
+        queryset = User.objects.all().select_related("profile").order_by("username")
+        if current_user is not None:
+            queryset = queryset.exclude(pk=current_user.pk)
+        self.fields["recipients"].queryset = queryset
+
+    def clean(self):
+        cleaned_data = super().clean()
+        recipients = cleaned_data.get("recipients")
+        send_to_all = cleaned_data.get("send_to_all")
+
+        if not send_to_all and not recipients:
+            self.add_error("recipients", "Select at least one user or choose 'Send to all users'.")
+
+        return cleaned_data
+
+    def save(self, sender):
+        recipients = list(self.cleaned_data["recipients"])
+
+        if self.cleaned_data.get("send_to_all"):
+            recipients = list(self.fields["recipients"].queryset)
+
+        notifications = [
+            Notification(
+                sender=sender,
+                recipient=recipient,
+                title=self.cleaned_data["title"].strip(),
+                message=self.cleaned_data["message"].strip(),
+            )
+            for recipient in recipients
+        ]
+
+        return Notification.objects.bulk_create(notifications)

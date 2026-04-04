@@ -7,9 +7,11 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.db.models.deletion import ProtectedError
 from django.shortcuts import get_object_or_404, redirect, render
+from django.utils import timezone
 from django.urls import reverse
 
-from .forms import AdminCreateUserForm, UserUpdateForm, ProfileUpdateForm
+from .forms import AdminCreateUserForm, NotificationForm, UserUpdateForm, ProfileUpdateForm
+from .models import Notification
 
 
 def is_platform_admin(user):
@@ -63,44 +65,80 @@ def change_password(request):
 @user_passes_test(is_platform_admin, login_url="home")
 def manage_users(request):
     back_url = request.GET.get("next") or request.POST.get("next") or reverse("home")
+    notification_form = NotificationForm(current_user=request.user)
 
     if request.method == "POST":
-        user_id = request.POST.get("user_id")
-        new_role = request.POST.get("new_role")
+        action = request.POST.get("action", "update_role")
 
-        if new_role not in ["admin", "member", "read-only"]:
-            messages.error(request, "Invalid global role.")
+        if action == "send_notification":
+            notification_form = NotificationForm(request.POST, current_user=request.user)
+            if notification_form.is_valid():
+                created_notifications = notification_form.save(sender=request.user)
+                recipient_count = len(created_notifications)
+                if recipient_count == 1:
+                    messages.success(request, "Notification sent to 1 user.")
+                else:
+                    messages.success(request, f"Notification sent to {recipient_count} users.")
+                return redirect(f"{reverse('manage-users')}?next={back_url}")
+
+        else:
+            user_id = request.POST.get("user_id")
+            new_role = request.POST.get("new_role")
+
+            if new_role not in ["admin", "member", "read-only"]:
+                messages.error(request, "Invalid global role.")
+                return redirect(f"{reverse('manage-users')}?next={back_url}")
+
+            target_user = get_object_or_404(User, id=user_id)
+
+            if target_user == request.user and new_role != "admin":
+                messages.error(request, "You cannot remove your own admin role.")
+                return redirect(f"{reverse('manage-users')}?next={back_url}")
+
+            if (
+                target_user.profile.global_role == "admin"
+                and new_role != "admin"
+                and User.objects.filter(profile__global_role="admin").count() <= 1
+            ):
+                messages.error(request, "You cannot downgrade the last admin.")
+                return redirect(f"{reverse('manage-users')}?next={back_url}")
+
+            profile = target_user.profile
+            profile.global_role = new_role
+            profile.save()
+
+            messages.success(
+                request,
+                f"The global role of {target_user.username} has been updated to '{new_role}'."
+            )
             return redirect(f"{reverse('manage-users')}?next={back_url}")
-
-        target_user = get_object_or_404(User, id=user_id)
-
-        if target_user == request.user and new_role != "admin":
-            messages.error(request, "You cannot remove your own admin role.")
-            return redirect(f"{reverse('manage-users')}?next={back_url}")
-
-        if (
-            target_user.profile.global_role == "admin"
-            and new_role != "admin"
-            and User.objects.filter(profile__global_role="admin").count() <= 1
-        ):
-            messages.error(request, "You cannot downgrade the last admin.")
-            return redirect(f"{reverse('manage-users')}?next={back_url}")
-
-        profile = target_user.profile
-        profile.global_role = new_role
-        profile.save()
-
-        messages.success(
-            request,
-            f"The global role of {target_user.username} has been updated to '{new_role}'."
-        )
-        return redirect(f"{reverse('manage-users')}?next={back_url}")
 
     users = User.objects.all().select_related("profile").order_by("username")
     return render(request, "users/manage_users.html", {
         "users": users,
         "back_url": back_url,
+        "notification_form": notification_form,
     })
+
+
+@login_required
+def notifications_list(request):
+    notifications = Notification.objects.filter(recipient=request.user).select_related("sender")
+    return render(request, "users/notifications.html", {
+        "notifications": notifications,
+    })
+
+
+@login_required
+def mark_all_notifications_read(request):
+    if request.method == "POST":
+        Notification.objects.filter(recipient=request.user, is_read=False).update(
+            is_read=True,
+            read_at=timezone.now(),
+        )
+        messages.success(request, "All notifications have been marked as read.")
+
+    return redirect("notifications-list")
 
 
 @login_required

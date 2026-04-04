@@ -1,6 +1,7 @@
 from django.contrib.auth import get_user_model
 
 from users.forms import AdminCreateUserForm
+from users.models import Notification
 
 from .forms import MembershipForm, TicketForm
 from .models import Project
@@ -44,6 +45,15 @@ def global_context(request):
             current_user=request.user,
         )
 
+    recent_notifications = list(
+        Notification.objects.filter(recipient=request.user)
+        .select_related("sender")[:5]
+    )
+    unread_notifications_count = Notification.objects.filter(
+        recipient=request.user,
+        is_read=False,
+    ).count()
+
     return {
         "user_projects": user_projects,
         "current_project": current_project,
@@ -52,4 +62,6 @@ def global_context(request):
         "membership_form": membership_form_modal,
         "can_create_user": is_platform_admin,
         "is_platform_admin": is_platform_admin,
+        "recent_notifications": recent_notifications,
+        "unread_notifications_count": unread_notifications_count,
     }
