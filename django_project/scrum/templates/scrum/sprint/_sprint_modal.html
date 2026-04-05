@@ -82,4 +82,241 @@
         </div>
     </div>
 </div>
+
+<script>
+// Get CSRF token for AJAX requests
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+// Auto-suggest sprint name based on existing sprints
+function suggestSprintName() {
+    const nameInput = document.getElementById('sprintName');
+    if (nameInput && !nameInput.value) {
+        // Get existing sprint numbers from the page
+        let maxNum = 0;
+
+        // Check for existing sprint blocks on the page
+        const sprintBlocks = document.querySelectorAll('.sprint-table-block');
+        sprintBlocks.forEach(block => {
+            const nameElem = block.querySelector('.spt-name');
+            if (nameElem) {
+                const match = nameElem.textContent.match(/Sprint\s+(\d+)/i);
+                if (match && parseInt(match[1]) > maxNum) {
+                    maxNum = parseInt(match[1]);
+                }
+            }
+        });
+
+        // Also check for sprint selects in modals
+        const sprintSelect = document.querySelector('#tmSprintSelect');
+        if (sprintSelect) {
+            sprintSelect.querySelectorAll('option').forEach(opt => {
+                const match = opt.textContent.match(/Sprint\s+(\d+)/i);
+                if (match && parseInt(match[1]) > maxNum) {
+                    maxNum = parseInt(match[1]);
+                }
+            });
+        }
+
+        nameInput.value = maxNum > 0 ? `Sprint ${maxNum + 1}` : 'Sprint 1';
+    }
+}
+
+// Validate dates
+function validateDates(startDate, endDate) {
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        if (start >= end) {
+            alert('End date must be after start date.');
+            return false;
+        }
+    }
+    return true;
+}
+
+// Validate sprint form before submission
+function validateSprintForm(event) {
+    const sprintName = document.getElementById('sprintName').value.trim();
+    const sprintGoal = document.getElementById('sprintGoal').value.trim();
+    const startDate = document.getElementById('sprintStartDate').value;
+    const endDate = document.getElementById('sprintEndDate').value;
+
+    // Check if name is provided
+    if (!sprintName) {
+        alert('Sprint Name is required.');
+        event.preventDefault();
+        return false;
+    }
+
+    // Check if dates are valid
+    if (!validateDates(startDate, endDate)) {
+        event.preventDefault();
+        return false;
+    }
+
+    // Warn about missing goal
+    if (!sprintGoal) {
+        const proceed = confirm(
+            '⚠️ No Sprint Goal Defined\n\n' +
+            'A sprint goal helps the team stay focused and aligned.\n\n' +
+            'Do you want to continue without a goal?\n' +
+            '• Click "OK" to create sprint without goal\n' +
+            '• Click "Cancel" to add a goal now'
+        );
+        if (!proceed) {
+            event.preventDefault();
+            return false;
+        }
+    }
+
+    return true;
+}
+
+// Handle duration change
+function handleDurationChange(select) {
+    const value = select.value;
+    if (value !== 'custom') {
+        const startDateInput = document.getElementById('sprintStartDate');
+        const endDateInput = document.getElementById('sprintEndDate');
+
+        let startDate = startDateInput.value ? new Date(startDateInput.value) : new Date();
+        if (!startDateInput.value) {
+            // Set to next Monday if no date selected
+            const day = startDate.getDay();
+            const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+            startDate.setDate(startDate.getDate() + daysUntilMonday);
+            startDateInput.value = startDate.toISOString().split('T')[0];
+        } else {
+            startDate = new Date(startDateInput.value);
+        }
+
+        const weeks = parseInt(value);
+        const endDate = new Date(startDate);
+        endDate.setDate(endDate.getDate() + (weeks * 7));
+        endDateInput.value = endDate.toISOString().split('T')[0];
+    }
+}
+
+// Handle start date change
+function handleStartDateChange() {
+    const startDate = document.getElementById('sprintStartDate').value;
+    const endDate = document.getElementById('sprintEndDate').value;
+    const durationSelect = document.getElementById('sprintDuration');
+
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24));
+        const weeks = daysDiff / 7;
+
+        if (weeks === 1 || weeks === 2 || weeks === 3 || weeks === 4) {
+            durationSelect.value = weeks.toString();
+        } else {
+            durationSelect.value = 'custom';
+        }
+    }
+}
+
+// Sync duration from dates
+function syncDurationFromDates() {
+    const startDate = document.getElementById('sprintStartDate').value;
+    const endDate = document.getElementById('sprintEndDate').value;
+    const durationSelect = document.getElementById('sprintDuration');
+
+    if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        const daysDiff = Math.round((end - start) / (1000 * 60 * 60 * 24));
+        const weeks = daysDiff / 7;
+
+        if (weeks === 1 || weeks === 2 || weeks === 3 || weeks === 4) {
+            durationSelect.value = weeks.toString();
+        } else {
+            durationSelect.value = 'custom';
+        }
+    }
+}
+
+// Reset form when modal is opened
+function resetSprintModal() {
+    const form = document.getElementById('createSprintForm');
+    if (form) {
+        form.reset();
+        // Reset duration to custom
+        const durationSelect = document.getElementById('sprintDuration');
+        if (durationSelect) durationSelect.value = 'custom';
+
+        // Set default dates
+        const startDateInput = document.getElementById('sprintStartDate');
+        if (startDateInput) {
+            const today = new Date();
+            // Set to next Monday
+            const day = today.getDay();
+            const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+            today.setDate(today.getDate() + daysUntilMonday);
+            startDateInput.value = today.toISOString().split('T')[0];
+        }
+
+        // Suggest sprint name
+        suggestSprintName();
+    }
+}
+
+// Set up modal event listeners
+document.addEventListener('DOMContentLoaded', function() {
+    const modal = document.getElementById('createSprintModal');
+    const form = document.getElementById('createSprintForm');
+
+    if (form) {
+        form.addEventListener('submit', validateSprintForm);
+    }
+
+    // Reset form when modal is shown
+    if (modal) {
+        $(modal).on('show.bs.modal', function() {
+            resetSprintModal();
+        });
+    }
+
+    // Auto-suggest name if field is empty on focus
+    const nameField = document.getElementById('sprintName');
+    if (nameField) {
+        nameField.addEventListener('focus', function() {
+            if (!this.value) {
+                suggestSprintName();
+            }
+        });
+    }
+
+    // Set default start date if empty
+    const startDateInput = document.getElementById('sprintStartDate');
+    if (startDateInput && !startDateInput.value) {
+        const today = new Date();
+        const day = today.getDay();
+        const daysUntilMonday = day === 0 ? 1 : day === 1 ? 0 : 8 - day;
+        today.setDate(today.getDate() + daysUntilMonday);
+        startDateInput.value = today.toISOString().split('T')[0];
+    }
+});
+
+// Make functions globally available for inline event handlers
+window.handleDurationChange = handleDurationChange;
+window.handleStartDateChange = handleStartDateChange;
+window.syncDurationFromDates = syncDurationFromDates;
+window.validateSprintForm = validateSprintForm;
+</script>
+
 <script src="{% static 'scrum/js/sprint_modal.js' %}"></script>

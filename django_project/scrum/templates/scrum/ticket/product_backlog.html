@@ -10,6 +10,27 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <style>
+    /* Styles généraux */
+    .backlog-layout {
+        display: flex;
+        gap: 24px;
+        width: 100%;
+    }
+
+    .backlog-main {
+        flex: 1;
+        min-width: 0;
+        overflow-x: auto;
+    }
+
+    .backlog-container {
+        padding: 24px;
+        background: #f4f5f7;
+        min-height: calc(100vh - 65px);
+        width: 100%;
+    }
+
+    /* Drag and drop */
     .drag-ticket-card { cursor: grab; }
     .drag-ticket-card.dragging,
     .backlog-draggable-row.dragging {
@@ -27,14 +48,616 @@
     .backlog-draggable-row {
         cursor: grab;
     }
+
+    /* Boutons améliorés */
+    .spt-action-btn {
+        transition: all 0.2s cubic-bezier(0.2, 0, 0, 1) !important;
+        border-radius: 6px !important;
+        font-weight: 600 !important;
+    }
+    .spt-action-btn:hover {
+        transform: translateY(-1px) !important;
+        box-shadow: 0 3px 10px rgba(0,0,0,.18) !important;
+    }
+    .spt-action-btn:active { transform: scale(.97) !important; }
+
+    .spt-action-btn--complete {
+        background: #de350b !important;
+        color: white !important;
+        border: none !important;
+    }
+    .spt-action-btn--complete:hover {
+        background: #b32d0a !important;
+        box-shadow: 0 3px 10px rgba(222, 53, 11, 0.3) !important;
+    }
+
+    .bqf-btn {
+        transition: all 0.2s;
+        border-radius: 6px;
+        font-weight: 500;
+    }
+    .bqf-btn:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,.12);
+        transform: translateY(-1px);
+    }
+    .bqf-btn:active { transform: scale(.97); }
+
+    .epic-panel-create-btn, .epic-panel-btn {
+        transition: all 0.2s;
+        border-radius: 6px;
+    }
+    .epic-panel-create-btn:hover {
+        box-shadow: 0 2px 8px rgba(0,0,0,.12);
+        transform: translateY(-1px);
+    }
+    .epic-panel-create-btn:active { transform: scale(.97); }
+
+    .btn-clear-filters {
+        transition: all 0.2s;
+        border-radius: 6px;
+    }
+    .btn-clear-filters:hover {
+        box-shadow: 0 2px 6px rgba(0,0,0,.10);
+        transform: translateY(-1px);
+    }
+    .btn-clear-filters:active { transform: scale(.97); }
+
+    /* Section Sprints */
+    .sprints-section {
+        margin-bottom: 32px;
+        width: 100%;
+    }
+
+    .sprints-section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .sprints-section-header h2 {
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: #172b4d;
+        margin: 0;
+    }
+
+    /* Sprint block */
+    .sprint-table-block {
+        background: white;
+        border-radius: 12px;
+        margin-bottom: 16px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        overflow: hidden;
+        border: 1px solid #e9e9e9;
+    }
+
+    .spt-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 16px 20px;
+        background: #fafbfc;
+        cursor: pointer;
+        transition: background 0.2s;
+    }
+
+    .spt-header:hover {
+        background: #f4f5f7;
+    }
+
+    .spt-header-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-wrap: wrap;
+    }
+
+    .spt-chevron {
+        transition: transform 0.2s;
+    }
+    .spt-chevron.collapsed {
+        transform: rotate(-90deg);
+    }
+
+    .spt-name {
+        font-size: 16px;
+        font-weight: 600;
+        color: #172b4d;
+    }
+
+    .spt-count {
+        font-size: 12px;
+        color: #6b778c;
+        background: #f0f0f0;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .spt-badge--active {
+        background: #e3fcef;
+        color: #006644;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 2px 8px;
+        border-radius: 20px;
+    }
+
+    .spt-status-dots {
+        display: flex;
+        gap: 6px;
+    }
+    .spt-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+    }
+    .spt-dot--todo { background: #dfe1e6; }
+    .spt-dot--inprogress { background: #0052cc; }
+    .spt-dot--done { background: #36b37e; }
+
+    .spt-header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .spt-action-btn {
+        padding: 6px 14px;
+        font-size: 12px;
+        font-weight: 600;
+        background: #0052cc;
+        color: white;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+    }
+
+    .spt-more-btn {
+        background: transparent;
+        border: none;
+        color: #6b778c;
+        cursor: pointer;
+        padding: 6px;
+        border-radius: 4px;
+    }
+    .spt-more-btn:hover {
+        background: #f0f0f0;
+        color: #172b4d;
+    }
+
+    .spt-dropdown {
+        display: none;
+        position: absolute;
+        background: white;
+        border: 1px solid #e9e9e9;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        min-width: 160px;
+        z-index: 100;
+    }
+    .spt-dropdown.show {
+        display: block;
+    }
+    .spt-dropdown-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 16px;
+        width: 100%;
+        border: none;
+        background: transparent;
+        cursor: pointer;
+        font-size: 13px;
+        color: #172b4d;
+        transition: background 0.2s;
+    }
+    .spt-dropdown-item:hover {
+        background: #f4f5f7;
+    }
+    .spt-dropdown-item--danger {
+        color: #de350b;
+    }
+
+    .spt-subinfo {
+        padding: 8px 20px 12px;
+        background: #fff;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        flex-wrap: wrap;
+        font-size: 12px;
+        color: #6b778c;
+    }
+    .spt-subinfo.collapsed {
+        display: none;
+    }
+
+    .spt-avatars {
+        display: flex;
+        align-items: center;
+    }
+    .spt-avatar {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: #0052cc;
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: -6px;
+        border: 2px solid white;
+    }
+    .spt-avatar:first-child {
+        margin-left: 0;
+    }
+    .spt-avatar img {
+        width: 100%;
+        height: 100%;
+        border-radius: 50%;
+        object-fit: cover;
+    }
+    .spt-avatar--sm {
+        width: 24px;
+        height: 24px;
+        font-size: 9px;
+    }
+    .spt-avatar--more {
+        background: #f0f0f0;
+        color: #6b778c;
+    }
+
+    .spt-body {
+        padding: 12px 16px;
+        background: #fff;
+        border-top: 1px solid #f0f0f0;
+    }
+    .spt-body.collapsed {
+        display: none;
+    }
+
+    .spt-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px 12px;
+        background: #fafbfc;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        transition: background 0.2s;
+    }
+    .spt-row:hover {
+        background: #f4f5f7;
+    }
+
+    .spt-row-left {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex: 1;
+    }
+    .drag-handle {
+        cursor: grab;
+        color: #6b778c;
+    }
+    .spt-ticket-key {
+        color: #0052cc;
+        font-weight: 600;
+        font-size: 12px;
+        text-decoration: none;
+    }
+    .spt-ticket-title {
+        font-size: 13px;
+        color: #172b4d;
+    }
+
+    .spt-row-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .spt-points {
+        background: #f0f0f0;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: 600;
+    }
+    .spt-remove-btn {
+        background: transparent;
+        border: none;
+        color: #de350b;
+        cursor: pointer;
+        padding: 4px;
+        border-radius: 4px;
+    }
+    .spt-remove-btn:hover {
+        background: #ffebe6;
+    }
+
+    .spt-empty {
+        text-align: center;
+        padding: 40px;
+        color: #6b778c;
+    }
+
+    .spt-no-sprints {
+        text-align: center;
+        padding: 40px;
+        background: white;
+        border-radius: 12px;
+        color: #6b778c;
+    }
+
+    /* Backlog section */
+    .backlog-section {
+        background: white;
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        border: 1px solid #e9e9e9;
+    }
+
+    .backlog-header {
+        padding: 16px 20px;
+        background: #fafbfc;
+        border-bottom: 1px solid #e9e9e9;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .backlog-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+
+    .backlog-title h2 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 700;
+        color: #172b4d;
+    }
+
+    .backlog-count {
+        padding: 4px 10px;
+        background: #e9e9e9;
+        border-radius: 20px;
+        font-size: 12px;
+        color: #42526e;
+        font-weight: 500;
+    }
+
+    /* Table */
+    .table-container {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    table {
+        width: 100%;
+        min-width: 1000px;
+        border-collapse: collapse;
+        font-size: 13px;
+    }
+
+    thead {
+        background: #fafbfc;
+        border-bottom: 2px solid #e9e9e9;
+    }
+
+    th {
+        padding: 14px 12px;
+        text-align: left;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: #6b778c;
+        white-space: nowrap;
+    }
+
+    td {
+        padding: 12px 12px;
+        border-bottom: 1px solid #f0f0f0;
+        color: #172b4d;
+        vertical-align: middle;
+    }
+
+    tr:hover td {
+        background: #f8f9fa;
+    }
+
+    /* Boutons */
+    .btn-dark {
+        background: #172b4d;
+        color: white;
+        border: none;
+        padding: 8px 16px;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .btn-dark:hover {
+        background: #0c1a2f;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .btn-dark:active {
+        transform: scale(0.98);
+    }
+
+    .filter-select {
+        padding: 8px 12px;
+        border: 1px solid #dfe1e6;
+        border-radius: 8px;
+        font-size: 13px;
+        background: white;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .filter-select:hover {
+        border-color: #0052cc;
+    }
+    .filter-select:focus {
+        outline: none;
+        border-color: #0052cc;
+        box-shadow: 0 0 0 2px rgba(0,82,204,0.15);
+    }
+
+    .btn-clear-filters {
+        padding: 8px 14px;
+        background: #ffebe6;
+        color: #de350b;
+        border: 1px solid #ffbdad;
+        border-radius: 8px;
+        font-size: 13px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.2s;
+    }
+    .btn-clear-filters:hover {
+        background: #ffbdad;
+        transform: translateY(-1px);
+        text-decoration: none;
+        color: #de350b;
+    }
+
+    /* Disabled button style */
+    .spt-action-btn.disabled,
+    .spt-action-btn:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        transform: none !important;
+    }
+
+    /* Modal de confirmation pour clôture de sprint */
+.sprint-complete-confirm-modal {
+    max-width: 460px;
+}
+
+.sprint-complete-confirm-modal .modal-content {
+    border-radius: 12px;
+    border: none;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.15);
+}
+
+.sprint-complete-confirm-modal .modal-header {
+    padding: 20px 24px 0 24px;
+    border-bottom: none;
+}
+
+.sprint-complete-confirm-modal .modal-body {
+    padding: 16px 24px;
+}
+
+.sprint-complete-confirm-modal .modal-footer {
+    padding: 0 24px 20px 24px;
+    border-top: none;
+    gap: 10px;
+}
+
+.sprint-complete-stats {
+    background: #f4f5f7;
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    display: flex;
+    justify-content: space-around;
+}
+
+.sprint-complete-stat {
+    text-align: center;
+}
+
+.sprint-complete-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.sprint-complete-stat-value.todo { color: #6b778c; }
+.sprint-complete-stat-value.progress { color: #0052cc; }
+.sprint-complete-stat-value.done { color: #36b37e; }
+
+.sprint-complete-stat-label {
+    font-size: 11px;
+    color: #6b778c;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.sprint-complete-warning {
+    background: #fffae6;
+    border-left: 3px solid #ff8b00;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #7a6200;
+}
+
+.sprint-complete-success {
+    background: #e3fcef;
+    border-left: 3px solid #36b37e;
+    padding: 12px 16px;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: #006644;
+}
+
+.sprint-complete-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.sprint-complete-icon.warning {
+    background: #ffebe6;
+}
+.sprint-complete-icon.warning i {
+    color: #de350b;
+    font-size: 18px;
+}
+
+.sprint-complete-icon.success {
+    background: #e3fcef;
+}
+.sprint-complete-icon.success i {
+    color: #36b37e;
+    font-size: 18px;
+}
+
+.sprint-complete-icon.info {
+    background: #deebff;
+}
+.sprint-complete-icon.info i {
+    color: #0052cc;
+    font-size: 18px;
+}
 </style>
 
 <h1 class="page-title">Product Backlog</h1>
 
 <div class="backlog-quick-filters">
     <span class="bqf-label">Quick Filters:</span>
-    <button class="bqf-btn" onclick="applyQuickFilter('mine')">Only My Issues</button>
-    <button class="bqf-btn" onclick="applyQuickFilter('recent')">Recently Updated</button>
+    <button class="bqf-btn" onclick="window.applyQuickFilter('mine')">Only My Issues</button>
+    <button class="bqf-btn" onclick="window.applyQuickFilter('recent')">Recently Updated</button>
 </div>
 
 <hr>
@@ -45,7 +668,6 @@
 
     <div class="epic-panel {% if filter_epic %}open{% endif %}" id="epicPanel">
         <div class="epic-panel-inner">
-
             <div class="epic-panel-header">
                 <span class="epic-panel-title">Epics</span>
                 <div class="epic-panel-header-actions">
@@ -55,14 +677,10 @@
                     <button class="epic-panel-btn" title="Close" onclick="toggleEpicPanel()"><i class="fas fa-times"></i></button>
                 </div>
             </div>
-
             <div class="epic-panel-body">
-
                 <a href="{% url 'product-backlog' project.pk %}" class="epic-all-row {% if not filter_epic %}active{% endif %}">All issues</a>
-
                 {% for epic in epics %}
                 <div class="epic-item" id="epic-item-{{ epic.pk }}" data-epic-index="{{ forloop.counter0 }}">
-
                     <div class="epic-item-header {% if filter_epic == epic.pk|stringformat:'s' %}active{% endif %}" id="epic-header-{{ epic.pk }}" onclick="handleEpicClick(event, {{ epic.pk }}, '{% url 'product-backlog' project.pk %}?epic={{ epic.pk }}')">
                         <span class="epic-item-chevron {% if filter_epic == epic.pk|stringformat:'s' %}open{% endif %}" id="epic-chev-{{ epic.pk }}">
                             <i class="fas fa-chevron-right"></i>
@@ -74,11 +692,9 @@
                         </button>
                         {% endif %}
                     </div>
-
                     <div class="epic-item-progress">
                         <div class="epic-item-progress-fill" id="epic-fill-{{ epic.pk }}"></div>
                     </div>
-
                     {% if can_create %}
                     <div class="epic-item-dropdown" id="epic-menu-{{ epic.pk }}">
                         <a href="?epic={{ epic.pk }}" class="epic-dd-item" onclick="event.stopPropagation();">
@@ -94,7 +710,6 @@
                         </button>
                     </div>
                     {% endif %}
-
                     <div class="epic-item-body {% if filter_epic == epic.pk|stringformat:'s' %}open{% endif %}" id="epic-body-{{ epic.pk }}">
                         <a href="#" class="epic-item-link" onclick="openTicketDrawer({{ epic.pk }}, '{% url 'ticket-detail' project.pk epic.pk %}?drawer=1'); return false;">
                             {{ project.code }}-{{ epic.pk }} {{ epic.title|truncatechars:28 }}
@@ -121,16 +736,12 @@
                         </button>
                         {% endif %}
                     </div>
-
                 </div>
                 {% empty %}
                 <p class="epic-empty-msg">No epics yet.</p>
                 {% endfor %}
-
                 <a href="{% url 'product-backlog' project.pk %}?no_epic=1" class="epic-no-epic-row">Issues without epics</a>
-
             </div>
-
             {% if can_create %}
             <div class="epic-panel-footer">
                 <button class="epic-panel-create-btn" onclick="openCreateModalAsEpic()">
@@ -138,7 +749,6 @@
                 </button>
             </div>
             {% endif %}
-
         </div>
     </div>
 
@@ -149,7 +759,7 @@
                 <div class="sprints-section-header">
                     <h2>Sprints</h2>
                     {% if can_create %}
-                    <button class="btn btn-dark" data-toggle="modal" data-target="#createSprintModal">
+                    <button class="btn-dark" data-toggle="modal" data-target="#createSprintModal">
                         <i class="fas fa-plus mr-1"></i> Create Sprint
                     </button>
                     {% endif %}
@@ -158,7 +768,6 @@
                 {% for sprint in sprints %}
                 {% if sprint.status != 'completed' and sprint.status != 'closed' %}
                 <div class="sprint-table-block" id="sprint-block-{{ sprint.pk }}">
-
                     <div class="spt-header" onclick="toggleSprint({{ sprint.pk }})">
                         <div class="spt-header-left">
                             <span class="spt-chevron" id="chevron-{{ sprint.pk }}"><i class="fas fa-chevron-down"></i></span>
@@ -176,14 +785,23 @@
                         <div class="spt-header-right" onclick="event.stopPropagation()">
                             {% if can_create %}
                             {% if sprint.status == 'planned' %}
-                            <button type="button" class="spt-action-btn" onclick="handleStartSprint({{ sprint.pk }}, '{{ sprint.goals|escapejs }}', '{% url 'sprint-start' project.pk sprint.pk %}')">
-                                Start sprint
-                            </button>
+                                {% if active_sprint %}
+                                    <button type="button" class="spt-action-btn disabled" disabled title="An active sprint already exists">
+                                        Start sprint
+                                    </button>
+                                {% else %}
+                                    <button type="button" class="spt-action-btn" onclick="handleStartSprint({{ sprint.pk }}, '{{ sprint.goals|escapejs }}', '{% url 'sprint-start' project.pk sprint.pk %}')">
+                                        Start sprint
+                                    </button>
+                                {% endif %}
                             {% elif sprint.status == 'active' %}
-                            <form method="POST" action="{% url 'sprint-complete' project.pk sprint.pk %}" style="display:inline;">
-                                {% csrf_token %}
-                                <button type="submit" class="spt-action-btn spt-action-btn--complete">Complete sprint</button>
-                            </form>
+                                <form method="POST" action="{% url 'sprint-complete' project.pk sprint.pk %}" style="display:inline;" id="complete-sprint-form-{{ sprint.pk }}">
+                                    {% csrf_token %}
+                                    <button type="button" class="spt-action-btn spt-action-btn--complete"
+                                            onclick="confirmCompleteSprintFromBacklog({{ sprint.pk }}, '{{ sprint.name|escapejs }}', document.getElementById('complete-sprint-form-{{ sprint.pk }}'))">
+                                        Complete sprint
+                                    </button>
+                                </form>
                             {% endif %}
                             {% endif %}
                             <div class="spt-more-menu">
@@ -225,10 +843,7 @@
                         {% if sprint.goals %}<span class="spt-goal">{{ sprint.goals }}</span>{% endif %}
                     </div>
 
-                    <div class="spt-body sprint-dropzone"
-                         id="spt-body-{{ sprint.pk }}"
-                         data-sprint-id="{{ sprint.pk }}"
-                         data-target="sprint">
+                    <div class="spt-body sprint-dropzone collapsed" id="spt-body-{{ sprint.pk }}" data-sprint-id="{{ sprint.pk }}" data-target="sprint">
                         <div class="spt-dropzone-inner" data-sprint-id="{{ sprint.pk }}">
                         {% with sprint_links=sprint.ordered_links %}
                         {% if sprint_links %}
@@ -259,7 +874,7 @@
                             </div>
                             <div class="spt-row-right">
                                 {% if ticket.parent %}
-                                <span class="spt-epic-tag" style="background:#eae6ff;color:#5243aa;">
+                                <span class="spt-epic-tag" style="background:#eae6ff;color:#5243aa;padding:2px 8px;border-radius:12px;font-size:10px;">
                                     <i class="fas fa-bolt" style="font-size:9px;"></i> {{ ticket.parent.title|truncatechars:14 }}
                                 </span>
                                 {% endif %}
@@ -284,7 +899,6 @@
                         {% endwith %}
                         </div>
                     </div>
-
                 </div>
                 {% endif %}
                 {% empty %}
@@ -300,8 +914,9 @@
                     </div>
                     <div class="backlog-actions">
                         {% if can_create %}
-                        <button class="btn btn-dark" id="createIssueBtn" data-toggle="modal" data-target="#globalCreateTicketModal" {% if filter_epic %}data-epic-id="{{ filter_epic }}" data-epic-title="{% for e in epics %}{% if e.pk|stringformat:'s' == filter_epic %}{{ e.title|escapejs }}{% endif %}{% endfor %}"{% endif %}>
-                            Create Issue
+                        <button class="btn-dark" id="createIssueBtn" data-toggle="modal" data-target="#globalCreateTicketModal"
+                                {% if filter_epic %}data-epic-id="{{ filter_epic }}" data-epic-title="{% for e in epics %}{% if e.pk|stringformat:'s' == filter_epic %}{{ e.title|escapejs }}{% endif %}{% endfor %}"{% endif %}>
+                            <i class="fas fa-plus mr-1"></i> Create Issue
                         </button>
                         {% endif %}
                     </div>
@@ -356,6 +971,7 @@
                     <table>
                         <thead>
                             <tr>
+                                <th class="drag-handle"></th>
                                 <th style="width:40px;"></th>
                                 <th style="width:40px;"></th>
                                 <th>Type</th>
@@ -514,8 +1130,8 @@
                 <div id="mts-sprint-list">
                     {% for sprint in sprints %}
                     {% if sprint.status != 'completed' and sprint.status != 'closed' %}
-                    <button type="button" class="mts-sprint-btn" data-sprint-id="{{ sprint.pk }}" onclick="addTicketToSprint(currentMtsTicketId, {{ sprint.pk }})"
->                        <span class="mts-sprint-name">{{ sprint.name }}</span>
+                    <button type="button" class="mts-sprint-btn" data-sprint-id="{{ sprint.pk }}" onclick="addTicketToSprint(currentMtsTicketId, {{ sprint.pk }})">
+                        <span class="mts-sprint-name">{{ sprint.name }}</span>
                         <span class="mts-sprint-count">{{ sprint.total_issues }} issues</span>
                         {% if sprint.status == 'active' %}<span class="mts-sprint-badge">ACTIVE</span>{% endif %}
                     </button>
@@ -546,6 +1162,52 @@
     </div>
 </div>
 
+<!-- Modal de confirmation pour compléter un sprint (Backlog) -->
+<div class="modal fade" id="backlogCompleteSprintModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered sprint-complete-confirm-modal">
+        <div class="modal-content">
+            <div class="modal-header" style="border-bottom: none; padding: 20px 24px 0 24px;">
+                <div class="d-flex align-items-center gap-3">
+                    <div class="sprint-complete-icon warning" id="backlogConfirmIcon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <h5 class="modal-title fw-bold" id="backlogConfirmTitle" style="color:#172b4d; margin:0;">Complete Sprint?</h5>
+                </div>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close" style="background: none; border: none; font-size: 24px;">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body" style="padding: 16px 24px;">
+                <p id="backlogConfirmMessage" style="color: #42526e; font-size: 14px; margin-bottom: 8px;"></p>
+
+                <div class="sprint-complete-stats" id="backlogConfirmStats" style="display: none;">
+                    <div class="sprint-complete-stat">
+                        <div class="sprint-complete-stat-value todo" id="backlogStatTodo">0</div>
+                        <div class="sprint-complete-stat-label">To Do</div>
+                    </div>
+                    <div class="sprint-complete-stat">
+                        <div class="sprint-complete-stat-value progress" id="backlogStatProgress">0</div>
+                        <div class="sprint-complete-stat-label">In Progress</div>
+                    </div>
+                    <div class="sprint-complete-stat">
+                        <div class="sprint-complete-stat-value done" id="backlogStatDone">0</div>
+                        <div class="sprint-complete-stat-label">Done</div>
+                    </div>
+                </div>
+
+                <div id="backlogConfirmWarning" class="sprint-complete-warning">
+                    <i class="fas fa-info-circle"></i>
+                    <span id="backlogWarningText">This action cannot be undone.</span>
+                </div>
+            </div>
+            <div class="modal-footer" style="border-top: none; padding: 0 24px 20px 24px; gap: 10px;">
+                <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" id="backlogConfirmCompleteBtn">Complete Sprint</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% include 'scrum/sprint/_sprint_modal.html' %}
 {% include 'scrum/global/confirm_delete_modal.html' %}
 
@@ -556,285 +1218,317 @@
 <script src="{% static 'scrum/js/backlog_epic.js' %}"></script>
 
 <script>
+// Variables globales
 var TICKET_CREATE_URL = "{% url 'ticket-quick-create' project.pk %}";
-var PROJECT_PK        = {{ project.pk }};
-var CSRF_TOKEN        = "{{ csrf_token }}";
-</script>
+var PROJECT_PK = {{ project.pk }};
+var CSRF_TOKEN = "{{ csrf_token }}";
+var ACTIVE_SPRINT_EXISTS = {% if active_sprint %}true{% else %}false{% endif %};
 
+// S'assurer que window.currentUsername est défini pour les filtres
+window.currentUsername = "{{ request.user.username }}";
 
-<script>
+// Redéfinir applyQuickFilter pour le backlog (corrige l'erreur des .kanban-card)
+window.applyQuickFilter = function(filterName) {
+    const rows = document.querySelectorAll('#backlog-tbody .backlog-draggable-row');
+    const currentUser = window.currentUsername || '';
+    const now = Math.floor(Date.now() / 1000);
 
-    document.addEventListener('DOMContentLoaded', function() {
-        document.querySelectorAll('.sprint-table-block').forEach(function(block) {
-            var sprintId = block.id.replace('sprint-block-', '');
-            var saved = localStorage.getItem('sprint_' + sprintId);
-            console.log('Sprint', sprintId, '→', saved); // debug
-
-            if (saved === 'closed') {
-                var body    = document.getElementById('spt-body-' + sprintId);
-                var subinfo = document.getElementById('subinfo-' + sprintId);
-                var chevron = document.getElementById('chevron-' + sprintId);
-                if (body)    body.classList.add('collapsed');
-                if (subinfo) subinfo.classList.add('collapsed');
-                if (chevron) chevron.classList.add('collapsed');
+    rows.forEach(row => {
+        let visible = true;
+        if (filterName === 'mine') {
+            const assigneeElem = row.querySelector('.assignee .avatar');
+            const assigneeTitle = assigneeElem ? assigneeElem.getAttribute('title') || '' : '';
+            visible = assigneeTitle === currentUser;
+        } else if (filterName === 'recent') {
+            const updated = row.dataset.updated;
+            if (updated) {
+                visible = (now - Number(updated)) < 7 * 24 * 3600;
             }
-        });
+        }
+        row.style.display = visible ? '' : 'none';
     });
+};
+
+// Restaurer l'état des sprints au chargement
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.sprint-table-block').forEach(function(block) {
+        var sprintId = block.id.replace('sprint-block-', '');
+        var saved = localStorage.getItem('sprint_' + sprintId);
+        if (saved === 'closed') {
+            var body = document.getElementById('spt-body-' + sprintId);
+            var subinfo = document.getElementById('subinfo-' + sprintId);
+            var chevron = document.getElementById('chevron-' + sprintId);
+            if (body) body.classList.add('collapsed');
+            if (subinfo) subinfo.classList.add('collapsed');
+            if (chevron) chevron.classList.add('collapsed');
+        }
+    });
+});
+
 function getCookie(name) {
     const value = `; ${document.cookie}`;
     const parts = value.split(`; ${name}=`);
     if (parts.length === 2) return parts.pop().split(';').shift();
 }
 
-(function () {
-    let draggedElement = null;
+// SCRIPT DRAG AND DROP SIMPLE - Version de secours
+(function() {
+    console.log('DnD script loaded');
 
+    let draggedItem = null;
+
+    // 1. Rendre les lignes du backlog draggables
+    function makeBacklogRowsDraggable() {
+        document.querySelectorAll('#backlog-tbody .backlog-draggable-row').forEach(function(row) {
+            if (row.getAttribute('data-dnd-initialized') === 'true') return;
+            row.setAttribute('draggable', 'true');
+            row.setAttribute('data-dnd-initialized', 'true');
+
+            row.addEventListener('dragstart', function(e) {
+                draggedItem = this;
+                this.style.opacity = '0.5';
+                e.dataTransfer.setData('text/plain', this.dataset.ticketId);
+                e.dataTransfer.effectAllowed = 'move';
+                console.log('Drag start:', this.dataset.ticketId);
+            });
+
+            row.addEventListener('dragend', function(e) {
+                this.style.opacity = '';
+                draggedItem = null;
+                console.log('Drag end');
+            });
+        });
+    }
+
+    // 2. Rendre les sprints droppables
+    function makeSprintsDroppable() {
+        document.querySelectorAll('.sprint-dropzone').forEach(function(zone) {
+            if (zone.getAttribute('data-drop-initialized') === 'true') return;
+            zone.setAttribute('data-drop-initialized', 'true');
+
+            zone.addEventListener('dragover', function(e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = 'move';
+                this.classList.add('drag-over');
+            });
+
+            zone.addEventListener('dragleave', function(e) {
+                this.classList.remove('drag-over');
+            });
+
+            zone.addEventListener('drop', function(e) {
+                e.preventDefault();
+                this.classList.remove('drag-over');
+
+                if (!draggedItem) return;
+
+                const ticketId = draggedItem.dataset.ticketId;
+                const sprintId = this.dataset.sprintId;
+
+                if (!ticketId || !sprintId) {
+                    console.error('Missing ticketId or sprintId');
+                    return;
+                }
+
+                console.log('Drop: ticket', ticketId, 'to sprint', sprintId);
+
+                // Ajouter le ticket au sprint via AJAX
+                const formData = new URLSearchParams();
+                formData.append('sprint_id', sprintId);
+
+                fetch(`/projects/${PROJECT_PK}/tickets/${ticketId}/add-to-sprint/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': getCookie('csrftoken'),
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: formData.toString(),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Déplacer l'élément dans le DOM
+                        const inner = this.querySelector('.spt-dropzone-inner') || this;
+                        inner.appendChild(draggedItem);
+                        draggedItem.style.opacity = '';
+                        draggedItem.dataset.dragOrigin = 'sprint';
+                        draggedItem.dataset.sprintId = sprintId;
+
+                        // Supprimer le message vide si présent
+                        const emptyMsg = inner.querySelector('.spt-empty');
+                        if (emptyMsg) emptyMsg.remove();
+
+                        // Rafraîchir le compteur
+                        const countSpan = this.closest('.sprint-table-block').querySelector('.spt-count');
+                        if (countSpan) {
+                            let count = parseInt(countSpan.textContent) || 0;
+                            countSpan.textContent = (count + 1) + ' issue' + (count + 1 !== 1 ? 's' : '');
+                        }
+
+                        // Rafraîchir l'état du backlog
+                        const backlogRows = document.querySelectorAll('#backlog-tbody .backlog-draggable-row');
+                        if (backlogRows.length === 0) {
+                            const tbody = document.getElementById('backlog-tbody');
+                            const emptyRow = document.createElement('tr');
+                            emptyRow.innerHTML = '<td colspan="11" class="empty-state"><i class="fas fa-clipboard-list"></i><p>No issues in backlog</p></td>';
+                            tbody.appendChild(emptyRow);
+                        }
+                    } else {
+                        alert(data.error || 'Unable to move ticket');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Network error');
+                });
+            });
+        });
+    }
+
+    // Fonction pour récupérer le CSRF token
     function getCookie(name) {
-        const value = `; ${document.cookie}`;
-        const parts = value.split(`; ${name}=`);
+        let value = `; ${document.cookie}`;
+        let parts = value.split(`; ${name}=`);
         if (parts.length === 2) return parts.pop().split(';').shift();
         return '';
     }
 
-    function getDragItems(container) {
-        return Array.from(container.querySelectorAll('.drag-ticket-card, .backlog-draggable-row'));
+    // Initialiser
+    function initDragAndDrop() {
+        makeBacklogRowsDraggable();
+        makeSprintsDroppable();
     }
 
-    function getInsertAfterElement(container, y) {
-        const elements = getDragItems(container).filter(el => el !== draggedElement);
-        let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+    // Exécuter au chargement
+    initDragAndDrop();
 
-        elements.forEach(el => {
-            const box = el.getBoundingClientRect();
-            const offset = y - box.top - box.height / 2;
-            if (offset < 0 && offset > closest.offset) {
-                closest = { offset, element: el };
-            }
-        });
+    // Observer les changements
+    const observer = new MutationObserver(function() {
+        makeBacklogRowsDraggable();
+        makeSprintsDroppable();
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
 
-        return closest.element;
-    }
-
-    function insertDraggedElement(container, y) {
-        if (!draggedElement) return;
-        const afterElement = getInsertAfterElement(container, y);
-        if (afterElement) {
-            container.insertBefore(draggedElement, afterElement);
-        } else {
-            container.appendChild(draggedElement);
-        }
-    }
-
-    function refreshSprintEmptyState(sprintBody) {
-        if (!sprintBody) return;
-        const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
-        const rows = inner.querySelectorAll('.drag-ticket-card');
-        const empty = inner.querySelector('.spt-empty');
-
-        if (rows.length === 0) {
-            if (!empty) {
-                const block = document.createElement('div');
-                block.className = 'spt-empty';
-                block.innerHTML = '<p>Plan your sprint. Drag and drop issues from the backlog below.</p>';
-                inner.appendChild(block);
-            }
-        } else if (empty) {
-            empty.remove();
-        }
-    }
-
-    function refreshBacklogEmptyState() {
-        const tbody = document.getElementById('backlog-tbody');
-        if (!tbody) return;
-        const rows = Array.from(tbody.querySelectorAll('.backlog-draggable-row'));
-        const empty = tbody.querySelector('.empty-state')?.closest('tr');
-        if (rows.length === 0) {
-            if (!empty) {
-                const tr = document.createElement('tr');
-                tr.innerHTML = '<td colspan="11" class="empty-state"><i class="fas fa-clipboard-list"></i><p>No issues in backlog</p></td>';
-                tbody.insertBefore(tr, document.getElementById('createIssueTriggerRow'));
-            }
-        } else if (empty) {
-            empty.remove();
-        }
-    }
-
-    async function syncSprintOrder(sprintId, sprintBody) {
-        if (!sprintId || !sprintBody) return;
-        const orderedTicketIds = Array.from((sprintBody.querySelector('.spt-dropzone-inner') || sprintBody).querySelectorAll('.drag-ticket-card'))
-            .map(el => el.dataset.ticketId);
-
-        const formData = new URLSearchParams();
-        orderedTicketIds.forEach(id => formData.append('ordered_ticket_ids[]', id));
-
-        const response = await fetch(`{% url 'sprint-ticket-reorder' project.pk 0 %}`.replace('/0/', `/${sprintId}/`), {
-            method: 'POST',
-            headers: {
-                'X-CSRFToken': getCookie('csrftoken'),
-                'X-Requested-With': 'XMLHttpRequest',
-                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-            },
-            body: formData.toString(),
-        });
-
-        const data = await response.json();
-        if (!data.success) {
-            throw new Error(data.error || 'Unable to reorder sprint backlog.');
-        }
-    }
-
-    function moveRowToBacklog(tbody, element) {
-        tbody.insertBefore(element, document.getElementById('createIssueTriggerRow'));
-        element.dataset.dragOrigin = 'backlog';
-        delete element.dataset.sprintId;
-    }
-
-    function moveCardToSprint(sprintBody, element, y) {
-        const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
-        const empty = inner.querySelector('.spt-empty');
-        if (empty) empty.remove();
-        insertDraggedElement(inner, y);
-        element.dataset.dragOrigin = 'sprint';
-        element.dataset.sprintId = sprintBody.dataset.sprintId;
-    }
-
-    function attachDnD() {
-        document.querySelectorAll('.drag-ticket-card, .backlog-draggable-row').forEach(el => {
-            el.addEventListener('dragstart', () => {
-                draggedElement = el;
-                el.classList.add('dragging');
-            });
-
-            el.addEventListener('dragend', () => {
-                el.classList.remove('dragging');
-                draggedElement = null;
-            });
-        });
-
-        document.querySelectorAll('.sprint-dropzone, #backlog-tbody').forEach(zone => {
-            zone.addEventListener('dragover', (e) => {
-                e.preventDefault();
-                zone.classList.add('drag-over');
-                if (!draggedElement) return;
-
-                if (zone.dataset.target === 'sprint' && draggedElement.classList.contains('drag-ticket-card')) {
-                    insertDraggedElement(zone.querySelector('.spt-dropzone-inner') || zone, e.clientY);
-                }
-                if (zone.dataset.target === 'backlog' && draggedElement.classList.contains('backlog-draggable-row')) {
-                    const after = getInsertAfterElement(zone, e.clientY);
-                    if (after) {
-                        zone.insertBefore(draggedElement, after);
-                    } else {
-                        zone.insertBefore(draggedElement, document.getElementById('createIssueTriggerRow'));
-                    }
-                }
-            });
-
-            zone.addEventListener('dragleave', () => {
-                zone.classList.remove('drag-over');
-            });
-
-            zone.addEventListener('drop', async (e) => {
-                e.preventDefault();
-                zone.classList.remove('drag-over');
-
-                if (!draggedElement) return;
-
-                const ticketId = draggedElement.dataset.ticketId;
-                const origin = draggedElement.dataset.dragOrigin;
-                const target = zone.dataset.target;
-                const originContainer = draggedElement.parentElement;
-                const originSprintBody = draggedElement.closest('.sprint-dropzone');
-                const originSprintId = draggedElement.dataset.sprintId || '';
-
-                if (!ticketId || !target) return;
-
-                try {
-                    if (target === 'sprint') {
-                        const sprintId = zone.dataset.sprintId;
-                        const url = "{% url 'add-ticket-to-sprint' project.pk 0 %}".replace('/0/', `/${ticketId}/`);
-
-                        moveCardToSprint(zone, draggedElement, e.clientY);
-                        refreshSprintEmptyState(originSprintBody);
-
-                        const formData = new URLSearchParams();
-                        formData.append('sprint_id', sprintId);
-                        if (origin === 'sprint' && originSprintId) {
-                            formData.append('source_sprint_id', originSprintId);
-                        }
-
-                        const response = await fetch(url, {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCookie('csrftoken'),
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                            },
-                            body: formData.toString(),
-                        });
-
-                        const data = await response.json();
-                        if (!data.success) {
-                            if (originContainer) originContainer.appendChild(draggedElement);
-                            refreshSprintEmptyState(zone);
-                            refreshSprintEmptyState(originSprintBody);
-                            throw new Error(data.error || 'Unable to move ticket to sprint.');
-                        }
-
-                        if (origin === 'backlog') {
-                            refreshBacklogEmptyState();
-                        }
-
-                        await syncSprintOrder(sprintId, zone);
-                        if (origin === 'sprint' && originSprintId && originSprintId !== sprintId) {
-                            await syncSprintOrder(originSprintId, originSprintBody);
-                        }
-                    }
-
-                    if (target === 'backlog' && origin === 'sprint') {
-                        const sprintId = originSprintId || zone.dataset.sprintId || "";
-
-                        moveRowToBacklog(zone, draggedElement);
-                        refreshSprintEmptyState(originSprintBody);
-                        refreshBacklogEmptyState();
-
-                        const formData = new URLSearchParams();
-                        formData.append('ticket_id', ticketId);
-                        if (sprintId) {
-                            formData.append('sprint_id', sprintId);
-                        }
-
-                        const response = await fetch("{% url 'ticket-remove-from-sprint' project.pk %}", {
-                            method: 'POST',
-                            headers: {
-                                'X-CSRFToken': getCookie('csrftoken'),
-                                'X-Requested-With': 'XMLHttpRequest',
-                                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
-                            },
-                            body: formData.toString(),
-                        });
-
-                        const data = await response.json();
-                        if (!data.success) {
-                            if (originContainer) originContainer.appendChild(draggedElement);
-                            refreshSprintEmptyState(originSprintBody);
-                            refreshBacklogEmptyState();
-                            throw new Error(data.error || 'Unable to move ticket back to backlog.');
-                        }
-
-                        if (sprintId) {
-                            await syncSprintOrder(sprintId, originSprintBody);
-                        }
-                    }
-                } catch (error) {
-                    alert(error.message || 'An error occurred during drag and drop.');
-                }
-            });
-        });
-    }
-
-    document.addEventListener('DOMContentLoaded', attachDnD);
+    console.log('Drag and drop initialized');
 })();
+
+// Fonction pour compléter un sprint depuis le backlog avec vérification des tickets
+window.confirmCompleteSprintFromBacklog = function(sprintId, sprintName, formElement) {
+    console.log('confirmCompleteSprintFromBacklog called', sprintId, sprintName);
+
+    // Récupérer les statistiques du sprint depuis le DOM
+    const sprintBlock = document.getElementById(`sprint-block-${sprintId}`);
+    if (!sprintBlock) {
+        console.error('Sprint block not found');
+        return;
+    }
+
+    // Récupérer les compteurs depuis les éléments du sprint
+    const todoSpan = sprintBlock.querySelector('.spt-dot--todo');
+    const progressSpan = sprintBlock.querySelector('.spt-dot--inprogress');
+    const doneSpan = sprintBlock.querySelector('.spt-dot--done');
+
+    let todoCount = 0;
+    let progressCount = 0;
+    let doneCount = 0;
+
+    if (todoSpan && todoSpan.parentElement) {
+        const todoText = todoSpan.parentElement.textContent || '';
+        const todoMatch = todoText.match(/(\d+)/);
+        if (todoMatch) todoCount = parseInt(todoMatch[1]);
+    }
+
+    if (progressSpan && progressSpan.parentElement) {
+        const progressText = progressSpan.parentElement.textContent || '';
+        const progressMatch = progressText.match(/(\d+)/);
+        if (progressMatch) progressCount = parseInt(progressMatch[1]);
+    }
+
+    if (doneSpan && doneSpan.parentElement) {
+        const doneText = doneSpan.parentElement.textContent || '';
+        const doneMatch = doneText.match(/(\d+)/);
+        if (doneMatch) doneCount = parseInt(doneMatch[1]);
+    }
+
+    const totalIssues = todoCount + progressCount + doneCount;
+    const hasUnfinished = todoCount > 0 || progressCount > 0;
+
+    const confirmIcon = document.getElementById('backlogConfirmIcon');
+    const confirmTitle = document.getElementById('backlogConfirmTitle');
+    const confirmMessage = document.getElementById('backlogConfirmMessage');
+    const confirmStats = document.getElementById('backlogConfirmStats');
+    const statTodo = document.getElementById('backlogStatTodo');
+    const statProgress = document.getElementById('backlogStatProgress');
+    const statDone = document.getElementById('backlogStatDone');
+    const confirmWarning = document.getElementById('backlogConfirmWarning');
+    const warningText = document.getElementById('backlogWarningText');
+    const confirmBtn = document.getElementById('backlogConfirmCompleteBtn');
+
+    if (!confirmIcon || !confirmTitle) {
+        console.error('Modal elements not found');
+        return;
+    }
+
+    if (hasUnfinished && totalIssues > 0) {
+        confirmIcon.className = 'sprint-complete-icon warning';
+        confirmIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+        confirmTitle.textContent = '⚠️ Unfinished Work Detected';
+        confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> still has unfinished issues.`;
+        confirmWarning.className = 'sprint-complete-warning';
+        warningText.innerHTML = `<strong>${todoCount} To Do</strong> and <strong>${progressCount} In Progress</strong> issue${progressCount !== 1 ? 's' : ''} will remain incomplete.`;
+        confirmBtn.className = 'btn btn-danger';
+        confirmBtn.innerHTML = 'Complete Anyway';
+    } else if (totalIssues === 0) {
+        confirmIcon.className = 'sprint-complete-icon info';
+        confirmIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+        confirmTitle.textContent = 'Complete Empty Sprint?';
+        confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has no issues.`;
+        confirmWarning.className = 'sprint-complete-warning';
+        warningText.innerHTML = 'Completing this sprint will mark it as finished.';
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.innerHTML = 'Complete Sprint';
+    } else {
+        confirmIcon.className = 'sprint-complete-icon success';
+        confirmIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+        confirmTitle.textContent = '🎉 Sprint Complete!';
+        confirmMessage.innerHTML = `All <strong>${doneCount}</strong> issues in sprint <strong>${sprintName}</strong> are done!`;
+        confirmWarning.className = 'sprint-complete-success';
+        warningText.innerHTML = 'Great work, team! Complete this sprint to close it.';
+        confirmBtn.className = 'btn btn-success';
+        confirmBtn.innerHTML = 'Complete Sprint';
+    }
+
+    if (totalIssues > 0) {
+        confirmStats.style.display = 'flex';
+        statTodo.textContent = todoCount;
+        statProgress.textContent = progressCount;
+        statDone.textContent = doneCount;
+    } else {
+        confirmStats.style.display = 'none';
+    }
+
+    // Stocker le formulaire pour la confirmation
+    window.pendingSprintCompleteForm = formElement;
+
+    // Afficher le modal
+    $('#backlogCompleteSprintModal').modal('show');
+};
+
+// Confirmer la complétion du sprint
+$(document).ready(function() {
+    $('#backlogConfirmCompleteBtn').on('click', function() {
+        if (window.pendingSprintCompleteForm) {
+            window.pendingSprintCompleteForm.submit();
+        }
+        $('#backlogCompleteSprintModal').modal('hide');
+    });
+
+    $('#backlogCompleteSprintModal').on('hidden.bs.modal', function() {
+        window.pendingSprintCompleteForm = null;
+    });
+});
+
 </script>
 
 {% endblock project_content %}

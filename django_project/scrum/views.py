@@ -363,30 +363,37 @@ def project_roadmap(request, pk):
 
 
 @login_required
-def project_releases(request, pk):
+def close_sprint(request, pk):
     project = get_object_or_404(Project, pk=pk)
     if not user_can_access_project(request.user, project):
         messages.error(request, "You don't have access to this project.")
         return redirect("project-list")
 
-    sprints = project.sprints.all().order_by('-created_at')
     membership = project.memberships.filter(user=request.user).first()
 
-    for sprint in sprints:
+    # Only show completed/closed sprints for this project
+    closed_sprints = (
+        project.sprints
+        .filter(status__in=["completed", "closed"])
+        .prefetch_related("tickets", "tickets__assignee", "tickets__assignee__profile")
+        .order_by("-end_date", "-created_at")
+    )
+
+    for sprint in closed_sprints:
         tickets = sprint.tickets.all()
-        sprint.total_issues     = tickets.count()
-        sprint.done_count       = tickets.filter(status='done').count()
+        sprint.total_issues          = tickets.count()
+        sprint.done_count            = tickets.filter(status="done").count()
         sprint.completion_percentage = (
             int((sprint.done_count / sprint.total_issues) * 100)
             if sprint.total_issues else 0
         )
 
     context = {
-        "project": project,
-        "membership": membership,
-        "sprints": sprints,
+        "project":       project,
+        "membership":    membership,
+        "closed_sprints": closed_sprints,
     }
-    return render(request, "scrum/project_releases.html", context)
+    return render(request, "scrum/sprint/close_sprint.html", context)
 
 class ProjectListView(LoginRequiredMixin, ListView):
     model = Project
@@ -790,7 +797,7 @@ class TicketListView(LoginRequiredMixin, UserPassesTestMixin, ListView):
             .filter(project=self.project)
             .exclude(type='epic')
             # EXCLURE LES TICKETS QUI SONT DANS UN SPRINT ACTIF OU PLANNED
-            .exclude(sprints__status__in=['active', 'planned'])
+            .exclude(sprints__status__in=['active', 'planned','completed'])
             # EXCLURE LES TICKETS DONE DU BACKLOG
             .exclude(status='done')
             .select_related("assignee", "assignee__profile", "parent")

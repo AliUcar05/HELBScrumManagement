@@ -34,7 +34,7 @@ urlpatterns = [
     path("projects/<int:pk>/settings/", ProjectSettingsView.as_view(), name="project-settings"),
     path("projects/<int:pk>/issues/", ProjectIssuesView.as_view(), name="project-issues"),
     path('projects/<int:pk>/roadmap/',  views.project_roadmap,  name='project-roadmap'),
-    path('projects/<int:pk>/releases/', views.project_releases, name='project-releases'),
+    path('projects/<int:pk>/close-sprint/', views.close_sprint, name='project-close-sprint'),
 
 
     # TICKET ISSUES URL

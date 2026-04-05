@@ -248,3 +248,288 @@ function removeTicketFromSprint(ticketId, sprintId) {
         btnLabel: 'Remove'
     });
 }
+
+// ==================== DRAG AND DROP FUNCTIONS ====================
+
+let draggedElement = null;
+
+function getCookie(name) {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) return parts.pop().split(';').shift();
+    return '';
+}
+
+function getDragItems(container) {
+    return Array.from(container.querySelectorAll('.drag-ticket-card, .backlog-draggable-row'));
+}
+
+function getInsertAfterElement(container, y) {
+    const elements = getDragItems(container).filter(el => el !== draggedElement);
+    let closest = { offset: Number.NEGATIVE_INFINITY, element: null };
+
+    elements.forEach(el => {
+        const box = el.getBoundingClientRect();
+        const offset = y - box.top - box.height / 2;
+        if (offset < 0 && offset > closest.offset) {
+            closest = { offset, element: el };
+        }
+    });
+
+    return closest.element;
+}
+
+function insertDraggedElement(container, y) {
+    if (!draggedElement) return;
+    const afterElement = getInsertAfterElement(container, y);
+    if (afterElement) {
+        container.insertBefore(draggedElement, afterElement);
+    } else {
+        container.appendChild(draggedElement);
+    }
+}
+
+function refreshSprintEmptyState(sprintBody) {
+    if (!sprintBody) return;
+    const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
+    const rows = inner.querySelectorAll('.drag-ticket-card');
+    const empty = inner.querySelector('.spt-empty');
+
+    if (rows.length === 0) {
+        if (!empty) {
+            const block = document.createElement('div');
+            block.className = 'spt-empty';
+            block.innerHTML = '<p>Plan your sprint. Drag and drop issues from the backlog below.</p>';
+            inner.appendChild(block);
+        }
+    } else if (empty) {
+        empty.remove();
+    }
+}
+
+function refreshBacklogEmptyState() {
+    const tbody = document.getElementById('backlog-tbody');
+    if (!tbody) return;
+    const rows = Array.from(tbody.querySelectorAll('.backlog-draggable-row'));
+    const empty = tbody.querySelector('.empty-state')?.closest('tr');
+    if (rows.length === 0) {
+        if (!empty) {
+            const tr = document.createElement('tr');
+            tr.innerHTML = '<td colspan="11" class="empty-state"><i class="fas fa-clipboard-list"></i><p>No issues in backlog</p></tr>';
+            const triggerRow = document.getElementById('createIssueTriggerRow');
+            if (triggerRow) {
+                tbody.insertBefore(tr, triggerRow);
+            } else {
+                tbody.appendChild(tr);
+            }
+        }
+    } else if (empty && empty !== rows[0]?.closest('tr')) {
+        empty.remove();
+    }
+}
+
+async function syncSprintOrder(sprintId, sprintBody) {
+    if (!sprintId || !sprintBody) return;
+    const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
+    const orderedTicketIds = Array.from(inner.querySelectorAll('.drag-ticket-card'))
+        .map(el => el.dataset.ticketId);
+
+    const formData = new URLSearchParams();
+    orderedTicketIds.forEach(id => formData.append('ordered_ticket_ids[]', id));
+
+    try {
+        const response = await fetch(`/projects/${PROJECT_PK}/sprints/${sprintId}/reorder/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': getCookie('csrftoken'),
+                'X-Requested-With': 'XMLHttpRequest',
+                'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+            },
+            body: formData.toString(),
+        });
+        const data = await response.json();
+        if (!data.success) {
+            console.error('Reorder error:', data.error);
+        }
+    } catch (error) {
+        console.error('Sync sprint order error:', error);
+    }
+}
+
+function moveRowToBacklog(tbody, element) {
+    const triggerRow = document.getElementById('createIssueTriggerRow');
+    if (triggerRow) {
+        tbody.insertBefore(element, triggerRow);
+    } else {
+        tbody.appendChild(element);
+    }
+    element.dataset.dragOrigin = 'backlog';
+    delete element.dataset.sprintId;
+}
+
+function moveCardToSprint(sprintBody, element, y) {
+    const inner = sprintBody.querySelector('.spt-dropzone-inner') || sprintBody;
+    const empty = inner.querySelector('.spt-empty');
+    if (empty) empty.remove();
+    insertDraggedElement(inner, y);
+    element.dataset.dragOrigin = 'sprint';
+    element.dataset.sprintId = sprintBody.dataset.sprintId;
+}
+
+function handleDragStart(e) {
+    draggedElement = this;
+    this.classList.add('dragging');
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', this.dataset.ticketId || '');
+}
+
+function handleDragEnd(e) {
+    this.classList.remove('dragging');
+    draggedElement = null;
+}
+
+function handleDragOver(e) {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    this.classList.add('drag-over');
+}
+
+function handleDragLeave(e) {
+    this.classList.remove('drag-over');
+}
+
+async function handleDrop(e) {
+    e.preventDefault();
+    this.classList.remove('drag-over');
+
+    if (!draggedElement) return;
+
+    const ticketId = draggedElement.dataset.ticketId;
+    const origin = draggedElement.dataset.dragOrigin;
+    const target = this.dataset.target;
+    const originContainer = draggedElement.parentElement;
+    const originSprintBody = draggedElement.closest('.sprint-dropzone');
+    const originSprintId = draggedElement.dataset.sprintId || '';
+
+    if (!ticketId || !target) return;
+
+    try {
+        if (target === 'sprint') {
+            const sprintId = this.dataset.sprintId;
+            const url = `/projects/${PROJECT_PK}/tickets/${ticketId}/add-to-sprint/`;
+
+            moveCardToSprint(this, draggedElement, e.clientY);
+            refreshSprintEmptyState(originSprintBody);
+
+            const formData = new URLSearchParams();
+            formData.append('sprint_id', sprintId);
+            if (origin === 'sprint' && originSprintId) {
+                formData.append('source_sprint_id', originSprintId);
+            }
+
+            const response = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                },
+                body: formData.toString(),
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                if (originContainer) originContainer.appendChild(draggedElement);
+                refreshSprintEmptyState(this);
+                refreshSprintEmptyState(originSprintBody);
+                alert(data.error || 'Unable to move ticket to sprint.');
+                return;
+            }
+
+            if (origin === 'backlog') {
+                refreshBacklogEmptyState();
+            }
+
+            await syncSprintOrder(sprintId, this);
+            if (origin === 'sprint' && originSprintId && originSprintId !== sprintId) {
+                await syncSprintOrder(originSprintId, originSprintBody);
+            }
+        }
+
+        if (target === 'backlog' && origin === 'sprint') {
+            const sprintId = originSprintId || this.dataset.sprintId || "";
+
+            moveRowToBacklog(this, draggedElement);
+            refreshSprintEmptyState(originSprintBody);
+            refreshBacklogEmptyState();
+
+            const formData = new URLSearchParams();
+            formData.append('ticket_id', ticketId);
+            if (sprintId) {
+                formData.append('sprint_id', sprintId);
+            }
+
+            const response = await fetch(`/projects/${PROJECT_PK}/ticket/remove-from-sprint/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': getCookie('csrftoken'),
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Content-Type': 'application/x-www-form-urlencoded;charset=UTF-8',
+                },
+                body: formData.toString(),
+            });
+
+            const data = await response.json();
+            if (!data.success) {
+                if (originContainer) originContainer.appendChild(draggedElement);
+                refreshSprintEmptyState(originSprintBody);
+                refreshBacklogEmptyState();
+                alert(data.error || 'Unable to move ticket back to backlog.');
+                return;
+            }
+
+            if (sprintId) {
+                await syncSprintOrder(sprintId, originSprintBody);
+            }
+        }
+    } catch (error) {
+        console.error('Drop error:', error);
+        alert('An error occurred during drag and drop.');
+    }
+}
+
+function attachDragAndDrop() {
+    const draggables = document.querySelectorAll('.drag-ticket-card, .backlog-draggable-row');
+    draggables.forEach(el => {
+        el.setAttribute('draggable', 'true');
+        el.removeEventListener('dragstart', handleDragStart);
+        el.removeEventListener('dragend', handleDragEnd);
+        el.addEventListener('dragstart', handleDragStart);
+        el.addEventListener('dragend', handleDragEnd);
+    });
+
+    const dropZones = document.querySelectorAll('.sprint-dropzone, #backlog-tbody');
+    dropZones.forEach(zone => {
+        zone.removeEventListener('dragover', handleDragOver);
+        zone.removeEventListener('dragleave', handleDragLeave);
+        zone.removeEventListener('drop', handleDrop);
+        zone.addEventListener('dragover', handleDragOver);
+        zone.addEventListener('dragleave', handleDragLeave);
+        zone.addEventListener('drop', handleDrop);
+    });
+}
+
+// Initialiser le drag and drop au chargement de la page
+document.addEventListener('DOMContentLoaded', function() {
+    attachDragAndDrop();
+
+    // Observer les changements du DOM pour attacher les événements aux nouveaux éléments
+    const observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+            if (mutation.addedNodes.length) {
+                attachDragAndDrop();
+            }
+        });
+    });
+    observer.observe(document.body, { childList: true, subtree: true });
+});

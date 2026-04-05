@@ -1,0 +1,370 @@
+{% extends 'scrum/project_board.html' %}
+{% load static %}
+{% block project_content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+
+<style>
+    /* ── Page header ────────────────────────────────── */
+    .cs-page-title {
+        font-size: 1.45rem; font-weight: 800; color: #172b4d;
+        margin: 0 0 4px; display: flex; align-items: center; gap: 10px;
+    }
+    .cs-page-title i { color: #9ca3af; font-size: 1.15rem; }
+    .cs-page-subtitle { color: #6b7280; font-size: .87rem; margin: 0 0 24px; }
+
+    /* ── Stats row ──────────────────────────────────── */
+    .cs-stats { display: flex; gap: 14px; margin-bottom: 26px; flex-wrap: wrap; }
+    .cs-stat {
+        flex: 1; min-width: 130px; background: #fff;
+        border: 1px solid #e9ecef; border-radius: 12px;
+        padding: 14px 18px; display: flex; flex-direction: column; gap: 3px;
+    }
+    .cs-stat-val { font-size: 1.55rem; font-weight: 800; }
+    .cs-stat-lbl { font-size: .75rem; color: #6b7280; text-transform: uppercase; letter-spacing: .06em; }
+    .cs-stat--count .cs-stat-val { color: #4f46e5; }
+    .cs-stat--done  .cs-stat-val { color: #059669; }
+    .cs-stat--pts   .cs-stat-val { color: #d97706; }
+
+    /* ── Empty state ────────────────────────────────── */
+    .cs-empty {
+        display: flex; flex-direction: column; align-items: center;
+        justify-content: center; padding: 64px 24px; gap: 14px; text-align: center;
+        background: #f8f9ff; border: 2px dashed #c7d2fe; border-radius: 14px;
+    }
+    .cs-empty i { font-size: 2.6rem; color: #a5b4fc; }
+    .cs-empty p { color: #6b7280; font-size: .9rem; margin: 0; max-width: 340px; }
+    .cs-empty strong { color: #3730a3; }
+
+    /* ── Sprint card ────────────────────────────────── */
+    .cs-sprint-card {
+        background: #fff; border: 1px solid #e9ecef; border-radius: 14px;
+        margin-bottom: 16px; overflow: hidden;
+        box-shadow: 0 1px 4px rgba(0,0,0,.05);
+        transition: box-shadow .15s;
+    }
+    .cs-sprint-card:hover { box-shadow: 0 4px 18px rgba(0,0,0,.09); }
+
+    /* header row */
+    .cs-sprint-hdr {
+        display: flex; align-items: center; gap: 12px;
+        padding: 15px 20px; cursor: pointer;
+        border-bottom: 1px solid transparent;
+        transition: background .12s, border-color .12s;
+        user-select: none;
+    }
+    .cs-sprint-hdr:hover { background: #f8f9ff; }
+    .cs-sprint-hdr.open  { border-bottom-color: #e9ecef; }
+
+    .cs-chev { color: #9ca3af; font-size: .82rem; transition: transform .2s; flex-shrink: 0; }
+    .cs-chev.open { transform: rotate(90deg); }
+
+    .cs-sprint-name { font-weight: 700; color: #172b4d; font-size: .96rem; flex: 1; min-width: 0; }
+
+    .cs-badge-closed {
+        font-size: .68rem; font-weight: 700; padding: .18rem .55rem;
+        border-radius: 999px; text-transform: uppercase; letter-spacing: .05em;
+        background: #ecfdf5; color: #065f46; border: 1px solid #a7f3d0;
+        white-space: nowrap; flex-shrink: 0;
+    }
+
+    .cs-sprint-meta {
+        display: flex; gap: 16px; flex-wrap: wrap; align-items: center;
+        font-size: .77rem; color: #6b7280;
+    }
+    .cs-sprint-meta span { display: flex; align-items: center; gap: 4px; white-space: nowrap; }
+
+    /* progress mini-bar */
+    .cs-mini-bar { width: 72px; height: 4px; background: #e5e7eb; border-radius: 2px; overflow: hidden; }
+    .cs-mini-bar-fill { height: 100%; background: #059669; border-radius: 2px; }
+
+    /* body */
+    .cs-sprint-body { display: none; padding: 0 20px 18px; }
+    .cs-sprint-body.open { display: block; }
+
+    .cs-sprint-goal {
+        padding: 10px 0 6px; font-size: .83rem; color: #374151;
+        display: flex; align-items: flex-start; gap: 6px;
+    }
+    .cs-sprint-goal i { color: #f59e0b; margin-top: 2px; flex-shrink: 0; }
+
+    /* ticket table */
+    .cs-table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .83rem; }
+    .cs-table th {
+        text-align: left; padding: 7px 10px;
+        font-size: .7rem; font-weight: 700; text-transform: uppercase;
+        letter-spacing: .07em; color: #9ca3af;
+        border-bottom: 2px solid #f3f4f6;
+    }
+    .cs-table td { padding: 9px 10px; border-bottom: 1px solid #f3f4f6; vertical-align: middle; }
+    .cs-table tr:last-child td { border-bottom: none; }
+    .cs-table tbody tr:hover td { background: #f9fafb; }
+
+    .cs-key { font-size: .73rem; color: #9ca3af; white-space: nowrap; }
+    .cs-title { color: #172b4d; font-weight: 500; }
+
+    /* type badge */
+    .cs-type {
+        display: inline-flex; align-items: center; gap: 3px;
+        padding: .14rem .4rem; border-radius: 5px; font-size: .71rem; font-weight: 600;
+    }
+
+    /* status pill */
+    .cs-status {
+        display: inline-flex; align-items: center; gap: 4px;
+        padding: .16rem .5rem; border-radius: 999px;
+        font-size: .7rem; font-weight: 700; text-transform: uppercase; letter-spacing: .04em;
+    }
+    .cs-status--done      { background: #ecfdf5; color: #065f46; }
+    .cs-status--closed    { background: #f3f4f6; color: #4b5563; }
+    .cs-status--cancelled { background: #fef2f2; color: #991b1b; }
+    .cs-status--other     { background: #f3f4f6; color: #6b7280; }
+
+    /* avatar */
+    .cs-avatar {
+        width: 24px; height: 24px; border-radius: 50%; overflow: hidden;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-size: .68rem; font-weight: 700; color: #fff; background: #4f46e5;
+    }
+    .cs-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+    /* filter bar */
+    .cs-filter-bar { display: flex; gap: 8px; margin-bottom: 18px; align-items: center; flex-wrap: wrap; }
+    .cs-filter-label { font-size: .79rem; color: #6b7280; font-weight: 600; }
+    .cs-filter-select {
+        padding: .28rem .6rem; border-radius: 7px; border: 1px solid #d1d5db;
+        font-size: .81rem; color: #374151; background: #fff; cursor: pointer;
+        transition: border-color .15s, box-shadow .15s;
+    }
+    .cs-filter-select:focus { outline: none; border-color: #4f46e5; box-shadow: 0 0 0 3px rgba(79,70,229,.15); }
+</style>
+
+{# ── Header ───────────────────────────────────────────────────────────── #}
+<h1 class="cs-page-title"><i class="fas fa-archive"></i> Closed Sprints</h1>
+<p class="cs-page-subtitle">All completed sprints for <strong>{{ project.name }}</strong></p>
+
+{# ── Stats ────────────────────────────────────────────────────────────── #}
+<div class="cs-stats">
+    <div class="cs-stat cs-stat--count">
+        <span class="cs-stat-val">{{ closed_sprints|length }}</span>
+        <span class="cs-stat-lbl">Closed Sprints</span>
+    </div>
+    <div class="cs-stat cs-stat--done">
+        <span class="cs-stat-val" id="csTotalDone">—</span>
+        <span class="cs-stat-lbl">Tickets Completed</span>
+    </div>
+    <div class="cs-stat cs-stat--pts">
+        <span class="cs-stat-val" id="csTotalPts">—</span>
+        <span class="cs-stat-lbl">Story Points Delivered</span>
+    </div>
+</div>
+
+{# ── Filter bar ───────────────────────────────────────────────────────── #}
+{% if closed_sprints %}
+<div class="cs-filter-bar">
+    <span class="cs-filter-label">Filter tickets:</span>
+    <select class="cs-filter-select" id="csStatusFilter" onchange="csApplyFilter()">
+        <option value="all">All statuses</option>
+        <option value="done">Done</option>
+        <option value="closed">Closed</option>
+        <option value="cancelled">Cancelled</option>
+    </select>
+</div>
+{% endif %}
+
+{# ── Sprint cards ─────────────────────────────────────────────────────── #}
+{% if closed_sprints %}
+    {% for sprint in closed_sprints %}
+    <div class="cs-sprint-card">
+
+        {# header #}
+        <div class="cs-sprint-hdr" onclick="csToggle({{ sprint.pk }})">
+            <span class="cs-chev" id="cs-chev-{{ sprint.pk }}"><i class="fas fa-chevron-right"></i></span>
+            <span class="cs-sprint-name">{{ sprint.name }}</span>
+            <span class="cs-badge-closed"><i class="fas fa-check-circle"></i> Closed</span>
+            <div class="cs-sprint-meta">
+                {% if sprint.start_date and sprint.end_date %}
+                <span><i class="far fa-calendar-alt"></i>
+                    {{ sprint.start_date|date:"d M Y" }} → {{ sprint.end_date|date:"d M Y" }}
+                </span>
+                {% endif %}
+                <span>
+                    <i class="fas fa-ticket-alt"></i>
+                    {{ sprint.total_issues }} ticket{{ sprint.total_issues|pluralize }}
+                </span>
+                <span>
+                    <i class="fas fa-check"></i>
+                    {{ sprint.done_count }} done
+                </span>
+                {% if sprint.sprint_capacity %}
+                <span><i class="fas fa-bolt"></i> {{ sprint.sprint_capacity }} pts cap.</span>
+                {% endif %}
+                {# mini progress bar #}
+                <span>
+                    <div class="cs-mini-bar">
+                        <div class="cs-mini-bar-fill" style="width: {{ sprint.completion_percentage }}%;"></div>
+                    </div>
+                    {{ sprint.completion_percentage }}%
+                </span>
+            </div>
+        </div>
+
+        {# body (collapsed by default) #}
+        <div class="cs-sprint-body" id="cs-body-{{ sprint.pk }}">
+
+            {% if sprint.goals %}
+            <div class="cs-sprint-goal">
+                <i class="fas fa-bullseye"></i>
+                <span><strong>Sprint goal:</strong> {{ sprint.goals }}</span>
+            </div>
+            {% endif %}
+
+            {% with sprint_tickets=sprint.tickets.all %}
+            {% if sprint_tickets %}
+            <table class="cs-table">
+                <thead>
+                    <tr>
+                        <th>Key</th>
+                        <th>Type</th>
+                        <th>Title</th>
+                        <th>Status</th>
+                        <th>Assignee</th>
+                        <th>Points</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for ticket in sprint_tickets %}
+                    <tr class="cs-ticket-row" data-status="{{ ticket.status }}">
+
+                        <td class="cs-key">{{ project.code }}-{{ ticket.id }}</td>
+
+                        <td>
+                            {% if ticket.type == "bug" %}
+                                <span class="cs-type" style="background:#ffebe6;color:#de350b;">
+                                    <i class="fas fa-bug"></i> Bug
+                                </span>
+                            {% elif ticket.type == "user story" %}
+                                <span class="cs-type" style="background:#e3fcef;color:#006644;">
+                                    <i class="fas fa-bookmark"></i> Story
+                                </span>
+                            {% elif ticket.type == "task" %}
+                                <span class="cs-type" style="background:#deebff;color:#0747a6;">
+                                    <i class="fas fa-check-square"></i> Task
+                                </span>
+                            {% elif ticket.type == "epic" %}
+                                <span class="cs-type" style="background:#eae6ff;color:#403294;">
+                                    <i class="fas fa-bolt"></i> Epic
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td class="cs-title">{{ ticket.title }}</td>
+
+                        <td>
+                            {% if ticket.status == "done" %}
+                                <span class="cs-status cs-status--done">
+                                    <i class="fas fa-check-circle"></i> Done
+                                </span>
+                            {% elif ticket.status == "closed" %}
+                                <span class="cs-status cs-status--closed">
+                                    <i class="fas fa-lock"></i> Closed
+                                </span>
+                            {% elif ticket.status == "cancelled" %}
+                                <span class="cs-status cs-status--cancelled">
+                                    <i class="fas fa-times-circle"></i> Cancelled
+                                </span>
+                            {% else %}
+                                <span class="cs-status cs-status--other">
+                                    {{ ticket.get_status_display }}
+                                </span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if ticket.assignee %}
+                                <div class="cs-avatar" title="{{ ticket.assignee.get_full_name|default:ticket.assignee.username }}">
+                                    {% if ticket.assignee.profile.image %}
+                                        <img src="{{ ticket.assignee.profile.image.url }}" alt="">
+                                    {% else %}
+                                        {{ ticket.assignee.first_name|first|upper }}{{ ticket.assignee.last_name|first|upper }}
+                                    {% endif %}
+                                </div>
+                            {% else %}
+                                <span style="color:#9ca3af;">—</span>
+                            {% endif %}
+                        </td>
+
+                        <td>
+                            {% if ticket.story_points %}
+                                <strong style="color:#374151;">{{ ticket.story_points }}</strong>
+                            {% else %}
+                                <span style="color:#9ca3af;">—</span>
+                            {% endif %}
+                        </td>
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% else %}
+            <p style="color:#9ca3af;font-size:.83rem;padding:10px 0;margin:0;">
+                No tickets were associated with this sprint.
+            </p>
+            {% endif %}
+            {% endwith %}
+
+        </div>
+    </div>
+    {% endfor %}
+
+{% else %}
+    <div class="cs-empty">
+        <i class="fas fa-archive"></i>
+        <p><strong>No closed sprints yet.</strong></p>
+        <p>When you complete a sprint from the backlog, it will appear here with all its tickets.</p>
+    </div>
+{% endif %}
+
+<script>
+(function () {
+
+    // Toggle accordion
+    window.csToggle = function (pk) {
+        const body = document.getElementById('cs-body-' + pk);
+        const chev = document.getElementById('cs-chev-' + pk);
+        const hdr  = chev && chev.closest('.cs-sprint-hdr');
+        if (!body) return;
+        const open = body.classList.toggle('open');
+        if (chev) chev.classList.toggle('open', open);
+        if (hdr)  hdr.classList.toggle('open', open);
+    };
+
+    // Compute stats from DOM tickets
+    function computeStats() {
+        let totalDone = 0, totalPts = 0;
+        document.querySelectorAll('.cs-ticket-row').forEach(function (row) {
+            var status = row.dataset.status;
+            if (status === 'done' || status === 'closed') totalDone++;
+            var ptsCell = row.querySelectorAll('td')[5];
+            var pts = parseInt((ptsCell && ptsCell.textContent.trim()) || '0', 10);
+            if (!isNaN(pts) && pts > 0) totalPts += pts;
+        });
+        var doneEl = document.getElementById('csTotalDone');
+        var ptsEl  = document.getElementById('csTotalPts');
+        if (doneEl) doneEl.textContent = totalDone;
+        if (ptsEl)  ptsEl.textContent  = totalPts;
+    }
+
+    // Status filter
+    window.csApplyFilter = function () {
+        var val = (document.getElementById('csStatusFilter') || {}).value || 'all';
+        document.querySelectorAll('.cs-ticket-row').forEach(function (row) {
+            row.style.display = (val === 'all' || row.dataset.status === val) ? '' : 'none';
+        });
+    };
+
+    document.addEventListener('DOMContentLoaded', computeStats);
+
+})();
+</script>
+
+{% endblock project_content %}

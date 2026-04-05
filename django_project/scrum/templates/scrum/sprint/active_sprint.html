@@ -17,8 +17,270 @@
     .ticket-title-link { color:inherit; text-decoration:none; }
     .ticket-title-link:hover { text-decoration:none; color:inherit; }
     .column-count { margin-left:auto; font-size:.8rem; color:#6b7280; background:#fff; padding:.15rem .5rem; border-radius:999px; }
-    .btn-backlog-inline { border:none; background:#fff3cd; color:#856404; border-radius:8px; padding:.35rem .55rem; font-size:.78rem; }
-    .btn-backlog-inline:hover { background:#ffe69c; }
+
+    .btn-backlog-inline { border:none; background:#fff3cd; color:#856404; border-radius:8px; padding:.35rem .55rem; font-size:.78rem; transition: background .15s, box-shadow .15s; }
+    .btn-backlog-inline:hover { background:#ffe69c; box-shadow: 0 2px 6px rgba(133,100,4,.15); }
+    .btn-backlog-inline:active { transform: scale(.97); }
+
+    .as-sprint-empty-msg {
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        padding: 48px 24px; gap: 12px; text-align: center;
+        background: #f8f9ff; border: 2px dashed #c7d2fe; border-radius: 14px; margin: 12px 0;
+    }
+    .as-sprint-empty-msg .as-sem-icon { font-size: 2.2rem; color: #a5b4fc; }
+    .as-sprint-empty-msg .as-sem-title { font-size: 1rem; font-weight: 700; color: #3730a3; margin: 0; }
+    .as-sprint-empty-msg .as-sem-sub { font-size: .85rem; color: #6b7280; margin: 0; }
+    .as-sprint-empty-msg .as-sem-btn {
+        margin-top: 4px; padding: .45rem 1.1rem; border-radius: 8px;
+        background: #4f46e5; color: #fff; font-size: .85rem; font-weight: 600;
+        border: none; cursor: pointer; text-decoration: none; display: inline-block;
+        transition: background .15s, box-shadow .15s, transform .1s;
+    }
+    .as-sprint-empty-msg .as-sem-btn:hover { background: #4338ca; box-shadow: 0 4px 12px rgba(79,70,229,.25); text-decoration: none; color: #fff; }
+    .as-sprint-empty-msg .as-sem-btn:active { transform: scale(.97); }
+
+    .as-unfinished-banner {
+        display: flex; align-items: center; gap: 12px;
+        background: #fffbeb; border: 1px solid #fde68a; border-radius: 10px;
+        padding: 12px 18px; margin: 10px 0 4px;
+    }
+    .as-unfinished-banner .as-ub-icon { font-size: 1.1rem; color: #d97706; flex-shrink: 0; }
+    .as-unfinished-banner .as-ub-text { font-size: .85rem; color: #92400e; }
+    .as-unfinished-banner .as-ub-text strong { color: #78350f; }
+
+    /* Bouton Complete Sprint - Rouge par défaut, Vert quand tout est done */
+    .as-complete-btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        background: #de350b;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s cubic-bezier(0.2, 0, 0, 1);
+    }
+    .as-complete-btn:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .as-complete-btn:active {
+        transform: translateY(1px) scale(0.98);
+    }
+    /* Style quand le sprint est complétable (tous les tickets sont done) */
+    .as-complete-btn.ready-to-complete {
+        background: #36b37e;
+    }
+    .as-complete-btn.ready-to-complete:hover {
+        background: #2c9a6b;
+        box-shadow: 0 4px 12px rgba(54, 179, 126, 0.4);
+    }
+    /* Style quand le sprint a des tickets non terminés */
+    .as-complete-btn.has-unfinished {
+        background: #de350b;
+    }
+    .as-complete-btn.has-unfinished:hover {
+        background: #b32d0a;
+        box-shadow: 0 4px 12px rgba(222, 53, 11, 0.3);
+    }
+
+    .as-go-backlog-btn {
+        transition: background .15s, box-shadow .15s, transform .1s;
+    }
+    .as-go-backlog-btn:hover { box-shadow: 0 4px 12px rgba(0,0,0,.12); transform: translateY(-1px); }
+    .as-go-backlog-btn:active { transform: scale(.97); }
+
+    .bqf-btn {
+        transition: background .15s, color .15s, box-shadow .15s, transform .1s;
+    }
+    .bqf-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,.10); transform: translateY(-1px); }
+    .bqf-btn:active { transform: scale(.97); }
+
+    /* Custom Confirmation Modal Styles */
+    .custom-confirm-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(9, 30, 66, 0.54);
+        backdrop-filter: blur(2px);
+        z-index: 1060;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.2s ease;
+    }
+    .custom-confirm-overlay.active {
+        opacity: 1;
+        visibility: visible;
+    }
+    .custom-confirm-modal {
+        background: white;
+        border-radius: 12px;
+        max-width: 440px;
+        width: 90%;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        transform: scale(0.95);
+        transition: transform 0.2s ease;
+    }
+    .custom-confirm-overlay.active .custom-confirm-modal {
+        transform: scale(1);
+    }
+    .custom-confirm-header {
+        padding: 20px 24px 0 24px;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    .custom-confirm-icon {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+    }
+    .custom-confirm-icon.warning {
+        background: #ffebe6;
+    }
+    .custom-confirm-icon.warning i {
+        color: #de350b;
+        font-size: 18px;
+    }
+    .custom-confirm-icon.success {
+        background: #e3fcef;
+    }
+    .custom-confirm-icon.success i {
+        color: #36b37e;
+        font-size: 18px;
+    }
+    .custom-confirm-icon.info {
+        background: #deebff;
+    }
+    .custom-confirm-icon.info i {
+        color: #0052cc;
+        font-size: 18px;
+    }
+    .custom-confirm-title {
+        font-size: 18px;
+        font-weight: 700;
+        color: #172b4d;
+        margin: 0;
+    }
+    .custom-confirm-body {
+        padding: 16px 24px;
+    }
+    .custom-confirm-message {
+        color: #42526e;
+        font-size: 14px;
+        line-height: 1.5;
+        margin-bottom: 8px;
+    }
+    .custom-confirm-warning {
+        background: #fffae6;
+        border-left: 3px solid #ff8b00;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: #7a6200;
+    }
+    .custom-confirm-warning i {
+        margin-right: 8px;
+        color: #ff8b00;
+    }
+    .custom-confirm-success {
+        background: #e3fcef;
+        border-left: 3px solid #36b37e;
+        padding: 12px 16px;
+        border-radius: 8px;
+        margin-top: 16px;
+        font-size: 13px;
+        color: #006644;
+    }
+    .custom-confirm-success i {
+        margin-right: 8px;
+        color: #36b37e;
+    }
+    .custom-confirm-stats {
+        background: #f4f5f7;
+        border-radius: 8px;
+        padding: 12px 16px;
+        margin-top: 16px;
+        display: flex;
+        justify-content: space-around;
+    }
+    .custom-confirm-stat {
+        text-align: center;
+    }
+    .custom-confirm-stat-value {
+        font-size: 24px;
+        font-weight: 700;
+    }
+    .custom-confirm-stat-value.todo { color: #6b778c; }
+    .custom-confirm-stat-value.progress { color: #0052cc; }
+    .custom-confirm-stat-value.done { color: #36b37e; }
+    .custom-confirm-stat-label {
+        font-size: 11px;
+        color: #6b778c;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+    .custom-confirm-footer {
+        padding: 0 24px 20px 24px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 8px;
+    }
+    .custom-confirm-btn {
+        padding: 8px 16px;
+        border-radius: 6px;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s;
+        border: none;
+    }
+    .custom-confirm-btn-cancel {
+        background: #f4f5f7;
+        color: #42526e;
+    }
+    .custom-confirm-btn-cancel:hover {
+        background: #ebecf0;
+    }
+    .custom-confirm-btn-danger {
+        background: #de350b;
+        color: white;
+    }
+    .custom-confirm-btn-danger:hover {
+        background: #b32d0a;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(222, 53, 11, 0.3);
+    }
+    .custom-confirm-btn-success {
+        background: #36b37e;
+        color: white;
+    }
+    .custom-confirm-btn-success:hover {
+        background: #2c9a6b;
+        transform: translateY(-1px);
+        box-shadow: 0 2px 8px rgba(54, 179, 126, 0.3);
+    }
+    .custom-confirm-btn-primary {
+        background: #0052cc;
+        color: white;
+    }
+    .custom-confirm-btn-primary:hover {
+        background: #0747a6;
+        transform: translateY(-1px);
+    }
 </style>
 
 <div>
@@ -66,13 +328,10 @@
                         <span class="as-stat as-stat--done"><span class="as-stat-dot"></span><span id="asDoneCount">{{ active_sprint.done_count|default:0 }}</span> Done</span>
                     </div>
                 </div>
-                {% if can_manage_sprint %}
-                <form method="POST" action="{% url 'sprint-complete' project.pk active_sprint.pk %}">
-                    {% csrf_token %}
-                    <button type="submit" class="as-complete-btn">
-                        <i class="fas fa-flag-checkered"></i> Complete Sprint
-                    </button>
-                </form>
+                {% if can_manage_sprint and active_sprint.pk %}
+                <button type="button" class="as-complete-btn has-unfinished" id="completeSprintBtn" onclick="showCompleteSprintConfirmation()">
+                    <i class="fas fa-flag-checkered"></i> Complete Sprint
+                </button>
                 {% endif %}
             </div>
         </div>
@@ -100,6 +359,35 @@
 </div>
 
 <hr>
+
+{% if active_sprint %}
+    {% with total=active_sprint.total_issues|default:0 done=active_sprint.done_count|default:0 %}
+
+    {% if total == 0 %}
+    <div class="as-sprint-empty-msg" id="asSprintEmptyMsg">
+        <span class="as-sem-icon"><i class="fas fa-inbox"></i></span>
+        <p class="as-sem-title">This sprint has no issues yet</p>
+        <p class="as-sem-sub">Go to the backlog and drag issues into <strong>{{ active_sprint.name }}</strong> to start planning your sprint.</p>
+        <a href="{% url 'product-backlog' project.pk %}" class="as-sem-btn">
+            <i class="fas fa-arrow-left"></i> Go to Backlog
+        </a>
+    </div>
+    {% endif %}
+
+    {% if total > 0 and done < total %}
+    <div class="as-unfinished-banner" id="asUnfinishedBanner">
+        <span class="as-ub-icon"><i class="fas fa-exclamation-triangle"></i></span>
+        <span class="as-ub-text">
+            <strong>{{ active_sprint.name }}</strong> still has
+            <strong>{{ active_sprint.todo_count|default:0 }} To Do</strong>
+            and <strong>{{ active_sprint.inprogress_count|default:0 }} In Progress</strong>
+            issue{{ active_sprint.inprogress_count|pluralize }} — keep going!
+        </span>
+    </div>
+    {% endif %}
+
+    {% endwith %}
+{% endif %}
 
 <div class="kanban-board" id="kanbanBoard">
     {% for column in columns %}
@@ -145,11 +433,11 @@
 
                         <div class="ticket-actions">
                             <small class="text-muted text-uppercase">{{ ticket.get_priority_display }}</small>
-                            {% if can_manage_sprint %}
+                            {% if can_manage_sprint and active_sprint.pk %}
                             <form method="POST" action="{% url 'ticket-remove-from-sprint' project.pk %}">
                                 {% csrf_token %}
                                 <input type="hidden" name="ticket_id" value="{{ ticket.id }}">
-                                <input type="hidden" name="sprint_id" value="{{ active_sprint.id }}">
+                                <input type="hidden" name="sprint_id" value="{{ active_sprint.pk }}">
                                 <button type="submit" class="btn-backlog-inline">
                                     <i class="fas fa-undo"></i> Backlog
                                 </button>
@@ -167,7 +455,54 @@
     {% endfor %}
 </div>
 
+<!-- Custom Confirmation Modal for Sprint Completion -->
+<div class="custom-confirm-overlay" id="sprintCompleteOverlay">
+    <div class="custom-confirm-modal">
+        <div class="custom-confirm-header">
+            <div class="custom-confirm-icon warning" id="confirmIcon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h3 class="custom-confirm-title" id="confirmTitle">Complete Sprint?</h3>
+        </div>
+        <div class="custom-confirm-body">
+            <p class="custom-confirm-message" id="confirmMessage"></p>
+            <div class="custom-confirm-stats" id="confirmStats" style="display: none;">
+                <div class="custom-confirm-stat">
+                    <div class="custom-confirm-stat-value todo" id="statTodo">0</div>
+                    <div class="custom-confirm-stat-label">To Do</div>
+                </div>
+                <div class="custom-confirm-stat">
+                    <div class="custom-confirm-stat-value progress" id="statProgress">0</div>
+                    <div class="custom-confirm-stat-label">In Progress</div>
+                </div>
+                <div class="custom-confirm-stat">
+                    <div class="custom-confirm-stat-value done" id="statDone">0</div>
+                    <div class="custom-confirm-stat-label">Done</div>
+                </div>
+            </div>
+            <div id="confirmWarningBlock" class="custom-confirm-warning">
+                <i class="fas fa-info-circle"></i>
+                <span id="warningText">This action cannot be undone.</span>
+            </div>
+        </div>
+        <div class="custom-confirm-footer">
+            <button class="custom-confirm-btn custom-confirm-btn-cancel" onclick="closeCompleteSprintConfirmation()">Cancel</button>
+            <button class="custom-confirm-btn custom-confirm-btn-danger" id="confirmActionBtn">Complete Sprint</button>
+        </div>
+    </div>
+</div>
+
+<!-- Hidden form for sprint completion -->
+{% if active_sprint and active_sprint.pk %}
+<form id="completeSprintForm" method="POST" action="{% url 'sprint-complete' project.pk active_sprint.pk %}">
+    {% csrf_token %}
+</form>
+{% endif %}
+
 <script>
+    let activeSprintPk = {{ active_sprint.pk|default:'null' }};
+    let completeSprintBtn = document.getElementById('completeSprintBtn');
+
     function getCookie(name) {
         const value = `; ${document.cookie}`;
         const parts = value.split(`; ${name}=`);
@@ -192,6 +527,181 @@
         });
     }
 
+    function getCurrentSprintStats() {
+        const board = document.getElementById('kanbanBoard');
+        if (!board) return { todo: 0, progress: 0, done: 0, total: 0 };
+
+        const todo = board.querySelectorAll('.kanban-card[data-status="todo"]').length;
+        const progress = board.querySelectorAll('.kanban-card[data-status="in_progress"]').length;
+        const done = board.querySelectorAll('.kanban-card[data-status="done"]').length;
+        const total = todo + progress + done;
+
+        return { todo, progress, done, total };
+    }
+
+    function updateCompleteButtonStyle() {
+        if (!completeSprintBtn) return;
+
+        const stats = getCurrentSprintStats();
+        const hasUnfinished = stats.todo > 0 || stats.progress > 0;
+        const hasIssues = stats.total > 0;
+
+        if (!hasIssues) {
+            // Pas d'issues dans le sprint
+            completeSprintBtn.classList.remove('has-unfinished', 'ready-to-complete');
+            completeSprintBtn.classList.add('has-unfinished');
+        } else if (hasUnfinished) {
+            // Il reste des tickets non terminés
+            completeSprintBtn.classList.remove('ready-to-complete');
+            completeSprintBtn.classList.add('has-unfinished');
+        } else {
+            // Tous les tickets sont terminés (done)
+            completeSprintBtn.classList.remove('has-unfinished');
+            completeSprintBtn.classList.add('ready-to-complete');
+        }
+    }
+
+    function refreshSprintProgress() {
+        const board = document.getElementById('kanbanBoard');
+        if (!board) return;
+
+        const total = board.querySelectorAll('.kanban-card').length;
+        const todo = board.querySelectorAll('.kanban-card[data-status="todo"]').length;
+        const inProgress = board.querySelectorAll('.kanban-card[data-status="in_progress"]').length;
+        const done = board.querySelectorAll('.kanban-card[data-status="done"]').length;
+        const pct = total ? Math.round((done / total) * 100) : 0;
+
+        const totalNode = document.getElementById('asTotalIssues');
+        const todoNode = document.getElementById('asTodoCount');
+        const inProgressNode = document.getElementById('asInProgressCount');
+        const doneNode = document.getElementById('asDoneCount');
+        const pctNode = document.getElementById('asProgressPct');
+        const fillNode = document.getElementById('asProgressFill');
+
+        if (totalNode) totalNode.textContent = total;
+        if (todoNode) todoNode.textContent = todo;
+        if (inProgressNode) inProgressNode.textContent = inProgress;
+        if (doneNode) doneNode.textContent = done;
+        if (pctNode) pctNode.textContent = `${pct}%`;
+        if (fillNode) fillNode.style.width = `${pct}%`;
+
+        const emptyMsg = document.getElementById('asSprintEmptyMsg');
+        const unfinishedBanner = document.getElementById('asUnfinishedBanner');
+
+        if (emptyMsg) emptyMsg.style.display = total === 0 ? '' : 'none';
+        if (unfinishedBanner) {
+            const hasUnfinished = total > 0 && done < total;
+            unfinishedBanner.style.display = hasUnfinished ? '' : 'none';
+            if (hasUnfinished) {
+                const text = unfinishedBanner.querySelector('.as-ub-text');
+                if (text) {
+                    text.innerHTML = `<strong>{{ active_sprint.name }}</strong> still has <strong>${todo} To Do</strong> and <strong>${inProgress} In Progress</strong> issue${inProgress !== 1 ? 's' : ''} — keep going!`;
+                }
+            }
+        }
+
+        // Mettre à jour le style du bouton
+        updateCompleteButtonStyle();
+    }
+
+    function showCompleteSprintConfirmation() {
+        const sprintName = "{{ active_sprint.name|escapejs }}";
+        const stats = getCurrentSprintStats();
+        const totalIssues = stats.total;
+        const hasUnfinished = stats.todo > 0 || stats.progress > 0;
+        const allDone = totalIssues > 0 && !hasUnfinished;
+
+        const confirmTitle = document.getElementById('confirmTitle');
+        const confirmMessage = document.getElementById('confirmMessage');
+        const confirmStats = document.getElementById('confirmStats');
+        const statTodo = document.getElementById('statTodo');
+        const statProgress = document.getElementById('statProgress');
+        const statDone = document.getElementById('statDone');
+        const confirmWarningBlock = document.getElementById('confirmWarningBlock');
+        const warningText = document.getElementById('warningText');
+        const confirmIcon = document.getElementById('confirmIcon');
+        const confirmActionBtn = document.getElementById('confirmActionBtn');
+
+        if (hasUnfinished && totalIssues > 0) {
+            // Sprint has unfinished work - show warning
+            confirmIcon.className = 'custom-confirm-icon warning';
+            confirmIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+            confirmTitle.textContent = '⚠️ Unfinished Work Detected';
+            confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> still has unfinished issues.`;
+            confirmWarningBlock.className = 'custom-confirm-warning';
+            warningText.innerHTML = `<strong>${stats.todo} To Do</strong> and <strong>${stats.progress} In Progress</strong> issue${stats.progress !== 1 ? 's' : ''} will remain incomplete.`;
+            confirmActionBtn.innerHTML = 'Complete Anyway';
+            confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-danger';
+        } else if (totalIssues === 0) {
+            // Sprint has no issues
+            confirmIcon.className = 'custom-confirm-icon info';
+            confirmIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+            confirmTitle.textContent = 'Complete Empty Sprint?';
+            confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has no issues.`;
+            confirmWarningBlock.className = 'custom-confirm-warning';
+            warningText.innerHTML = 'Completing this sprint will mark it as finished.';
+            confirmActionBtn.innerHTML = 'Complete Sprint';
+            confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-primary';
+        } else if (allDone) {
+            // All issues are done - success!
+            confirmIcon.className = 'custom-confirm-icon success';
+            confirmIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+            confirmTitle.textContent = '🎉 Sprint Complete!';
+            confirmMessage.innerHTML = `All <strong>${stats.done}</strong> issues in sprint <strong>${sprintName}</strong> are done!`;
+            confirmWarningBlock.className = 'custom-confirm-success';
+            warningText.innerHTML = 'Great work, team! Complete this sprint to close it.';
+            confirmActionBtn.innerHTML = 'Complete Sprint';
+            confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-success';
+        }
+
+        if (totalIssues > 0) {
+            confirmStats.style.display = 'flex';
+            statTodo.textContent = stats.todo;
+            statProgress.textContent = stats.progress;
+            statDone.textContent = stats.done;
+        } else {
+            confirmStats.style.display = 'none';
+        }
+
+        document.getElementById('sprintCompleteOverlay').classList.add('active');
+    }
+
+    function closeCompleteSprintConfirmation() {
+        document.getElementById('sprintCompleteOverlay').classList.remove('active');
+    }
+
+    function confirmCompleteSprint() {
+        const form = document.getElementById('completeSprintForm');
+        if (form && activeSprintPk) {
+            form.submit();
+        }
+        closeCompleteSprintConfirmation();
+    }
+
+    if (document.getElementById('confirmActionBtn')) {
+        document.getElementById('confirmActionBtn').addEventListener('click', confirmCompleteSprint);
+    }
+
+    const overlay = document.getElementById('sprintCompleteOverlay');
+    if (overlay) {
+        overlay.addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeCompleteSprintConfirmation();
+            }
+        });
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeCompleteSprintConfirmation();
+        }
+    });
+
+    // Initialiser le style du bouton au chargement
+    document.addEventListener('DOMContentLoaded', function() {
+        updateCompleteButtonStyle();
+    });
+
     {% if can_edit_board and active_sprint %}
     let draggedCard = null;
 
@@ -214,29 +724,6 @@
         const count = zone.querySelectorAll('.kanban-card').length;
         const badge = document.querySelector(`[data-column-count-for="${zone.dataset.columnId}"]`);
         if (badge) badge.textContent = count;
-    }
-
-    function refreshSprintProgress() {
-        const board = document.getElementById('kanbanBoard');
-        const total = board.querySelectorAll('.kanban-card').length;
-        const todo = board.querySelectorAll('.kanban-card[data-status="todo"]').length;
-        const inProgress = board.querySelectorAll('.kanban-card[data-status="in_progress"]').length;
-        const done = board.querySelectorAll('.kanban-card[data-status="done"]').length;
-        const pct = total ? Math.round((done / total) * 100) : 0;
-
-        const totalNode = document.getElementById('asTotalIssues');
-        const todoNode = document.getElementById('asTodoCount');
-        const inProgressNode = document.getElementById('asInProgressCount');
-        const doneNode = document.getElementById('asDoneCount');
-        const pctNode = document.getElementById('asProgressPct');
-        const fillNode = document.getElementById('asProgressFill');
-
-        if (totalNode) totalNode.textContent = total;
-        if (todoNode) todoNode.textContent = todo;
-        if (inProgressNode) inProgressNode.textContent = inProgress;
-        if (doneNode) doneNode.textContent = done;
-        if (pctNode) pctNode.textContent = `${pct}%`;
-        if (fillNode) fillNode.style.width = `${pct}%`;
     }
 
     document.querySelectorAll('.kanban-card').forEach(card => {
@@ -304,8 +791,9 @@
             refreshSprintProgress();
         });
     });
-{% endif %}
+    {% endif %}
 </script>
 
 {% include 'scrum/sprint/_sprint_modal.html' %}
+{% include 'scrum/global/confirm_delete_modal.html' %}
 {% endblock project_content %}

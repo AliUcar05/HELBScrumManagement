@@ -44,6 +44,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{% url 'project-close-sprint' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-close-sprint' %}active{% endif %}">
+                                <i class="fas fa-archive"></i>
+                                <span>Close Sprint</span>
+                            </a>
+                        </li>
+                        <li>
                             <a href="{% url 'project-issues' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-issues' %}active{% endif %}">
                                 <i class="fas fa-desktop"></i>
                                 <span>Issues</span>
@@ -53,12 +59,6 @@
                             <a href="{% url 'project-roadmap' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-roadmap' %}active{% endif %}">
                                 <i class="fas fa-map"></i>
                                 <span>Roadmap</span>
-                            </a>
-                        </li>
-                        <li>
-                            <a href="{% url 'project-releases' project.pk %}" class="sidebar-link {% if request.resolver_match.url_name == 'project-releases' %}active{% endif %}">
-                                <i class="fas fa-archive"></i>
-                                <span>Releases</span>
                             </a>
                         </li>
                         <li>

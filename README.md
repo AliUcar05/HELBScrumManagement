@@ -1,130 +1,206 @@
-# Project Management Application (Scrum-compatible)
+# Scrum Project Management Application
 
-## 📚 Documentation
-- [Navigation & Page Flow](docs/navigation.md)
+A lightweight, Scrum-compatible project management web application built with Django, designed as a cost-effective alternative to Jira for academic use at **HELB**.
 
-A lightweight web application for managing software projects using the Scrum framework.  
-Designed as a cost-effective alternative to Jira for academic use at **HELB**, focusing on the features actually needed in project management courses.
+---
 
-## Purpose
-HELB currently provides Jira to students for project management exercises, but Jira comes with a significant monthly cost compared to the features used.  
-This project aims to deliver a **Scrum-oriented project management tool** with essential functionalities: project spaces, tickets, backlog prioritization, sprint management, and user access control.
+## Table of Contents
 
+- [Overview](#overview)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Installation](#installation)
+- [Database Setup](#database-setup)
+- [Running the Application](#running-the-application)
+- [Loading Demo Data](#loading-demo-data)
+- [Demo Accounts](#demo-accounts)
+- [Application Structure](#application-structure)
+- [Key Features](#key-features)
+
+---
+
+## Overview
+
+This application provides a Scrum-oriented project management tool with essential functionalities: project spaces, ticket management, product backlog prioritization, sprint management, a Kanban board, and role-based access control.
+
+---
+
+## Tech Stack
+
+| Layer      | Technology                         |
+|------------|-------------------------------------|
+| Backend    | Python 3 / Django 5.2              |
+| Frontend   | HTML, CSS, Bootstrap                |
+| Database   | PostgreSQL                          |
+| Forms      | django-crispy-forms + crispy-bootstrap4 |
+
+---
+
+## Prerequisites
+
+Before getting started, make sure the following are installed on your machine:
+
+- Python 3.10 or higher
+- pip
+- PostgreSQL (running on port `5432`)
+- Git
+
+---
+
+## Installation
+
+**1. Clone the repository**
+
+```bash
+git clone <repository-url>
+cd <repository-folder>
+```
+
+**2. (Optional but recommended) Create a virtual environment**
+
+```bash
+python -m venv venv
+source venv/bin/activate        # macOS / Linux
+venv\Scripts\activate           # Windows
+```
+
+**3. Install dependencies**
+
+```bash
+pip install -r requirements.txt
+```
+
+---
+
+## Database Setup
+
+**1. Open a PostgreSQL session and run the following commands:**
+
+```sql
+CREATE USER django_user WITH PASSWORD 'Garedumidi';
+CREATE DATABASE django_project_db OWNER django_user;
+GRANT ALL PRIVILEGES ON DATABASE django_project_db TO django_user;
+```
+
+**2. Verify the Django database settings in `django_project/settings.py`:**
+
+```python
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'django_project_db',
+        'USER': 'django_user',
+        'PASSWORD': 'Garedumidi',
+        'HOST': '127.0.0.1',
+        'PORT': '5432',
+    }
+}
+```
+
+**3. Apply migrations:**
+
+```bash
+cd django_project
+python manage.py migrate
+```
+
+---
+
+## Running the Application
+
+```bash
+python manage.py runserver
+```
+
+The application will be accessible at:
+
+- **Main app:** http://127.0.0.1:8000/
+- **Django admin panel:** http://127.0.0.1:8000/admin/
+
+---
+
+## Loading Demo Data
+
+A demo fixture is provided to populate the application with a realistic sample project (**SNA — Suivi des Notes Académiques**), including sprints, tickets, comments, and activity logs.
+
+**To load demo data into a fresh database:**
+
+```bash
+# Place the fixture file:
+# django_project/scrum/fixtures/demo_sna_notes_fixture.json
+
+cd django_project
+python manage.py flush --noinput
+python manage.py migrate
+python manage.py loaddata demo_sna_notes_fixture
+```
+
+**To promote the `admin` account to global admin:**
+
+```bash
+python manage.py shell -c "from django.contrib.auth.models import User; u=User.objects.get(username='admin'); u.profile.global_role='admin'; u.profile.save(); print('Done')"
+```
+
+> **Note:** The fixture is intended for a clean database. Running it on an existing database may cause ID or username conflicts.
+
+---
+
+## Demo Accounts
+
+All demo accounts share the same password:
+
+```
+Password: Demo1234!
+```
+
+| Username | Role            |
+|----------|-----------------|
+| admin    | Platform Admin  |
+| po       | Product Owner   |
+| sm       | Scrum Master    |
+| dev      | Developer       |
+| test     | Tester          |
+| viewer   | Read-only       |
+
+---
+
+## Application Structure
+
+```
+django_project/
+├── manage.py
+├── scrum/
+│   ├── fixtures/
+│   │   └── demo_sna_notes_fixture.json
+│   ├── models.py
+│   ├── views.py
+│   ├── urls.py
+│   └── templates/
+└── settings.py
+```
+
+---
 
 ## Key Features
 
-### 1) Project Spaces
-CRUD management of project spaces with:
-- Project code (prefix)
-- Name, description
-- Start date, end date
-- Workload unit: **man-days**, **man-hours**, or **story points**
-- Sprint duration
-- Capacity: global or per user
+- **Project Spaces** — Create and manage projects with sprint duration, workload units, and team capacity settings
+- **Ticket Management** — Supports Epics, User Stories, Bugs, and Tasks with full hierarchy
+- **Product Backlog** — Priority ordering with move up / move down controls
+- **Sprint Management** — Start, close, and track sprints; only one active sprint at a time
+- **Kanban Board** — Drag-and-drop ticket status management (To Do / In Progress / Done)
+- **Role-Based Access Control** — Platform admin, project admin, contributor, and read-only roles
+- **Statistics** — Burndown chart and sprint progress reporting
 
-### 2) Ticket Management
-Supports 4 ticket types:
-- **Epics**
-- **User Stories**
-- **Bugs**
-- **Tasks**
+---
 
-Hierarchy:
-- Epics → User Stories
-- Bugs → Tasks
+## Superuser (Manual Creation)
 
-Common fields (all ticket types):
-- Human-readable identifier
-- Project
-- Title, description
-- Status
-- Requester user
-- Assignee user
+If you prefer to create a superuser manually instead of using the demo fixture:
 
-Type-specific fields:
-- **Epic**: start date, end date, absolute priority
-- **User story / Bug / Task**: start date, end date, initial workload, remaining workload, completed workload, associated sprint
+```bash
+python manage.py createsuperuser
+```
 
-Minimal status sets:
-- **Epic**: `active`, `completed`, `cancelled`
-- **User story & Bug**: `new`, `active`, `closed`, `cancelled`
-- **Task**: `new`, `active`, `closed`, `cancelled`
-
-### 3) Product Backlog
-- Displays **user stories and bugs** ordered by **relative priority**
-- Shows related epic (if applicable)
-- Allows reordering items (move up / move down)
-
-### 4) Sprints
-CRUD for sprints with:
-- Name, start date, end date
-- Goal
-- Status
-
-Sprint capabilities:
-- Capacity tracking: global or per user
-- Actions:
-  - Start a sprint
-  - Close a sprint
-  - Add stories/bugs to sprint
-  - Move stories/bugs between sprint and product backlog
-- Sprint backlog: same behavior as product backlog
-- Kanban view of the sprint with drag/move between statuses
-- Constraint: **only one active sprint at a time**
-
-### 5) Users & Access Control
-Authentication:
-- Sign up
-- Log in
-
-User fields:
-- Email
-- Last name, first name
-- Username (pseudo)
-
-Roles:
-- Admin
-- Contributor
-
-Project permissions:
-- Admin
-- Contributor
-- Read-only
-
-### 6) Language
-- The entire application UI and content must be **in English**.
-
-## Suggested / Optional Enhancements (Nice-to-have)
-Ordered by added value:
-- Statistics module (per sprint, burndown chart, velocity, points per user, etc.)
-- Basic Git integration (link commits to tickets)
-- File attachments (project-level and/or ticket-level)
-- User profile picture
-- Create a new user story directly from the product backlog
-- Configurable story point values (e.g., Fibonacci) per project space
-- Tags on tickets
-- Custom ticket statuses and allowed transitions
-- Links between user stories/bugs (e.g., “blocked by”)
-- Ticket templates (pre-filled descriptions, e.g., “As a…, I want…, so that…”)
-- Epic color
-
-## Expected Deliverables
-- Project Charter
-- High-level design
-- Versioned source code on HELB GitHub
-- Final product presentation
-
-## Differentiation vs Jira
-Each team must propose **at least 3 significant differences** compared to Jira and justify them.  
-The best solution may become the base for future course usage, and contributors may be credited in the application.
-
-## Tech Stack (Recommended)
-- **Backend:** Python (Django recommended)
-- **Frontend:** HTML, CSS, JavaScript (Bootstrap or Angular)
-- **Database:** MariaDB or PostgreSQL
-
-## License
-Specify the project license here (e.g., MIT) if applicable.
-
-## Credits
-Add team members and contributors here. If parts of this project are adopted for future course versions, contributors may be listed in the app.
+Suggested credentials used during development:
+- **Username:** Helb
+- **Password:** Garedumidi
