@@ -342,6 +342,70 @@
     body.dark-mode .empty-column-state {
         color: #8b949e !important;
     }
+    .kanban-card.ticket-status-done {
+        border-left: 4px solid #28965a !important;
+        background-color: rgba(40, 150, 90, 0.07) !important;
+    }
+    .kanban-card.ticket-status-in_progress {
+        border-left: 4px solid #c76400 !important;
+        background-color: rgba(200, 100, 0, 0.07) !important;
+    }
+    .kanban-card.ticket-status-blocked {
+        border-left: 4px solid #a01400 !important;
+        background-color: rgba(160, 20, 0, 0.07) !important;
+    }
+    .kanban-card.ticket-status-in_review {
+        border-left: 4px solid #d28c00 !important;
+        background-color: rgba(210, 140, 0, 0.07) !important;
+    }
+    .kanban-card.ticket-status-todo {
+        border-left: 4px solid #dfe1e6 !important;
+    }
+    .kanban-card.ticket-type-bug {
+        border-left: 4px solid #a01400 !important;
+        background-color: rgba(160, 20, 0, 0.05) !important;
+    }
+
+    /* Dark mode */
+    body.dark-mode .kanban-card {
+        background: #1c2128 !important;
+        border-color: #30363d !important;
+        color: #c9d1d9 !important;
+    }
+    body.dark-mode .kanban-card strong { color: #e6edf3 !important; }
+    body.dark-mode .kanban-card .ticket-meta { color: #8b949e !important; }
+    body.dark-mode .kanban-card .text-muted { color: #8b949e !important; }
+    body.dark-mode .kanban-card .ticket-badge {
+        background: #30363d !important;
+        color: #c9d1d9 !important;
+    }
+    body.dark-mode .kanban-card .ticket-title-link { color: #e6edf3 !important; }
+    body.dark-mode .kanban-column {
+        background: #161b22 !important;
+    }
+    body.dark-mode .kanban-card.ticket-status-done {
+        border-left-color: #36b37e !important;
+        background-color: rgba(54, 179, 126, 0.15) !important;
+    }
+    body.dark-mode .kanban-card.ticket-status-in_progress {
+        border-left-color: #ffaa00 !important;
+        background-color: rgba(255, 170, 0, 0.15) !important;
+    }
+    body.dark-mode .kanban-card.ticket-status-blocked {
+        border-left-color: #f85149 !important;
+        background-color: rgba(248, 81, 73, 0.15) !important;
+    }
+    body.dark-mode .kanban-card.ticket-status-in_review {
+        border-left-color: #f79232 !important;
+        background-color: rgba(247, 146, 50, 0.15) !important;
+    }
+    body.dark-mode .kanban-card.ticket-status-todo {
+        border-left-color: #484f58 !important;
+    }
+    body.dark-mode .kanban-card.ticket-type-bug {
+        border-left-color: #f85149 !important;
+        background-color: rgba(248, 81, 73, 0.10) !important;
+    }
 </style>
 
 <div>
@@ -460,8 +524,7 @@
 
             <div class="kanban-dropzone" data-column-id="{{ column.id }}">
                 {% for ticket in column.tickets %}
-                    <div class="card p-3 shadow-sm kanban-card"
-                         draggable="{% if can_edit_board %}true{% else %}false{% endif %}"
+                    <div class="card p-3 shadow-sm kanban-card ticket-status-{{ ticket.status }}{% if ticket.type == 'bug' %} ticket-type-bug{% endif %}"                         draggable="{% if can_edit_board %}true{% else %}false{% endif %}"
                          data-ticket-id="{{ ticket.id }}"
                          data-assignee="{% if ticket.assignee %}{{ ticket.assignee.username }}{% endif %}"
                          data-updated="{{ ticket.updated_at|date:'U' }}"

@@ -1119,8 +1119,7 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
                         {% if sprint_links %}
                         {% for link in sprint_links %}
                         {% with ticket=link.ticket %}
-                        <div class="spt-row drag-ticket-card"
-                             data-ticket-id="{{ ticket.pk }}"
+                        <div class="spt-row drag-ticket-card ticket-status-{{ ticket.status }}{% if ticket.type == 'bug' %} ticket-type-bug{% endif %}"                             data-ticket-id="{{ ticket.pk }}"
                              data-sprint-id="{{ sprint.pk }}"
                              data-position="{{ link.position|default:forloop.counter }}"
                              data-draggable="true"

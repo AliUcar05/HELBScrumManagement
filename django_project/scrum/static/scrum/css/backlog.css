@@ -1214,3 +1214,60 @@ tr.ticket-status-todo td:first-child,
 tr.ticket-status-open td:first-child {
     border-left: 4px solid #dfe1e6 !important;
 }
+
+/* ===== COULEURS DYNAMIQUES - SPRINT TABLE ===== */
+
+.spt-row.ticket-status-done {
+    border-left: 4px solid #28965a;
+    background-color: rgba(40, 150, 90, 0.08) !important;
+}
+.spt-row.ticket-status-in_progress {
+    border-left: 4px solid #c76400;
+    background-color: rgba(200, 100, 0, 0.10) !important;
+}
+.spt-row.ticket-status-blocked {
+    border-left: 4px solid #a01400;
+    background-color: rgba(160, 20, 0, 0.10) !important;
+}
+.spt-row.ticket-status-in_review {
+    border-left: 4px solid #d28c00;
+    background-color: rgba(210, 140, 0, 0.09) !important;
+}
+.spt-row.ticket-status-todo {
+    border-left: 4px solid #dfe1e6;
+}
+.spt-row.ticket-type-bug {
+    border-left: 4px solid #a01400;
+    background-color: rgba(160, 20, 0, 0.07) !important;
+}
+
+/* Hover */
+.spt-row.ticket-status-done:hover { background-color: rgba(40, 150, 90, 0.15) !important; }
+.spt-row.ticket-status-in_progress:hover { background-color: rgba(200, 100, 0, 0.17) !important; }
+.spt-row.ticket-status-blocked:hover { background-color: rgba(160, 20, 0, 0.17) !important; }
+.spt-row.ticket-status-in_review:hover { background-color: rgba(210, 140, 0, 0.15) !important; }
+
+/* Dark mode */
+body.dark-mode .spt-row.ticket-status-done {
+    border-left-color: #36b37e;
+    background-color: rgba(54, 179, 126, 0.18) !important;
+}
+body.dark-mode .spt-row.ticket-status-in_progress {
+    border-left-color: #ffaa00;
+    background-color: rgba(255, 170, 0, 0.18) !important;
+}
+body.dark-mode .spt-row.ticket-status-blocked {
+    border-left-color: #f85149;
+    background-color: rgba(248, 81, 73, 0.18) !important;
+}
+body.dark-mode .spt-row.ticket-status-in_review {
+    border-left-color: #f79232;
+    background-color: rgba(247, 146, 50, 0.18) !important;
+}
+body.dark-mode .spt-row.ticket-status-todo {
+    border-left-color: #484f58;
+}
+body.dark-mode .spt-row.ticket-type-bug {
+    border-left-color: #f85149;
+    background-color: rgba(248, 81, 73, 0.12) !important;
+}
