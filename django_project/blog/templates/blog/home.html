@@ -492,6 +492,99 @@
         .ticket-row { flex-wrap: wrap; }
         .ticket-type { width: auto; }
     }
+
+    /* ===== DARK MODE - HOME ===== */
+    body.dark-mode .dashboard {
+        background: #0d1117 !important;
+    }
+
+    body.dark-mode .card,
+    body.dark-mode .card-header,
+    body.dark-mode .stat-card,
+    body.dark-mode .project-item,
+    body.dark-mode .ticket-row,
+    body.dark-mode .activity-item,
+    body.dark-mode .sprint-card-item,
+    body.dark-mode .profile-card,
+    body.dark-mode .quick-action {
+        background: #161b22 !important;
+        border-color: #30363d !important;
+        color: #c9d1d9 !important;
+    }
+
+    body.dark-mode .card-header {
+        background: #161b22 !important;
+        border-bottom-color: #30363d !important;
+    }
+
+    body.dark-mode .stat-card:hover,
+    body.dark-mode .project-item:hover,
+    body.dark-mode .ticket-row:hover,
+    body.dark-mode .sprint-card-item:hover,
+    body.dark-mode .quick-action:hover {
+        background: #21262d !important;
+    }
+
+    /* Textes */
+    body.dark-mode .welcome-section h1,
+    body.dark-mode .stat-left h3,
+    body.dark-mode .project-name,
+    body.dark-mode .ticket-title,
+    body.dark-mode .sprint-name,
+    body.dark-mode .profile-info .name,
+    body.dark-mode .activity-text strong,
+    body.dark-mode .quick-action span {
+        color: #e6edf3 !important;
+    }
+
+    body.dark-mode .welcome-section p,
+    body.dark-mode .stat-left p,
+    body.dark-mode .project-stats,
+    body.dark-mode .ticket-meta,
+    body.dark-mode .activity-text,
+    body.dark-mode .activity-time,
+    body.dark-mode .sprint-footer,
+    body.dark-mode .profile-email,
+    body.dark-mode .card-title h3 {
+        color: #8b949e !important;
+    }
+
+    /* Badges */
+    body.dark-mode .card-badge,
+    body.dark-mode .card-badge {
+        background: #21262d !important;
+        color: #8b949e !important;
+    }
+
+    /* Quick action icons */
+    body.dark-mode .quick-action i {
+        background: #21262d !important;
+        color: #58a6ff !important;
+    }
+
+    /* Progress bar */
+    body.dark-mode .progress-bar {
+        background: #21262d !important;
+    }
+
+    /* Bordures entre items */
+    body.dark-mode .project-item,
+    body.dark-mode .ticket-row,
+    body.dark-mode .activity-item,
+    body.dark-mode .sprint-card-item {
+        border-bottom-color: #21262d !important;
+    }
+
+    /* Stat icons - garder les couleurs mais assombrir le fond */
+    body.dark-mode .stat-icon.projects { background: #1a1f3a !important; }
+    body.dark-mode .stat-icon.tickets { background: #0f2a2a !important; }
+    body.dark-mode .stat-icon.tasks { background: #2a1020 !important; }
+    body.dark-mode .stat-icon.sprints { background: #2a1f0f !important; }
+
+    /* Pro Tip card - garder le gradient bleu */
+    body.dark-mode .card[style*="linear-gradient"] {
+        background: linear-gradient(135deg, #0747a6, #0052cc) !important;
+    }
 </style>
 
 <div class="dashboard">

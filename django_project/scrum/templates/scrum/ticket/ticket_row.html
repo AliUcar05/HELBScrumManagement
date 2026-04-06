@@ -1,7 +1,7 @@
 {% load static %}
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/quill/1.3.7/quill.snow.min.css">
 
-<tr class="ticket-row backlog-draggable-row"
+<tr class="ticket-row backlog-draggable-row ticket-status-{{ ticket.status }}{% if ticket.type == 'bug' %} ticket-type-bug{% endif %}"
     data-ticket-id="{{ ticket.id }}"
     data-ticket-order="{{ ticket.backlog_order|default:forloop.counter }}"
     data-drag-origin="backlog"

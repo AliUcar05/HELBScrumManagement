@@ -632,3 +632,143 @@
     padding: 16px;
     margin: 0;
 }
+/* ===== DARK MODE ===== */
+
+/* Tab label vertical */
+body.dark-mode .epic-tab-label {
+    background: #161b22 !important;
+    border-right-color: #30363d !important;
+    color: #8b949e !important;
+}
+body.dark-mode .epic-tab-label:hover {
+    background: #21262d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-tab-label.active {
+    background: #0d1117 !important;
+    color: #58a6ff !important;
+    border-right-color: transparent !important;
+}
+
+/* Panel */
+body.dark-mode .epic-panel {
+    background: #161b22 !important;
+    border-right-color: #30363d !important;
+}
+body.dark-mode .epic-panel-header {
+    border-bottom-color: #30363d !important;
+}
+body.dark-mode .epic-panel-title { color: #8b949e !important; }
+body.dark-mode .epic-panel-btn {
+    color: #8b949e !important;
+}
+body.dark-mode .epic-panel-btn:hover {
+    background: #30363d !important;
+    color: #c9d1d9 !important;
+}
+
+/* Scrollbar */
+body.dark-mode .epic-panel-body::-webkit-scrollbar-thumb {
+    background: #30363d !important;
+}
+
+/* Rows */
+body.dark-mode .epic-all-row,
+body.dark-mode .epic-no-epic-row {
+    color: #c9d1d9 !important;
+    border-color: #21262d !important;
+}
+body.dark-mode .epic-all-row:hover,
+body.dark-mode .epic-no-epic-row:hover {
+    background: #21262d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-all-row.active { color: #58a6ff !important; }
+body.dark-mode .epic-empty-msg { color: #8b949e !important; }
+
+/* Footer */
+body.dark-mode .epic-panel-footer {
+    border-top-color: #30363d !important;
+}
+body.dark-mode .epic-panel-create-btn { color: #58a6ff !important; }
+
+/* Epic items */
+body.dark-mode .epic-item {
+    border-bottom-color: #21262d !important;
+}
+body.dark-mode .epic-item-header:hover {
+    background: #21262d !important;
+}
+body.dark-mode .epic-item-header.active {
+    background: #1f3a5f !important;
+}
+body.dark-mode .epic-item-name { color: #c9d1d9 !important; }
+body.dark-mode .epic-item-header.active .epic-item-name {
+    color: #58a6ff !important;
+}
+body.dark-mode .epic-item-chevron { color: #8b949e !important; }
+body.dark-mode .epic-item-menu-btn { color: #8b949e !important; }
+body.dark-mode .epic-item-menu-btn:hover {
+    background: #30363d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-item-progress {
+    background: #30363d !important;
+}
+body.dark-mode .epic-item-body {
+    background: #1c2128 !important;
+    border-top-color: #30363d !important;
+}
+body.dark-mode .epic-item-link { color: #58a6ff !important; }
+body.dark-mode .epic-stat-row {
+    border-bottom-color: #21262d !important;
+}
+body.dark-mode .epic-stat-label { color: #8b949e !important; }
+body.dark-mode .epic-stat-badge {
+    background: #30363d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-create-link { color: #58a6ff !important; }
+
+/* Epic dropdown menu (le menu blanc) */
+body.dark-mode .epic-item-dropdown {
+    background: #161b22 !important;
+    border-color: #30363d !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+body.dark-mode .epic-dd-item {
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-dd-item:hover {
+    background: #21262d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-dd-item--danger { color: #f85149 !important; }
+body.dark-mode .epic-dd-item--danger:hover {
+    background: #2d1a1a !important;
+    color: #f85149 !important;
+}
+body.dark-mode .epic-dd-sep { background: #30363d !important; }
+
+/* Filter banner */
+body.dark-mode .epic-filter-banner {
+    background: #1f1a3a !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .epic-filter-count { color: #8b949e !important; }
+body.dark-mode .epic-filter-banner-clear { color: #8b949e !important; }
+body.dark-mode .epic-filter-banner-clear:hover { color: #c9d1d9 !important; }
+
+/* Move to sprint modal */
+body.dark-mode .mts-sprint-btn {
+    background: #21262d !important;
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .mts-sprint-btn:hover {
+    background: #1f3a5f !important;
+    border-color: #58a6ff !important;
+}
+body.dark-mode .mts-sprint-name { color: #c9d1d9 !important; }
+body.dark-mode .mts-sprint-count { color: #8b949e !important; }
+body.dark-mode .mts-empty-msg { color: #8b949e !important; }
