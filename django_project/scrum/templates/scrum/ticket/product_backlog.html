@@ -650,6 +650,69 @@
     color: #0052cc;
     font-size: 18px;
 }
+
+/* ===== COULEURS DYNAMIQUES TICKETS ===== */
+
+/* 🟠 In Progress - Orange foncé */
+tr.ticket-status-in_progress td {
+    background-color: rgba(200, 100, 0, 0.18) !important;
+    border-bottom-color: rgba(200, 100, 0, 0.15) !important;
+}
+tr.ticket-status-in_progress td:first-child { border-left: 4px solid #c76400 !important; }
+tr.ticket-status-in_progress:hover td { background-color: rgba(200, 100, 0, 0.26) !important; }
+
+/* 🔴 Blocked - Rouge bien foncé */
+tr.ticket-status-blocked td {
+    background-color: rgba(160, 20, 0, 0.18) !important;
+    border-bottom-color: rgba(160, 20, 0, 0.15) !important;
+}
+tr.ticket-status-blocked td:first-child { border-left: 4px solid #a01400 !important; }
+tr.ticket-status-blocked:hover td { background-color: rgba(160, 20, 0, 0.26) !important; }
+
+/* 🟡 In Review - Jaune ambre */
+tr.ticket-status-in_review td {
+    background-color: rgba(210, 140, 0, 0.14) !important;
+}
+tr.ticket-status-in_review td:first-child { border-left: 4px solid #d28c00 !important; }
+
+/* ✅ Done - Vert */
+tr.ticket-status-done td {
+    background-color: rgba(40, 150, 90, 0.12) !important;
+}
+tr.ticket-status-done td:first-child { border-left: 4px solid #28965a !important; }
+
+/* ⚪ Todo - Neutre */
+tr.ticket-status-todo td:first-child { border-left: 4px solid #dfe1e6 !important; }
+
+/*Bug */
+tr.ticket-type-bug td { background-color: rgba(160, 20, 0, 0.10) !important; }
+tr.ticket-type-bug td:first-child { border-left: 4px solid #a01400 !important; }
+
+/* ===== DARK MODE ===== */
+body.dark-mode tr.ticket-status-in_progress td {
+    background-color: rgba(255, 139, 0, 0.20) !important;
+}
+body.dark-mode tr.ticket-status-in_progress td:first-child {
+    border-left: 4px solid #ffaa00 !important;
+}
+body.dark-mode tr.ticket-status-blocked td {
+    background-color: rgba(220, 50, 20, 0.22) !important;
+}
+body.dark-mode tr.ticket-status-blocked td:first-child {
+    border-left: 4px solid #ff4d2e !important;
+}
+body.dark-mode tr.ticket-status-in_review td {
+    background-color: rgba(247, 146, 50, 0.20) !important;
+}
+body.dark-mode tr.ticket-status-in_review td:first-child {
+    border-left: 4px solid #f79232 !important;
+}
+body.dark-mode tr.ticket-status-done td {
+    background-color: rgba(54, 179, 126, 0.20) !important;
+}
+body.dark-mode tr.ticket-status-done td:first-child {
+    border-left: 4px solid #36b37e !important;
+}
 </style>
 
 <h1 class="page-title">Product Backlog</h1>

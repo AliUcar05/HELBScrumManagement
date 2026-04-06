@@ -1174,3 +1174,43 @@ tr:hover {
     color: #de350b;
     text-decoration: none;
 }
+
+/* ===== DYNAMIC TICKET COLORS ===== */
+
+/* ✅ Done - Vert */
+tr.ticket-status-done td {
+    background-color: rgba(54, 179, 126, 0.08) !important;
+}
+tr.ticket-status-done td:first-child {
+    border-left: 4px solid #36b37e !important;
+}
+
+/* 🟠 In Progress - Orange */
+tr.ticket-status-in_progress td {
+    background-color: rgba(255, 139, 0, 0.07) !important;
+}
+tr.ticket-status-in_progress td:first-child {
+    border-left: 4px solid #ff8b00 !important;
+}
+
+/* 🔴 Blocked - Rouge */
+tr.ticket-status-blocked td {
+    background-color: rgba(222, 53, 11, 0.07) !important;
+}
+tr.ticket-status-blocked td:first-child {
+    border-left: 4px solid #de350b !important;
+}
+
+/* 🔴 Bug - Rouge clair */
+tr.ticket-type-bug td {
+    background-color: rgba(222, 53, 11, 0.05) !important;
+}
+tr.ticket-type-bug td:first-child {
+    border-left: 4px solid #de350b !important;
+}
+
+/* ⚪ Todo / Open - Neutre */
+tr.ticket-status-todo td:first-child,
+tr.ticket-status-open td:first-child {
+    border-left: 4px solid #dfe1e6 !important;
+}

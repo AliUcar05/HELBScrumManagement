@@ -607,3 +607,14 @@ body.dark-mode .badge {
     background-color: #21262d !important;
     color: #c9d1d9 !important;
 }
+
+/* Préserver les couleurs dynamiques en dark mode */
+body.dark-mode .ticket-status-completed td {
+    background-color: rgba(54, 179, 126, 0.15) !important;
+}
+body.dark-mode .ticket-status-active td {
+    background-color: rgba(255, 139, 0, 0.12) !important;
+}
+body.dark-mode .ticket-status-planned td {
+    background-color: rgba(107, 119, 140, 0.08) !important;
+}
