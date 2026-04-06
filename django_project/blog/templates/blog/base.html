@@ -127,7 +127,7 @@
 
                                     <li class="nav-item">
                                         {% if current_project and current_project.created_by_id == user.id %}
-                                            <a class="nav-link" href="{% url 'project-settings' current_project.pk %}#members-section" title="Project members">
+                                            <a class="nav-link" href="{% url 'project-settings' current_project.pk %}#team" title="Project members">
                                                 <i class="fas fa-users" style="font-size:1.4rem;"></i>
                                             </a>
                                         {% else %}
