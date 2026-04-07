@@ -63,7 +63,11 @@
                             </li>
 
                             <li class="nav-item mr-4">
-                                <a class="nav-link text-white" href="">Issues</a>
+                                {% if current_project %}
+                                    <a class="nav-link text-white" href="{% url 'project-issues' current_project.pk %}">Issues</a>
+                                {% else %}
+                                    <a class="nav-link text-white" href="#">Issues</a>
+                                {% endif %}
                             </li>
 
                             <li class="nav-item mr-4">
@@ -75,7 +79,11 @@
                             </li>
 
                             <li class="nav-item mr-4">
-                                <a class="nav-link text-white" href="#">Plans</a>
+                                {% if current_project %}
+                                    <a class="nav-link text-white" href="{% url 'project-roadmap' current_project.pk %}">Plans</a>
+                                {% else %}
+                                    <a class="nav-link text-white" href="#">Plans</a>
+                                {% endif %}
                             </li>
 
                             <button type="button" class="btn btn-primary btn-sm px-3 py-1 ml-1" data-toggle="modal" data-target="#globalCreateTicketModal" style="border-radius:6px; font-weight:600; font-size:0.82rem; letter-spacing:.01em;">
@@ -86,10 +94,6 @@
                         <div class="navbar-nav">
                             {% if user.is_authenticated %}
                                 <ul class="navbar-nav align-items-center">
-                                    <li class="nav-item">
-                                        <a class="nav-link" href="#"><i class="fas fa-search" style="font-size:1.4rem;"></i></a>
-                                    </li>
-
                                     <li class="nav-item dropdown">
                                         <a class="nav-link position-relative" href="#" role="button" data-toggle="dropdown" title="Notifications">
                                             <i class="fas fa-bell" style="font-size:1.4rem;"></i>
