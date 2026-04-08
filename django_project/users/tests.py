@@ -2,6 +2,8 @@ from django.contrib.auth import get_user_model
 from django.test import Client, TestCase, override_settings
 from django.urls import reverse
 
+from scrum.models import Membership, Project
+
 from .models import Notification
 
 User = get_user_model()
@@ -21,6 +23,18 @@ class UserAdministrationAccessTests(TestCase):
         self.admin = self.make_user("platform_admin", "admin")
         self.member = self.make_user("regular_member", "member")
         self.other_member = self.make_user("second_member", "member")
+        self.outsider = self.make_user("outsider_member", "member")
+
+        self.project = Project.objects.create(
+            name="Apollo",
+            code="APOLLO",
+            description="Project used for notification tests.",
+            start_date="2026-04-01",
+            created_by=self.admin,
+        )
+        Membership.objects.create(user=self.admin, project=self.project, role="admin")
+        Membership.objects.create(user=self.member, project=self.project, role="contributor")
+        Membership.objects.create(user=self.other_member, project=self.project, role="read-only")
 
     def make_user(self, username, global_role):
         user = User.objects.create_user(
@@ -61,6 +75,7 @@ class UserAdministrationAccessTests(TestCase):
             reverse("manage-users"),
             {
                 "action": "send_notification",
+                "audience": "selected",
                 "title": "Sprint update",
                 "message": "The sprint review starts at 15:00.",
                 "recipients": [self.member.id],
@@ -72,6 +87,47 @@ class UserAdministrationAccessTests(TestCase):
         self.assertEqual(Notification.objects.filter(recipient=self.member).count(), 1)
         self.assertEqual(Notification.objects.filter(recipient=self.other_member).count(), 0)
         self.assertContains(response, "Notification sent to 1 user.")
+
+    def test_admin_can_send_notification_to_project_team(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse("manage-users"),
+            {
+                "action": "send_notification",
+                "audience": "project_team",
+                "project": self.project.id,
+                "title": "Project announcement",
+                "message": "Demo tomorrow at 10:00.",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Notification.objects.filter(recipient=self.member, title="Project announcement").count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.other_member, title="Project announcement").count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.outsider, title="Project announcement").count(), 0)
+        self.assertContains(response, "Notification sent to 2 users.")
+
+    def test_admin_can_send_notification_to_all_users(self):
+        self.client.force_login(self.admin)
+        response = self.client.post(
+            reverse("manage-users"),
+            {
+                "action": "send_notification",
+                "audience": "all_users",
+                "title": "Global maintenance",
+                "message": "The platform will be unavailable tonight.",
+            },
+            follow=True,
+        )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(Notification.objects.filter(title="Global maintenance").count(), 3)
+        self.assertEqual(Notification.objects.filter(recipient=self.member, title="Global maintenance").count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.other_member, title="Global maintenance").count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.outsider, title="Global maintenance").count(), 1)
+        self.assertEqual(Notification.objects.filter(recipient=self.admin, title="Global maintenance").count(), 0)
+        self.assertContains(response, "Notification sent to 3 users.")
 
     def test_user_only_sees_their_own_notifications(self):
         Notification.objects.create(
