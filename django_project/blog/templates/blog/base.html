@@ -6,6 +6,33 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+        <style id="anti-flash">
+            html { 
+                background-color: #f4f6f9;
+                visibility: hidden;
+                opacity: 0;
+            }
+            html.dark-mode { 
+                background-color: #0d1117 !important;
+            }
+        </style>
+        <script>
+            (function() {
+                var isDark = localStorage.getItem('darkMode') === 'true';
+                if (isDark) {
+                    document.documentElement.classList.add('dark-mode');
+                    document.documentElement.style.backgroundColor = '#0d1117';
+                } else {
+                    document.documentElement.style.backgroundColor = '#f4f6f9';
+                }
+                // Attend que le CSS soit chargé avant de montrer la page
+                document.addEventListener('DOMContentLoaded', function() {
+                    document.documentElement.style.visibility = 'visible';
+                    document.documentElement.style.opacity = '1';
+                });
+            })();
+        </script>
+
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
         <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
