@@ -1,6 +1,8 @@
 from django import forms
 from django.contrib.auth.models import User
 
+from scrum.models import Project
+
 from .models import Notification, Profile
 
 
@@ -106,14 +108,37 @@ class ProfileUpdateForm(forms.ModelForm):
             "supervisor",
         ]
 
+
 class NotificationForm(forms.Form):
+    AUDIENCE_SELECTED = "selected"
+    AUDIENCE_PROJECT = "project_team"
+    AUDIENCE_ALL = "all_users"
+
+    AUDIENCE_CHOICES = [
+        (AUDIENCE_SELECTED, "Selected users"),
+        (AUDIENCE_PROJECT, "Project team members"),
+        (AUDIENCE_ALL, "All users"),
+    ]
+
+    audience = forms.ChoiceField(
+        choices=AUDIENCE_CHOICES,
+        initial=AUDIENCE_SELECTED,
+        widget=forms.Select(attrs={"class": "form-control"}),
+        help_text="Choose who should receive the notification.",
+    )
+    project = forms.ModelChoiceField(
+        queryset=Project.objects.none(),
+        required=False,
+        widget=forms.Select(attrs={"class": "form-control"}),
+        help_text="Required when sending an announcement to a project team.",
+        empty_label="Select a project",
+    )
     recipients = forms.ModelMultipleChoiceField(
         queryset=User.objects.none(),
         required=False,
         widget=forms.SelectMultiple(attrs={"class": "form-control", "size": 8}),
-        help_text="Hold Ctrl (or Cmd on Mac) to select multiple users.",
+        help_text="Used only for the 'Selected users' option.",
     )
-    send_to_all = forms.BooleanField(required=False, label="Send to all users")
     title = forms.CharField(
         max_length=200,
         widget=forms.TextInput(attrs={"class": "form-control", "placeholder": "Notification title"}),
@@ -125,26 +150,54 @@ class NotificationForm(forms.Form):
     def __init__(self, *args, current_user=None, **kwargs):
         self.current_user = current_user
         super().__init__(*args, **kwargs)
-        queryset = User.objects.all().select_related("profile").order_by("username")
+
+        users_queryset = User.objects.all().select_related("profile").order_by("username")
         if current_user is not None:
-            queryset = queryset.exclude(pk=current_user.pk)
-        self.fields["recipients"].queryset = queryset
+            users_queryset = users_queryset.exclude(pk=current_user.pk)
+        self.fields["recipients"].queryset = users_queryset
+
+        projects_queryset = Project.objects.all().order_by("name")
+        self.fields["project"].queryset = projects_queryset
+
+    def _resolve_recipients(self):
+        audience = self.cleaned_data.get("audience")
+        selected_recipients = self.cleaned_data.get("recipients")
+        project = self.cleaned_data.get("project")
+
+        if audience == self.AUDIENCE_ALL:
+            recipients_qs = self.fields["recipients"].queryset
+        elif audience == self.AUDIENCE_PROJECT and project is not None:
+            recipients_qs = User.objects.filter(memberships__project=project)
+            if self.current_user is not None:
+                recipients_qs = recipients_qs.exclude(pk=self.current_user.pk)
+            recipients_qs = recipients_qs.select_related("profile").distinct().order_by("username")
+        else:
+            recipients_qs = selected_recipients or User.objects.none()
+
+        return list(recipients_qs)
 
     def clean(self):
         cleaned_data = super().clean()
-        recipients = cleaned_data.get("recipients")
-        send_to_all = cleaned_data.get("send_to_all")
+        audience = cleaned_data.get("audience")
+        project = cleaned_data.get("project")
 
-        if not send_to_all and not recipients:
-            self.add_error("recipients", "Select at least one user or choose 'Send to all users'.")
+        if audience == self.AUDIENCE_PROJECT and not project:
+            self.add_error("project", "Select a project to notify its team members.")
+
+        if audience == self.AUDIENCE_SELECTED and not cleaned_data.get("recipients"):
+            self.add_error("recipients", "Select at least one user.")
+
+        if not self.errors:
+            recipients = self._resolve_recipients()
+            if not recipients:
+                self.add_error(None, "No eligible recipients were found for this notification.")
+            else:
+                cleaned_data["resolved_recipients"] = recipients
 
         return cleaned_data
 
     def save(self, sender):
-        recipients = list(self.cleaned_data["recipients"])
-
-        if self.cleaned_data.get("send_to_all"):
-            recipients = list(self.fields["recipients"].queryset)
+        recipients = self.cleaned_data.get("resolved_recipients") or self._resolve_recipients()
 
         notifications = [
             Notification(

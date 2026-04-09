@@ -1,0 +1,12 @@
+
+{% load static %}
+
+<link rel="stylesheet" href="{% static 'blog/tour.css' %}">
+
+{# ── Pass server-side flag to JS: show welcome on very first visit ── #}
+<script>
+  // Set to true if this is a first-time session (set by Django view or session flag)
+  window.TOUR_SHOW_WELCOME = {% if request.session.show_tour_welcome %}true{% else %}false{% endif %};
+</script>
+
+<script src="{% static 'blog/tour_professional.js' %}"></script>

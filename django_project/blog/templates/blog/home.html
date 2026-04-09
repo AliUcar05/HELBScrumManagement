@@ -1,5 +1,6 @@
 {% extends "blog/base.html" %}
 {% load static %}
+{% load i18n %}
 
 {% block content %}
 <style>
@@ -592,14 +593,14 @@
     <div class="dashboard-header">
         <div class="welcome-section">
             <h1>
-                <span id="greetingText">Good {{ time_of_day }}</span>, {{ user.first_name|default:user.username }}
+                <span id="greetingText">{% trans "Good" %} {{ time_of_day }}</span>, {{ user.first_name|default:user.username }}
             </h1>
-            <p>Here's what's happening across your projects</p>
+            <p>{% trans "Here's what's happening across your projects" %}</p>
         </div>
         <div class="header-actions">
             {% if user.profile.global_role|lower == 'admin' %}
                 <a href="{% url 'project-create' %}" class="create-btn">
-                    <i class="fas fa-plus"></i> Create Project
+                    <i class="fas fa-plus"></i> {% trans "Create Project" %}
                 </a>
             {% endif %}
         </div>
@@ -610,28 +611,28 @@
         <div class="stat-card" onclick="window.location.href='{% url 'project-list' %}'">
             <div class="stat-left">
                 <h3>{{ user_projects_count|default:"0" }}</h3>
-                <p>Active Projects</p>
+                <p>{% trans "Active Projects" %}</p>
             </div>
             <div class="stat-icon projects"><i class="fas fa-folder-open"></i></div>
         </div>
         <div class="stat-card" onclick="window.location.href='{% url 'project-list' %}'">
             <div class="stat-left">
                 <h3>{{ open_tickets_count|default:"0" }}</h3>
-                <p>Open Tickets</p>
+                <p>{% trans "Open Tickets" %}</p>
             </div>
             <div class="stat-icon tickets"><i class="fas fa-ticket-alt"></i></div>
         </div>
         <div class="stat-card">
             <div class="stat-left">
                 <h3>{{ my_tickets_count|default:"0" }}</h3>
-                <p>My Tasks</p>
+                <p>{% trans "My Tasks" %}</p>
             </div>
             <div class="stat-icon tasks"><i class="fas fa-user-check"></i></div>
         </div>
         <div class="stat-card" onclick="window.location.href='{% url 'project-list' %}'">
             <div class="stat-left">
                 <h3>{{ active_sprints_count|default:"0" }}</h3>
-                <p>Active Sprints</p>
+                <p>{% trans "Active Sprints" %}</p>
             </div>
             <div class="stat-icon sprints"><i class="fas fa-rocket"></i></div>
         </div>
@@ -648,9 +649,9 @@
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fas fa-folder-open"></i>
-                        <h3>Recent Projects</h3>
+                        <h3>{% trans "Recent Projects" %}</h3>
                     </div>
-                    <a href="{% url 'project-list' %}" class="card-link">View all →</a>
+                    <a href="{% url 'project-list' %}" class="card-link">{% trans "View all" %} →</a>
                 </div>
                 <div class="project-list">
                     {% for project in recent_projects|slice:":5" %}
@@ -659,7 +660,7 @@
                             <div class="project-info">
                                 <div class="project-name">{{ project.name }}</div>
                                 <div class="project-stats">
-                                    <span><i class="fas fa-ticket-alt"></i> {{ project.ticket_count|default:0 }} issues</span>
+                                    <span><i class="fas fa-ticket-alt"></i> {{ project.ticket_count|default:0 }} {% trans "issues" %}</span>
                                     <span><i class="fas fa-user"></i> {{ project.created_by.username }}</span>
                                     <span><i class="fas fa-calendar"></i> {{ project.created_at|date:"M Y" }}</span>
                                 </div>
@@ -669,9 +670,9 @@
                     {% empty %}
                         <div class="empty-state">
                             <i class="fas fa-folder-open"></i>
-                            <p>No projects yet</p>
+                            <p>{% trans "No projects yet" %}</p>
                             {% if user.profile.global_role|lower == 'admin' %}
-                                <a href="{% url 'project-create' %}" class="card-link">Create your first project →</a>
+                                <a href="{% url 'project-create' %}" class="card-link">{% trans "Create your first project" %} →</a>
                             {% endif %}
                         </div>
                     {% endfor %}
@@ -683,9 +684,9 @@
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fas fa-ticket-alt"></i>
-                        <h3>My Tickets</h3>
+                        <h3>{% trans "My Tickets" %}</h3>
                     </div>
-                    <span class="card-badge">{{ my_tickets_count|default:0 }} open</span>
+                    <span class="card-badge">{{ my_tickets_count|default:0 }} {% trans "open" %}</span>
                 </div>
                 <div class="tickets-list">
                     {% for ticket in my_tickets|slice:":5" %}
@@ -704,13 +705,13 @@
                     {% empty %}
                         <div class="empty-state">
                             <i class="fas fa-check-circle"></i>
-                            <p>No tickets assigned to you</p>
+                            <p>{% trans "No tickets assigned to you" %}</p>
                         </div>
                     {% endfor %}
                 </div>
                 {% if my_tickets|length > 5 %}
                     <div style="padding: 12px 20px; border-top: 1px solid var(--border-light); text-align: center;">
-                        <a href="{% url 'project-list' %}" class="card-link">View all {{ my_tickets|length }} tickets →</a>
+                        <a href="{% url 'project-list' %}" class="card-link">{% trans "View all" %} {{ my_tickets|length }} {% trans "tickets" %} →</a>
                     </div>
                 {% endif %}
             </div>
@@ -720,7 +721,7 @@
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fas fa-stream"></i>
-                        <h3>Activity Feed</h3>
+                        <h3>{% trans "Activity Feed" %}</h3>
                     </div>
                 </div>
                 <div class="activity-list">
@@ -735,7 +736,7 @@
                                     {{ activity.description }}
                                 </div>
                                 <div class="activity-time">
-                                    <i class="far fa-clock"></i> {{ activity.created_at|timesince }} ago
+                                    <i class="far fa-clock"></i> {{ activity.created_at|timesince }} {% trans "ago" %}
                                     <span class="ml-2"><i class="fas fa-folder"></i> {{ activity.project.name }}</span>
                                 </div>
                             </div>
@@ -743,7 +744,7 @@
                     {% empty %}
                         <div class="empty-state">
                             <i class="fas fa-stream"></i>
-                            <p>No recent activity</p>
+                            <p>{% trans "No recent activity" %}</p>
                         </div>
                     {% endfor %}
                 </div>
@@ -758,27 +759,27 @@
                 <div class="card-header">
                     <div class="card-title">
                         <i class="fas fa-bolt"></i>
-                        <h3>Quick Actions</h3>
+                        <h3>{% trans "Quick Actions" %}</h3>
                     </div>
                 </div>
                 <div class="quick-actions">
                     {% if user.profile.global_role|lower == 'admin' %}
                         <a href="{% url 'project-create' %}" class="quick-action">
                             <i class="fas fa-plus-circle"></i>
-                            <span>New Project</span>
+                            <span>{% trans "New Project" %}</span>
                         </a>
                     {% endif %}
                     <button class="quick-action" data-toggle="modal" data-target="#globalCreateTicketModal">
                         <i class="fas fa-ticket-alt"></i>
-                        <span>Create Issue</span>
+                        <span>{% trans "Create Issue" %}</span>
                     </button>
                     <button class="quick-action" data-toggle="modal" data-target="#createSprintModal">
                         <i class="fas fa-rocket"></i>
-                        <span>Start Sprint</span>
+                        <span>{% trans "Start Sprint" %}</span>
                     </button>
                     <a href="{% url 'project-list' %}" class="quick-action">
                         <i class="fas fa-search"></i>
-                        <span>Browse Projects</span>
+                        <span>{% trans "Browse Projects" %}</span>
                     </a>
                 </div>
             </div>

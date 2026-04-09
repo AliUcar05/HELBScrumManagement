@@ -1,5 +1,6 @@
 {% extends 'scrum/project_board.html' %}
 {% load static %}
+{% load i18n %}
 {% block project_content %}
 
 <link rel="stylesheet" href="{% static 'scrum/css/backlog.css' %}">
@@ -922,7 +923,7 @@ body.dark-mode .empty-state-row td {
 body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
 </style>
 
-<h1 class="page-title">Product Backlog</h1>
+<h1 class="page-title">{% trans "Product Backlog" %}</h1>
 
 <div class="backlog-quick-filters">
     <span class="bqf-label">Quick Filters:</span>
@@ -1027,10 +1028,10 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
 
             <div class="sprints-section">
                 <div class="sprints-section-header">
-                    <h2>Sprints</h2>
+                    <h2>{% trans "Sprints" %}</h2>
                     {% if can_create %}
                     <button class="btn-dark" data-toggle="modal" data-target="#createSprintModal">
-                        <i class="fas fa-plus mr-1"></i> Create Sprint
+                        <i class="fas fa-plus mr-1"></i> {% trans "Create Sprint" %}
                     </button>
                     {% endif %}
                 </div>
@@ -1056,12 +1057,12 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
                             {% if can_create %}
                             {% if sprint.status == 'planned' %}
                                 {% if active_sprint %}
-                                    <button type="button" class="spt-action-btn disabled" disabled title="An active sprint already exists">
-                                        Start sprint
+                                    <button type="button" class="spt-action-btn disabled" disabled title="{% trans 'An active sprint already exists' %}">
+                                        {% trans "Start sprint" %}
                                     </button>
                                 {% else %}
                                     <button type="button" class="spt-action-btn" onclick="handleStartSprint({{ sprint.pk }}, '{{ sprint.goals|escapejs }}', '{% url 'sprint-start' project.pk sprint.pk %}')">
-                                        Start sprint
+                                        {% trans "Start sprint" %}
                                     </button>
                                 {% endif %}
                             {% elif sprint.status == 'active' %}
@@ -1069,7 +1070,7 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
                                     {% csrf_token %}
                                     <button type="button" class="spt-action-btn spt-action-btn--complete"
                                             onclick="confirmCompleteSprintFromBacklog({{ sprint.pk }}, '{{ sprint.name|escapejs }}', document.getElementById('complete-sprint-form-{{ sprint.pk }}'))">
-                                        Complete sprint
+                                        {% trans "Complete sprint" %}
                                     </button>
                                 </form>
                             {% endif %}
@@ -1178,14 +1179,14 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
             <div class="backlog-section">
                 <div class="backlog-header">
                     <div class="backlog-title">
-                        <h2>Backlog</h2>
-                        <span class="backlog-count">{{ tickets|length }} issues</span>
+                        <h2>{% trans "Backlog" %}</h2>
+                        <span class="backlog-count">{{ tickets|length }} {% trans "issues" %}</span>
                     </div>
                     <div class="backlog-actions">
                         {% if can_create %}
                         <button class="btn-dark" id="createIssueBtn" data-toggle="modal" data-target="#globalCreateTicketModal"
                                 {% if filter_epic %}data-epic-id="{{ filter_epic }}" data-epic-title="{% for e in epics %}{% if e.pk|stringformat:'s' == filter_epic %}{{ e.title|escapejs }}{% endif %}{% endfor %}"{% endif %}>
-                            <i class="fas fa-plus mr-1"></i> Create Issue
+                            <i class="fas fa-plus mr-1"></i> {% trans "Create Issue" %}
                         </button>
                         {% endif %}
                     </div>
@@ -1431,7 +1432,7 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
     </div>
 </div>
 
-<!-- Modal de confirmation pour compléter un sprint (Backlog) -->
+<!-- Modal de confirmation pour compléter un sprint (Backlog) - VERSION PROFESSIONNELLE -->
 <div class="modal fade" id="backlogCompleteSprintModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered sprint-complete-confirm-modal">
         <div class="modal-content">
@@ -1449,6 +1450,17 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
             <div class="modal-body" style="padding: 16px 24px;">
                 <p id="backlogConfirmMessage" style="color: #42526e; font-size: 14px; margin-bottom: 8px;"></p>
 
+                <!-- Liste des tickets non terminés -->
+                <div id="backlogUnfinishedTicketsList" style="display: none; margin-bottom: 16px;">
+                    <div class="sprint-complete-warning" style="margin-top: 0; margin-bottom: 12px;">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <strong>Unfinished tickets:</strong>
+                    </div>
+                    <ul id="backlogUnfinishedTicketsUl" style="margin: 0; padding-left: 20px; max-height: 200px; overflow-y: auto;">
+                        <!-- Dynamically populated -->
+                    </ul>
+                </div>
+
                 <div class="sprint-complete-stats" id="backlogConfirmStats" style="display: none;">
                     <div class="sprint-complete-stat">
                         <div class="sprint-complete-stat-value todo" id="backlogStatTodo">0</div>
@@ -1464,6 +1476,38 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
                     </div>
                 </div>
 
+                <!-- Options pour les tickets non terminés -->
+                <div id="backlogUnfinishedOptions" style="display: none; margin-top: 16px;">
+                    <div class="sprint-complete-warning" style="margin-bottom: 12px;">
+                        <i class="fas fa-question-circle"></i>
+                        <strong>What do you want to do with the unfinished tickets?</strong>
+                    </div>
+
+                    <div style="display: flex; flex-direction: column; gap: 12px;">
+                        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; padding: 8px; border-radius: 8px; background: #f4f5f7;">
+                            <input type="radio" name="backlog_unfinished_action" value="backlog" checked style="margin-top: 3px;">
+                            <div>
+                                <strong><i class="fas fa-arrow-left"></i> Move to Backlog</strong>
+                                <div style="font-size: 12px; color: #6b778c; margin-top: 4px;">
+                                    Tickets will be removed from this sprint and remain in the backlog.<br>
+                                    In-progress tickets will be reset to "To Do".
+                                </div>
+                            </div>
+                        </label>
+
+                        <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; padding: 8px; border-radius: 8px; background: #e3fcef;">
+                            <input type="radio" name="backlog_unfinished_action" value="mark_done" style="margin-top: 3px;">
+                            <div>
+                                <strong><i class="fas fa-check-circle"></i> Mark as Done</strong>
+                                <div style="font-size: 12px; color: #6b778c; margin-top: 4px;">
+                                    Force all unfinished tickets to status "Done".<br>
+                                    Tickets will be marked as completed in this sprint.
+                                </div>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+
                 <div id="backlogConfirmWarning" class="sprint-complete-warning">
                     <i class="fas fa-info-circle"></i>
                     <span id="backlogWarningText">This action cannot be undone.</span>
@@ -1471,7 +1515,7 @@ body.dark-mode .empty-state-action-row td { background: #1c2128 !important; }
             </div>
             <div class="modal-footer" style="border-top: none; padding: 0 24px 20px 24px; gap: 10px;">
                 <button type="button" class="btn btn-outline-secondary" data-dismiss="modal">Cancel</button>
-                <button type="button" class="btn btn-danger" id="backlogConfirmCompleteBtn">Complete Sprint</button>
+                <button type="button" class="btn btn-primary" id="backlogConfirmCompleteBtn">Complete Sprint</button>
             </div>
         </div>
     </div>
@@ -1723,6 +1767,7 @@ window.confirmCompleteSprintFromBacklog = function(sprintId, sprintName, formEle
     const totalIssues = todoCount + progressCount + doneCount;
     const hasUnfinished = todoCount > 0 || progressCount > 0;
 
+    // Get all modal elements
     const confirmIcon = document.getElementById('backlogConfirmIcon');
     const confirmTitle = document.getElementById('backlogConfirmTitle');
     const confirmMessage = document.getElementById('backlogConfirmMessage');
@@ -1733,41 +1778,31 @@ window.confirmCompleteSprintFromBacklog = function(sprintId, sprintName, formEle
     const confirmWarning = document.getElementById('backlogConfirmWarning');
     const warningText = document.getElementById('backlogWarningText');
     const confirmBtn = document.getElementById('backlogConfirmCompleteBtn');
+    const unfinishedOptions = document.getElementById('backlogUnfinishedOptions');
+    const unfinishedTicketsList = document.getElementById('backlogUnfinishedTicketsList');
+    const unfinishedTicketsUl = document.getElementById('backlogUnfinishedTicketsUl');
 
     if (!confirmIcon || !confirmTitle) {
         console.error('Modal elements not found');
         return;
     }
 
-    if (hasUnfinished && totalIssues > 0) {
-        confirmIcon.className = 'sprint-complete-icon warning';
-        confirmIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-        confirmTitle.textContent = '⚠️ Unfinished Work Detected';
-        confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> still has unfinished issues.`;
-        confirmWarning.className = 'sprint-complete-warning';
-        warningText.innerHTML = `<strong>${todoCount} To Do</strong> and <strong>${progressCount} In Progress</strong> issue${progressCount !== 1 ? 's' : ''} will remain incomplete.`;
-        confirmBtn.className = 'btn btn-danger';
-        confirmBtn.innerHTML = 'Complete Anyway';
-    } else if (totalIssues === 0) {
-        confirmIcon.className = 'sprint-complete-icon info';
-        confirmIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
-        confirmTitle.textContent = 'Complete Empty Sprint?';
-        confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has no issues.`;
-        confirmWarning.className = 'sprint-complete-warning';
-        warningText.innerHTML = 'Completing this sprint will mark it as finished.';
-        confirmBtn.className = 'btn btn-primary';
-        confirmBtn.innerHTML = 'Complete Sprint';
-    } else {
-        confirmIcon.className = 'sprint-complete-icon success';
-        confirmIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-        confirmTitle.textContent = '🎉 Sprint Complete!';
-        confirmMessage.innerHTML = `All <strong>${doneCount}</strong> issues in sprint <strong>${sprintName}</strong> are done!`;
-        confirmWarning.className = 'sprint-complete-success';
-        warningText.innerHTML = 'Great work, team! Complete this sprint to close it.';
-        confirmBtn.className = 'btn btn-success';
-        confirmBtn.innerHTML = 'Complete Sprint';
+    // Get unfinished tickets from the sprint body
+    const unfinishedTickets = [];
+    const sprintBody = document.getElementById(`spt-body-${sprintId}`);
+    if (sprintBody) {
+        const rows = sprintBody.querySelectorAll('.drag-ticket-card[data-status]');
+        rows.forEach(row => {
+            const status = row.dataset.status;
+            if (status && status !== 'done') {
+                const titleElem = row.querySelector('.tt-title');
+                const title = titleElem ? titleElem.textContent.trim() : 'Untitled';
+                unfinishedTickets.push({ title, status });
+            }
+        });
     }
 
+    // Update stats display
     if (totalIssues > 0) {
         confirmStats.style.display = 'flex';
         statTodo.textContent = todoCount;
@@ -1777,6 +1812,64 @@ window.confirmCompleteSprintFromBacklog = function(sprintId, sprintName, formEle
         confirmStats.style.display = 'none';
     }
 
+    // Configure modal based on sprint state
+    if (hasUnfinished && totalIssues > 0) {
+        // Show unfinished tickets list
+        unfinishedTicketsUl.innerHTML = '';
+        const statusMap = {
+            'todo': '📋 To Do',
+            'in_progress': '⚙️ In Progress',
+            'in_review': '👀 In Review',
+            'blocked': '🚫 Blocked'
+        };
+        unfinishedTickets.forEach(ticket => {
+            const li = document.createElement('li');
+            li.innerHTML = `<strong>${ticket.title}</strong> <span style="color: #6b778c;">(${statusMap[ticket.status] || ticket.status})</span>`;
+            li.style.marginBottom = '8px';
+            unfinishedTicketsUl.appendChild(li);
+        });
+        unfinishedTicketsList.style.display = unfinishedTickets.length > 0 ? 'block' : 'none';
+
+        // Show options for handling unfinished tickets
+        unfinishedOptions.style.display = 'block';
+
+        // Reset radio selection to backlog (safer default)
+        const backlogRadio = document.querySelector('input[name="backlog_unfinished_action"][value="backlog"]');
+        if (backlogRadio) backlogRadio.checked = true;
+
+        confirmIcon.className = 'sprint-complete-icon warning';
+        confirmIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+        confirmTitle.textContent = '⚠️ Unfinished Tickets Detected';
+        confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has <strong>${unfinishedTickets.length}</strong> unfinished ticket(s).`;
+        confirmWarning.className = 'sprint-complete-warning';
+        warningText.innerHTML = 'Choose how to handle unfinished tickets before completing the sprint.';
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.innerHTML = 'Complete Sprint';
+    } else if (totalIssues === 0) {
+        unfinishedTicketsList.style.display = 'none';
+        unfinishedOptions.style.display = 'none';
+        confirmIcon.className = 'sprint-complete-icon info';
+        confirmIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+        confirmTitle.textContent = 'Complete Empty Sprint?';
+        confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has no tickets.`;
+        confirmWarning.className = 'sprint-complete-warning';
+        warningText.innerHTML = 'Completing this sprint will mark it as finished.';
+        confirmBtn.className = 'btn btn-primary';
+        confirmBtn.innerHTML = 'Complete Sprint';
+    } else {
+        // All tickets done
+        unfinishedTicketsList.style.display = 'none';
+        unfinishedOptions.style.display = 'none';
+        confirmIcon.className = 'sprint-complete-icon success';
+        confirmIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+        confirmTitle.textContent = '🎉 All Tickets Completed!';
+        confirmMessage.innerHTML = `All <strong>${doneCount}</strong> tickets in sprint <strong>${sprintName}</strong> are done!`;
+        confirmWarning.className = 'sprint-complete-success';
+        warningText.innerHTML = 'Great work, team! Complete this sprint to celebrate.';
+        confirmBtn.className = 'btn btn-success';
+        confirmBtn.innerHTML = 'Complete Sprint';
+    }
+
     // Stocker le formulaire pour la confirmation
     window.pendingSprintCompleteForm = formElement;
 
@@ -1784,10 +1877,26 @@ window.confirmCompleteSprintFromBacklog = function(sprintId, sprintName, formEle
     $('#backlogCompleteSprintModal').modal('show');
 };
 
-// Confirmer la complétion du sprint
+// Confirmer la complétion du sprint avec l'action choisie
 $(document).ready(function() {
     $('#backlogConfirmCompleteBtn').on('click', function() {
         if (window.pendingSprintCompleteForm) {
+            // Get the selected action from radio buttons
+            const selectedAction = document.querySelector('input[name="backlog_unfinished_action"]:checked');
+
+            // Add or update the hidden input for unfinished_action
+            let actionInput = window.pendingSprintCompleteForm.querySelector('input[name="unfinished_action"]');
+            if (!actionInput) {
+                actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'unfinished_action';
+                window.pendingSprintCompleteForm.appendChild(actionInput);
+            }
+
+            // Set the value (default to 'backlog' if no option selected)
+            actionInput.value = selectedAction ? selectedAction.value : 'backlog';
+
+            // Submit the form
             window.pendingSprintCompleteForm.submit();
         }
         $('#backlogCompleteSprintModal').modal('hide');

@@ -24,8 +24,8 @@
         <div class="card-body">
             <div class="d-flex justify-content-between align-items-start flex-wrap" style="gap: 12px;">
                 <div>
-                    <h4 class="mb-1"><i class="fas fa-bell mr-2 text-primary"></i>Send Notification</h4>
-                    <p class="text-muted mb-0">Only administrators can send notifications. Recipients will see them in the interface at any time.</p>
+                    <h4 class="mb-1"><i class="fas fa-bullhorn mr-2 text-primary"></i>Send Announcement</h4>
+                    <p class="text-muted mb-0">An administrator can now send an announcement to selected users, to one project team, or to all users.</p>
                 </div>
             </div>
 
@@ -34,6 +34,14 @@
                 <input type="hidden" name="action" value="send_notification">
                 <input type="hidden" name="next" value="{{ back_url }}">
 
+                {% if notification_form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in notification_form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
                 <div class="form-row">
                     <div class="form-group col-md-6">
                         <label for="{{ notification_form.title.id_for_label }}">Title</label>
@@ -41,14 +49,25 @@
                         {% for error in notification_form.title.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
                     </div>
                     <div class="form-group col-md-6">
+                        <label for="{{ notification_form.audience.id_for_label }}">Audience</label>
+                        {{ notification_form.audience }}
+                        <small class="form-text text-muted">{{ notification_form.audience.help_text }}</small>
+                        {% for error in notification_form.audience.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group col-md-6" id="project-field-wrapper">
+                        <label for="{{ notification_form.project.id_for_label }}">Project</label>
+                        {{ notification_form.project }}
+                        <small class="form-text text-muted">{{ notification_form.project.help_text }}</small>
+                        {% for error in notification_form.project.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
+                    </div>
+                    <div class="form-group col-md-6" id="recipients-field-wrapper">
                         <label for="{{ notification_form.recipients.id_for_label }}">Recipients</label>
                         {{ notification_form.recipients }}
                         <small class="form-text text-muted">{{ notification_form.recipients.help_text }}</small>
                         {% for error in notification_form.recipients.errors %}<div class="text-danger small mt-1">{{ error }}</div>{% endfor %}
-                        <div class="form-check mt-2">
-                            {{ notification_form.send_to_all }}
-                            <label class="form-check-label" for="{{ notification_form.send_to_all.id_for_label }}">Send to all users</label>
-                        </div>
                     </div>
                 </div>
 
@@ -59,7 +78,7 @@
                 </div>
 
                 <button type="submit" class="btn btn-primary">
-                    <i class="fas fa-paper-plane mr-1"></i> Send Notification
+                    <i class="fas fa-paper-plane mr-1"></i> Send Announcement
                 </button>
             </form>
         </div>
@@ -132,4 +151,28 @@
         </tbody>
     </table>
 </div>
+
+<script>
+(function () {
+    const audienceField = document.getElementById("{{ notification_form.audience.id_for_label }}");
+    const projectWrapper = document.getElementById("project-field-wrapper");
+    const recipientsWrapper = document.getElementById("recipients-field-wrapper");
+
+    if (!audienceField || !projectWrapper || !recipientsWrapper) {
+        return;
+    }
+
+    function toggleAudienceFields() {
+        const value = audienceField.value;
+        const isProjectTeam = value === "project_team";
+        const isSelectedUsers = value === "selected";
+
+        projectWrapper.style.display = isProjectTeam ? "block" : "none";
+        recipientsWrapper.style.display = isSelectedUsers ? "block" : "none";
+    }
+
+    audienceField.addEventListener("change", toggleAudienceFields);
+    toggleAudienceFields();
+})();
+</script>
 {% endblock %}

@@ -6,7 +6,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-01-08 12:00+0000\n"
+"POT-Creation-Date: 2026-04-08 18:50+0000\n"
 "PO-Revision-Date: 2025-01-08 12:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: Dutch\n"
@@ -17,383 +17,416 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 # Navigation
+#: blog/templates/blog/base.html:36
 msgid "Projects"
 msgstr "Projecten"
 
-msgid "Issues"
-msgstr "Issues"
-
-msgid "Boards"
-msgstr "Borden"
-
-msgid "Plans"
-msgstr "Plannen"
-
-msgid "Create"
-msgstr "Aanmaken"
-
-msgid "Guide"
-msgstr "Handleiding"
-
-msgid "Open Interactive Guide"
-msgstr "Open interactieve handleiding"
-
-msgid "Notifications"
-msgstr "Meldingen"
-
-msgid "Profile"
-msgstr "Profiel"
-
-msgid "Dashboard"
-msgstr "Dashboard"
-
-msgid "Logout"
-msgstr "Uitloggen"
-
-msgid "Login"
-msgstr "Inloggen"
-
-# Project Management
-msgid "View All Projects"
-msgstr "Alle projecten bekijken"
-
-msgid "Create Project"
-msgstr "Project aanmaken"
-
+#: blog/templates/blog/base.html:42 blog/templates/blog/base.html:250
 msgid "Current Project"
 msgstr "Huidig project"
 
-msgid "Project Settings"
-msgstr "Projectinstellingen"
-
-msgid "Project members"
-msgstr "Projectleden"
-
-msgid "Manage Users"
-msgstr "Gebruikers beheren"
-
-msgid "Create User"
-msgstr "Gebruiker aanmaken"
-
-# Sprint Management
-msgid "Active Sprint"
-msgstr "Actieve sprint"
-
-msgid "Product Backlog"
-msgstr "Product backlog"
-
-msgid "Sprint"
-msgstr "Sprint"
-
-msgid "Start Sprint"
-msgstr "Sprint starten"
-
-msgid "Complete Sprint"
-msgstr "Sprint voltooien"
-
-msgid "Sprint Planning"
-msgstr "Sprint planning"
-
-msgid "No active sprint"
-msgstr "Geen actieve sprint"
-
-msgid "Create and start a sprint from the backlog to begin tracking work."
-msgstr "Maak en start een sprint vanuit de backlog om werk te volgen."
-
-msgid "Go to Backlog"
-msgstr "Ga naar backlog"
-
-# Ticket Management
-msgid "Create Ticket"
-msgstr "Ticket aanmaken"
-
-msgid "Quick Filters:"
-msgstr "Snelfilters:"
-
-msgid "Only My Issues"
-msgstr "Alleen mijn issues"
-
-msgid "Recently Updated"
-msgstr "Recent bijgewerkt"
-
-msgid "Blocked"
-msgstr "Geblokkeerd"
-
-msgid "To Do"
-msgstr "Te doen"
-
-msgid "In Progress"
-msgstr "In uitvoering"
-
-msgid "Done"
-msgstr "Klaar"
-
-msgid "In Review"
-msgstr "In beoordeling"
-
-# Sprint Completion
-msgid "Unfinished Tickets Detected"
-msgstr "Onvoltooide tickets gedetecteerd"
-
-msgid "All Tickets Completed!"
-msgstr "Alle tickets voltooid!"
-
-msgid "Complete Empty Sprint?"
-msgstr "Lege sprint voltooien?"
-
-msgid "What do you want to do with the unfinished tickets?"
-msgstr "Wat wilt u doen met de onvoltooide tickets?"
-
-msgid "Move to Backlog"
-msgstr "Verplaats naar backlog"
-
-msgid "Mark as Done"
-msgstr "Markeer als klaar"
-
-msgid "Tickets will be removed from this sprint and remain in the backlog."
-msgstr "Tickets worden verwijderd uit deze sprint en blijven in de backlog."
-
-msgid "In-progress tickets will be reset to \"To Do\"."
-msgstr "Tickets in uitvoering worden gereset naar \"Te doen\"."
-
-msgid "Force all unfinished tickets to status \"Done\"."
-msgstr "Dwing alle onvoltooide tickets naar status \"Klaar\"."
-
-msgid "Tickets will be marked as completed in this sprint."
-msgstr "Tickets worden gemarkeerd als voltooid in deze sprint."
-
-msgid "This action cannot be undone."
-msgstr "Deze actie kan niet ongedaan worden gemaakt."
-
-msgid "Cancel"
-msgstr "Annuleren"
-
-msgid "Choose how to handle unfinished tickets before completing the sprint."
-msgstr "Kies hoe onvoltooide tickets te behandelen voordat u de sprint voltooit."
-
-msgid "unfinished tickets"
-msgstr "onvoltooide tickets"
-
-msgid "Unfinished tickets:"
-msgstr "Onvoltooide tickets:"
-
-# User Interface
-msgid "Next"
-msgstr "Volgende"
-
-msgid "Previous"
-msgstr "Vorige"
-
-msgid "Skip"
-msgstr "Overslaan"
-
-msgid "Finish"
-msgstr "Voltooien"
-
-msgid "Close"
-msgstr "Sluiten"
-
-msgid "Save"
-msgstr "Opslaan"
-
-msgid "Delete"
-msgstr "Verwijderen"
-
-msgid "Edit"
-msgstr "Bewerken"
-
-msgid "View"
-msgstr "Bekijken"
-
-msgid "Search"
-msgstr "Zoeken"
-
-msgid "Filter"
-msgstr "Filteren"
-
-msgid "Sort"
-msgstr "Sorteren"
-
-# Messages
-msgid "Success"
-msgstr "Succes"
-
-msgid "Error"
-msgstr "Fout"
-
-msgid "Warning"
-msgstr "Waarschuwing"
-
-msgid "Info"
-msgstr "Informatie"
-
-msgid "You don't have permission to complete sprints."
-msgstr "U heeft geen toestemming om sprints te voltooien."
-
-msgid "You don't have access to this project."
-msgstr "U heeft geen toegang tot dit project."
-
-# Tour/Guide
-msgid "Welcome to ScrumManagement!"
-msgstr "Welkom bij ScrumManagement!"
-
-msgid "Your professional Agile project management platform"
-msgstr "Uw professionele Agile projectmanagement platform"
-
-msgid "Take a 2-minute interactive tour to learn the key features and get started quickly."
-msgstr "Doe een interactieve rondleiding van 2 minuten om de belangrijkste functies te leren en snel te starten."
-
-msgid "Don't Show Again"
-msgstr "Niet meer tonen"
-
-msgid "Skip Tour"
-msgstr "Rondleiding overslaan"
-
-msgid "Start Tour"
-msgstr "Rondleiding starten"
-
-msgid "Interactive Guide"
-msgstr "Interactieve handleiding"
-
-msgid "Kanban Boards"
-msgstr "Kanban borden"
-
-msgid "Team Management"
-msgstr "Teambeheer"
-
-msgid "Ticket Tracking"
-msgstr "Ticket tracking"
-
-msgid "Burndown Charts"
-msgstr "Burndown grafieken"
-
-# Status and Priority
-msgid "High"
-msgstr "Hoog"
-
-msgid "Medium"
-msgstr "Gemiddeld"
-
-msgid "Low"
-msgstr "Laag"
-
-msgid "Epic"
-msgstr "Epic"
-
-msgid "User Story"
-msgstr "User Story"
-
-msgid "Task"
-msgstr "Taak"
-
-msgid "Bug"
-msgstr "Bug"
-
-# Time
-msgid "days remaining"
-msgstr "dagen over"
-
-msgid "issues"
-msgstr "issues"
-
-msgid "Progress"
-msgstr "Voortgang"
-
-# Empty States
-msgid "No notifications yet."
-msgstr "Nog geen meldingen."
-
-msgid "No tickets found."
-msgstr "Geen tickets gevonden."
-
-msgid "No projects found."
-msgstr "Geen projecten gevonden."
-
-msgid "This sprint has no issues yet"
-msgstr "Deze sprint heeft nog geen issues"
-
-msgid "Great work, team! Complete this sprint to celebrate."
-msgstr "Geweldig werk, team! Voltooi deze sprint om te vieren."
-
-# Dashboard
-msgid "Good"
-msgstr "Goed"
-
-msgid "Here's what's happening across your projects"
-msgstr "Hier is wat er gebeurt in je projecten"
-
-msgid "Active Projects"
-msgstr "Actieve projecten"
-
-msgid "Open Tickets"
-msgstr "Open tickets"
-
-msgid "My Tasks"
-msgstr "Mijn taken"
-
-msgid "Active Sprints"
-msgstr "Actieve sprints"
-
-msgid "Recent Projects"
-msgstr "Recente projecten"
-
+# Project Management
+#: blog/templates/blog/base.html:51
+msgid "View All Projects"
+msgstr "Alle projecten bekijken"
+
+#: blog/templates/blog/base.html:59
+msgid "Create Project"
+msgstr "Project aanmaken"
+
+#: blog/templates/blog/base.html:68 blog/templates/blog/base.html:70
+msgid "Issues"
+msgstr "Issues"
+
+#: blog/templates/blog/base.html:76 blog/templates/blog/base.html:78
+msgid "Boards"
+msgstr "Borden"
+
+#: blog/templates/blog/base.html:84 blog/templates/blog/base.html:86
+msgid "Plans"
+msgstr "Plannen"
+
+#: blog/templates/blog/base.html:91
+msgid "Create"
+msgstr "Aanmaken"
+
+#: blog/templates/blog/base.html:94
+msgid "Open Interactive Guide"
+msgstr "Open interactieve handleiding"
+
+#: blog/templates/blog/base.html:95
+msgid "Guide"
+msgstr "Handleiding"
+
+#: blog/templates/blog/base.html:100
+msgid "Change Language"
+msgstr "Taal wijzigen"
+
+#: blog/templates/blog/base.html:144 blog/templates/blog/base.html:240
+msgid "Notifications"
+msgstr "Meldingen"
+
+#: blog/templates/blog/base.html:145
 msgid "View all"
 msgstr "Bekijk alles"
 
-msgid "No projects yet"
-msgstr "Nog geen projecten"
-
-msgid "Create your first project"
-msgstr "Maak je eerste project"
-
-msgid "My Tickets"
-msgstr "Mijn tickets"
-
-msgid "open"
-msgstr "open"
-
-msgid "No tickets assigned to you"
-msgstr "Geen tickets aan jou toegewezen"
-
-msgid "tickets"
-msgstr "tickets"
-
-msgid "Activity Feed"
-msgstr "Activiteitenfeed"
-
+#: blog/templates/blog/base.html:154
 msgid "ago"
 msgstr "geleden"
 
-msgid "No recent activity"
-msgstr "Geen recente activiteit"
+#: blog/templates/blog/base.html:156
+msgid "New"
+msgstr "Nieuw"
 
-msgid "Quick Actions"
-msgstr "Snelle acties"
+# Empty States
+#: blog/templates/blog/base.html:162
+msgid "No notifications yet."
+msgstr "Nog geen meldingen."
 
-msgid "New Project"
-msgstr "Nieuw project"
+#: blog/templates/blog/base.html:228
+msgid "Dashboard"
+msgstr "Dashboard"
 
-msgid "Create Issue"
-msgstr "Maak ticket"
+#: blog/templates/blog/base.html:234
+msgid "Profile"
+msgstr "Profiel"
 
-msgid "Browse Projects"
-msgstr "Projecten bekijken"
+#: blog/templates/blog/base.html:259
+msgid "Manage Users"
+msgstr "Gebruikers beheren"
+
+#: blog/templates/blog/base.html:264
+msgid "Create User"
+msgstr "Gebruiker aanmaken"
+
+#: blog/templates/blog/base.html:276
+msgid "Logout"
+msgstr "Uitloggen"
+
+#~ msgid "Login"
+#~ msgstr "Inloggen"
+
+#~ msgid "Project Settings"
+#~ msgstr "Projectinstellingen"
+
+#~ msgid "Project members"
+#~ msgstr "Projectleden"
+
+# Sprint Management
+#~ msgid "Active Sprint"
+#~ msgstr "Actieve sprint"
+
+#~ msgid "Product Backlog"
+#~ msgstr "Product backlog"
+
+#~ msgid "Sprint"
+#~ msgstr "Sprint"
+
+#~ msgid "Start Sprint"
+#~ msgstr "Sprint starten"
+
+#~ msgid "Complete Sprint"
+#~ msgstr "Sprint voltooien"
+
+#~ msgid "Sprint Planning"
+#~ msgstr "Sprint planning"
+
+#~ msgid "No active sprint"
+#~ msgstr "Geen actieve sprint"
+
+#~ msgid "Create and start a sprint from the backlog to begin tracking work."
+#~ msgstr "Maak en start een sprint vanuit de backlog om werk te volgen."
+
+#~ msgid "Go to Backlog"
+#~ msgstr "Ga naar backlog"
+
+# Ticket Management
+#~ msgid "Create Ticket"
+#~ msgstr "Ticket aanmaken"
+
+#~ msgid "Quick Filters:"
+#~ msgstr "Snelfilters:"
+
+#~ msgid "Only My Issues"
+#~ msgstr "Alleen mijn issues"
+
+#~ msgid "Recently Updated"
+#~ msgstr "Recent bijgewerkt"
+
+#~ msgid "Blocked"
+#~ msgstr "Geblokkeerd"
+
+#~ msgid "To Do"
+#~ msgstr "Te doen"
+
+#~ msgid "In Progress"
+#~ msgstr "In uitvoering"
+
+#~ msgid "Done"
+#~ msgstr "Klaar"
+
+#~ msgid "In Review"
+#~ msgstr "In beoordeling"
+
+# Sprint Completion
+#~ msgid "Unfinished Tickets Detected"
+#~ msgstr "Onvoltooide tickets gedetecteerd"
+
+#~ msgid "All Tickets Completed!"
+#~ msgstr "Alle tickets voltooid!"
+
+#~ msgid "Complete Empty Sprint?"
+#~ msgstr "Lege sprint voltooien?"
+
+#~ msgid "What do you want to do with the unfinished tickets?"
+#~ msgstr "Wat wilt u doen met de onvoltooide tickets?"
+
+#~ msgid "Move to Backlog"
+#~ msgstr "Verplaats naar backlog"
+
+#~ msgid "Mark as Done"
+#~ msgstr "Markeer als klaar"
+
+#~ msgid "Tickets will be removed from this sprint and remain in the backlog."
+#~ msgstr "Tickets worden verwijderd uit deze sprint en blijven in de backlog."
+
+#~ msgid "In-progress tickets will be reset to \"To Do\"."
+#~ msgstr "Tickets in uitvoering worden gereset naar \"Te doen\"."
+
+#~ msgid "Force all unfinished tickets to status \"Done\"."
+#~ msgstr "Dwing alle onvoltooide tickets naar status \"Klaar\"."
+
+#~ msgid "Tickets will be marked as completed in this sprint."
+#~ msgstr "Tickets worden gemarkeerd als voltooid in deze sprint."
+
+#~ msgid "This action cannot be undone."
+#~ msgstr "Deze actie kan niet ongedaan worden gemaakt."
+
+#~ msgid "Cancel"
+#~ msgstr "Annuleren"
+
+#~ msgid ""
+#~ "Choose how to handle unfinished tickets before completing the sprint."
+#~ msgstr ""
+#~ "Kies hoe onvoltooide tickets te behandelen voordat u de sprint voltooit."
+
+#~ msgid "unfinished tickets"
+#~ msgstr "onvoltooide tickets"
+
+#~ msgid "Unfinished tickets:"
+#~ msgstr "Onvoltooide tickets:"
+
+# User Interface
+#~ msgid "Next"
+#~ msgstr "Volgende"
+
+#~ msgid "Previous"
+#~ msgstr "Vorige"
+
+#~ msgid "Skip"
+#~ msgstr "Overslaan"
+
+#~ msgid "Finish"
+#~ msgstr "Voltooien"
+
+#~ msgid "Close"
+#~ msgstr "Sluiten"
+
+#~ msgid "Save"
+#~ msgstr "Opslaan"
+
+#~ msgid "Delete"
+#~ msgstr "Verwijderen"
+
+#~ msgid "Edit"
+#~ msgstr "Bewerken"
+
+#~ msgid "View"
+#~ msgstr "Bekijken"
+
+#~ msgid "Search"
+#~ msgstr "Zoeken"
+
+#~ msgid "Filter"
+#~ msgstr "Filteren"
+
+#~ msgid "Sort"
+#~ msgstr "Sorteren"
+
+# Messages
+#~ msgid "Success"
+#~ msgstr "Succes"
+
+#~ msgid "Error"
+#~ msgstr "Fout"
+
+#~ msgid "Warning"
+#~ msgstr "Waarschuwing"
+
+#~ msgid "Info"
+#~ msgstr "Informatie"
+
+#~ msgid "You don't have permission to complete sprints."
+#~ msgstr "U heeft geen toestemming om sprints te voltooien."
+
+#~ msgid "You don't have access to this project."
+#~ msgstr "U heeft geen toegang tot dit project."
+
+# Tour/Guide
+#~ msgid "Welcome to ScrumManagement!"
+#~ msgstr "Welkom bij ScrumManagement!"
+
+#~ msgid "Your professional Agile project management platform"
+#~ msgstr "Uw professionele Agile projectmanagement platform"
+
+#~ msgid ""
+#~ "Take a 2-minute interactive tour to learn the key features and get "
+#~ "started quickly."
+#~ msgstr ""
+#~ "Doe een interactieve rondleiding van 2 minuten om de belangrijkste "
+#~ "functies te leren en snel te starten."
+
+#~ msgid "Don't Show Again"
+#~ msgstr "Niet meer tonen"
+
+#~ msgid "Skip Tour"
+#~ msgstr "Rondleiding overslaan"
+
+#~ msgid "Start Tour"
+#~ msgstr "Rondleiding starten"
+
+#~ msgid "Interactive Guide"
+#~ msgstr "Interactieve handleiding"
+
+#~ msgid "Kanban Boards"
+#~ msgstr "Kanban borden"
+
+#~ msgid "Team Management"
+#~ msgstr "Teambeheer"
+
+#~ msgid "Ticket Tracking"
+#~ msgstr "Ticket tracking"
+
+#~ msgid "Burndown Charts"
+#~ msgstr "Burndown grafieken"
+
+# Status and Priority
+#~ msgid "High"
+#~ msgstr "Hoog"
+
+#~ msgid "Medium"
+#~ msgstr "Gemiddeld"
+
+#~ msgid "Low"
+#~ msgstr "Laag"
+
+#~ msgid "Epic"
+#~ msgstr "Epic"
+
+#~ msgid "User Story"
+#~ msgstr "User Story"
+
+#~ msgid "Task"
+#~ msgstr "Taak"
+
+#~ msgid "Bug"
+#~ msgstr "Bug"
+
+# Time
+#~ msgid "days remaining"
+#~ msgstr "dagen over"
+
+#~ msgid "issues"
+#~ msgstr "issues"
+
+#~ msgid "Progress"
+#~ msgstr "Voortgang"
+
+#~ msgid "No tickets found."
+#~ msgstr "Geen tickets gevonden."
+
+#~ msgid "No projects found."
+#~ msgstr "Geen projecten gevonden."
+
+#~ msgid "This sprint has no issues yet"
+#~ msgstr "Deze sprint heeft nog geen issues"
+
+#~ msgid "Great work, team! Complete this sprint to celebrate."
+#~ msgstr "Geweldig werk, team! Voltooi deze sprint om te vieren."
+
+# Dashboard
+#~ msgid "Good"
+#~ msgstr "Goed"
+
+#~ msgid "Here's what's happening across your projects"
+#~ msgstr "Hier is wat er gebeurt in je projecten"
+
+#~ msgid "Active Projects"
+#~ msgstr "Actieve projecten"
+
+#~ msgid "Open Tickets"
+#~ msgstr "Open tickets"
+
+#~ msgid "My Tasks"
+#~ msgstr "Mijn taken"
+
+#~ msgid "Active Sprints"
+#~ msgstr "Actieve sprints"
+
+#~ msgid "Recent Projects"
+#~ msgstr "Recente projecten"
+
+#~ msgid "No projects yet"
+#~ msgstr "Nog geen projecten"
+
+#~ msgid "Create your first project"
+#~ msgstr "Maak je eerste project"
+
+#~ msgid "My Tickets"
+#~ msgstr "Mijn tickets"
+
+#~ msgid "open"
+#~ msgstr "open"
+
+#~ msgid "No tickets assigned to you"
+#~ msgstr "Geen tickets aan jou toegewezen"
+
+#~ msgid "tickets"
+#~ msgstr "tickets"
+
+#~ msgid "Activity Feed"
+#~ msgstr "Activiteitenfeed"
+
+#~ msgid "No recent activity"
+#~ msgstr "Geen recente activiteit"
+
+#~ msgid "Quick Actions"
+#~ msgstr "Snelle acties"
+
+#~ msgid "New Project"
+#~ msgstr "Nieuw project"
+
+#~ msgid "Create Issue"
+#~ msgstr "Maak ticket"
+
+#~ msgid "Browse Projects"
+#~ msgstr "Projecten bekijken"
 
 # Backlog & Sprint
-msgid "Sprints"
-msgstr "Sprints"
+#~ msgid "Sprints"
+#~ msgstr "Sprints"
 
-msgid "Create Sprint"
-msgstr "Maak sprint"
+#~ msgid "Create Sprint"
+#~ msgstr "Maak sprint"
 
-msgid "Start sprint"
-msgstr "Start sprint"
+#~ msgid "Start sprint"
+#~ msgstr "Start sprint"
 
-msgid "An active sprint already exists"
-msgstr "Er bestaat al een actieve sprint"
+#~ msgid "An active sprint already exists"
+#~ msgstr "Er bestaat al een actieve sprint"
 
-msgid "Complete sprint"
-msgstr "Voltooi sprint"
+#~ msgid "Complete sprint"
+#~ msgstr "Voltooi sprint"
 
-msgid "Backlog"
-msgstr "Backlog"
+#~ msgid "Backlog"
+#~ msgstr "Backlog"
