@@ -652,6 +652,11 @@ body.dark-mode .sidebarBtn button {
   border-color: #30363d !important;
 }
 
+body.dark-mode .sidebarBtn {
+    background: #161b22 !important;
+    border-top-color: #30363d !important;
+}
+
 body.dark-mode .sidebarBtn button:hover {
   color: #e6edf3 !important;
   background: #30363d !important;
@@ -664,4 +669,69 @@ body.dark-mode .wrapper {
 
 body.dark-mode .main {
   background: #0d1117 !important;
+}
+
+/* Quill Editor */
+body.dark-mode .ql-toolbar,
+body.dark-mode .ql-container,
+body.dark-mode .ql-editor,
+body.dark-mode .ql-picker-options,
+body.dark-mode .ql-picker-item,
+body.dark-mode .ql-tooltip,
+body.dark-mode .ql-picker-label {
+    background-color: #161b22 !important;
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+}
+body.dark-mode .ql-picker-item:hover,
+body.dark-mode .ql-picker-item.ql-selected {
+    background-color: #21262d !important;
+    color: #58a6ff !important;
+}
+body.dark-mode .ql-tooltip {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.4) !important;
+}
+body.dark-mode .ql-tooltip input {
+    background-color: #0d1117 !important;
+    color: #c9d1d9 !important;
+    border-color: #30363d !important;
+}
+body.dark-mode .ql-stroke {
+    stroke: #8b949e !important;
+}
+body.dark-mode .ql-fill {
+    fill: #8b949e !important;
+}
+body.dark-mode .ql-picker-label {
+    color: #c9d1d9 !important;
+}
+
+/* User select dropdown (assignee) */
+body.dark-mode .tm-user-select__trigger,
+body.dark-mode .tm-user-select__menu {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .tm-user-select__option:hover {
+    background-color: #21262d !important;
+}
+
+/* Boutons outline */
+body.dark-mode .btn-outline-secondary {
+    background-color: #21262d !important;
+    border-color: #30363d !important;
+    color: #c9d1d9 !important;
+}
+body.dark-mode .btn-outline-secondary:hover {
+    background-color: #2d333b !important;
+    color: #fff !important;
+}
+
+/* Project type badge */
+body.dark-mode .project-type-badge {
+    background-color: #161b22 !important;
+    border-color: #30363d !important;
 }
