@@ -1,25 +1,25 @@
 [
   {
     "model": "auth.user",
-    "pk": 1,
+    "pk": 101,
     "fields": {
       "password": "pbkdf2_sha256$1000000$demo1234salt$/JbrFAY/rBgGLSX6KAygvj9dGxAt8QClnGlZoiuYtK4=",
       "last_login": null,
       "is_superuser": true,
       "username": "admin",
-      "first_name": "Ali",
+      "first_name": "Alice",
       "last_name": "Admin",
-      "email": "admin@example.test",
+      "email": "admin@helb.demo",
       "is_staff": true,
       "is_active": true,
-      "date_joined": "2026-03-01T08:00:00Z",
+      "date_joined": "2026-03-20T08:00:00Z",
       "groups": [],
       "user_permissions": []
     }
   },
   {
     "model": "auth.user",
-    "pk": 2,
+    "pk": 102,
     "fields": {
       "password": "pbkdf2_sha256$1000000$demo1234salt$/JbrFAY/rBgGLSX6KAygvj9dGxAt8QClnGlZoiuYtK4=",
       "last_login": null,
@@ -27,17 +27,17 @@
       "username": "po",
       "first_name": "Nina",
       "last_name": "PO",
-      "email": "po@example.test",
+      "email": "po@helb.demo",
       "is_staff": false,
       "is_active": true,
-      "date_joined": "2026-03-01T08:05:00Z",
+      "date_joined": "2026-03-20T08:05:00Z",
       "groups": [],
       "user_permissions": []
     }
   },
   {
     "model": "auth.user",
-    "pk": 3,
+    "pk": 103,
     "fields": {
       "password": "pbkdf2_sha256$1000000$demo1234salt$/JbrFAY/rBgGLSX6KAygvj9dGxAt8QClnGlZoiuYtK4=",
       "last_login": null,
@@ -45,17 +45,17 @@
       "username": "sm",
       "first_name": "Mehdi",
       "last_name": "SM",
-      "email": "sm@example.test",
+      "email": "sm@helb.demo",
       "is_staff": false,
       "is_active": true,
-      "date_joined": "2026-03-01T08:10:00Z",
+      "date_joined": "2026-03-20T08:10:00Z",
       "groups": [],
       "user_permissions": []
     }
   },
   {
     "model": "auth.user",
-    "pk": 4,
+    "pk": 104,
     "fields": {
       "password": "pbkdf2_sha256$1000000$demo1234salt$/JbrFAY/rBgGLSX6KAygvj9dGxAt8QClnGlZoiuYtK4=",
       "last_login": null,
@@ -63,35 +63,35 @@
       "username": "dev",
       "first_name": "Sara",
       "last_name": "Dev",
-      "email": "dev@example.test",
+      "email": "dev@helb.demo",
       "is_staff": false,
       "is_active": true,
-      "date_joined": "2026-03-01T08:15:00Z",
+      "date_joined": "2026-03-20T08:15:00Z",
       "groups": [],
       "user_permissions": []
     }
   },
   {
     "model": "auth.user",
-    "pk": 5,
+    "pk": 105,
     "fields": {
       "password": "pbkdf2_sha256$1000000$demo1234salt$/JbrFAY/rBgGLSX6KAygvj9dGxAt8QClnGlZoiuYtK4=",
       "last_login": null,
       "is_superuser": false,
       "username": "test",
-      "first_name": "Léo",
-      "last_name": "Test",
-      "email": "test@example.test",
+      "first_name": "Leo",
+      "last_name": "Tester",
+      "email": "test@helb.demo",
       "is_staff": false,
       "is_active": true,
-      "date_joined": "2026-03-01T08:20:00Z",
+      "date_joined": "2026-03-20T08:20:00Z",
       "groups": [],
       "user_permissions": []
     }
   },
   {
     "model": "auth.user",
-    "pk": 6,
+    "pk": 106,
     "fields": {
       "password": "pbkdf2_sha256$1000000$demo1234salt$/JbrFAY/rBgGLSX6KAygvj9dGxAt8QClnGlZoiuYtK4=",
       "last_login": null,
@@ -99,812 +99,988 @@
       "username": "viewer",
       "first_name": "Maya",
       "last_name": "Viewer",
-      "email": "viewer@example.test",
+      "email": "viewer@helb.demo",
       "is_staff": false,
       "is_active": true,
-      "date_joined": "2026-03-01T08:25:00Z",
+      "date_joined": "2026-03-20T08:25:00Z",
       "groups": [],
       "user_permissions": []
     }
   },
   {
-    "model": "scrum.project",
+    "model": "users.profile",
     "pk": 1,
+    "fields": {
+      "user": 101,
+      "image": "default.jpg",
+      "phone": "",
+      "location": "HELB",
+      "role": "product_owner",
+      "global_role": "admin",
+      "job_title": "Professeur",
+      "department": "Informatique",
+      "supervisor": null,
+      "remember_login": false,
+      "last_failed_login": null,
+      "current_failed_logins": 0,
+      "last_activity": "2026-04-13T16:30:00Z"
+    }
+  },
+  {
+    "model": "users.profile",
+    "pk": 2,
+    "fields": {
+      "user": 102,
+      "image": "default.jpg",
+      "phone": "",
+      "location": "Bruxelles",
+      "role": "product_owner",
+      "global_role": "member",
+      "job_title": "Étudiante",
+      "department": "IODA",
+      "supervisor": 101,
+      "remember_login": false,
+      "last_failed_login": null,
+      "current_failed_logins": 0,
+      "last_activity": "2026-04-13T16:00:00Z"
+    }
+  },
+  {
+    "model": "users.profile",
+    "pk": 3,
+    "fields": {
+      "user": 103,
+      "image": "default.jpg",
+      "phone": "",
+      "location": "Bruxelles",
+      "role": "scrum_master",
+      "global_role": "member",
+      "job_title": "Étudiant",
+      "department": "IODA",
+      "supervisor": 101,
+      "remember_login": false,
+      "last_failed_login": null,
+      "current_failed_logins": 0,
+      "last_activity": "2026-04-13T15:50:00Z"
+    }
+  },
+  {
+    "model": "users.profile",
+    "pk": 4,
+    "fields": {
+      "user": 104,
+      "image": "default.jpg",
+      "phone": "",
+      "location": "Bruxelles",
+      "role": "developer",
+      "global_role": "member",
+      "job_title": "Étudiante",
+      "department": "IODA",
+      "supervisor": 101,
+      "remember_login": false,
+      "last_failed_login": null,
+      "current_failed_logins": 0,
+      "last_activity": "2026-04-13T15:40:00Z"
+    }
+  },
+  {
+    "model": "users.profile",
+    "pk": 5,
+    "fields": {
+      "user": 105,
+      "image": "default.jpg",
+      "phone": "",
+      "location": "Bruxelles",
+      "role": "developer",
+      "global_role": "member",
+      "job_title": "Étudiant",
+      "department": "IODA",
+      "supervisor": 101,
+      "remember_login": false,
+      "last_failed_login": null,
+      "current_failed_logins": 0,
+      "last_activity": "2026-04-13T15:30:00Z"
+    }
+  },
+  {
+    "model": "users.profile",
+    "pk": 6,
+    "fields": {
+      "user": 106,
+      "image": "default.jpg",
+      "phone": "",
+      "location": "Bruxelles",
+      "role": "developer",
+      "global_role": "member",
+      "job_title": "Étudiante",
+      "department": "IODA",
+      "supervisor": 101,
+      "remember_login": false,
+      "last_failed_login": null,
+      "current_failed_logins": 0,
+      "last_activity": "2026-04-13T15:20:00Z"
+    }
+  },
+  {
+    "model": "scrum.project",
+    "pk": 201,
     "fields": {
       "image": "project_icons/default.png",
       "name": "SNA - Suivi des Notes Académiques",
       "code": "SNA",
-      "description": "Petit projet étudiant pour gérer les notes, consulter les résultats et calculer une moyenne générale.",
+      "description": "Projet principal de la démo HELB : une application Scrum pour gérer les notes, calculer les moyennes et suivre les évaluations des étudiants.",
       "board_type": "scrum",
       "project_type": "software",
-      "start_date": "2026-03-01",
+      "start_date": "2026-03-23",
       "end_date": "2026-05-31",
-      "created_by": 1,
+      "created_by": 101,
       "effort_unit": "story_points",
       "sprint_duration": 14,
-      "global_capacity": 24,
-      "created_at": "2026-03-01T09:00:00Z",
-      "updated_at": "2026-03-31T16:00:00Z"
+      "global_capacity": 26,
+      "created_at": "2026-03-23T09:00:00Z",
+      "updated_at": "2026-04-12T16:30:00Z"
     }
   },
   {
     "model": "scrum.membership",
-    "pk": 1,
+    "pk": 301,
     "fields": {
-      "user": 2,
-      "project": 1,
+      "user": 102,
+      "project": 201,
       "role": "contributor",
       "team_role": "product_owner",
       "capacity_per_sprint": 5,
-      "joined_at": "2026-03-01T09:05:00Z"
+      "joined_at": "2026-03-23T09:05:00Z"
     }
   },
   {
     "model": "scrum.membership",
-    "pk": 2,
+    "pk": 302,
     "fields": {
-      "user": 3,
-      "project": 1,
+      "user": 103,
+      "project": 201,
       "role": "contributor",
       "team_role": "scrum_master",
       "capacity_per_sprint": 5,
-      "joined_at": "2026-03-01T09:05:00Z"
+      "joined_at": "2026-03-23T09:06:00Z"
     }
   },
   {
     "model": "scrum.membership",
-    "pk": 3,
+    "pk": 303,
     "fields": {
-      "user": 4,
-      "project": 1,
+      "user": 104,
+      "project": 201,
       "role": "contributor",
       "team_role": "developer",
       "capacity_per_sprint": 10,
-      "joined_at": "2026-03-01T09:05:00Z"
+      "joined_at": "2026-03-23T09:07:00Z"
     }
   },
   {
     "model": "scrum.membership",
-    "pk": 4,
+    "pk": 304,
     "fields": {
-      "user": 5,
-      "project": 1,
+      "user": 105,
+      "project": 201,
       "role": "contributor",
       "team_role": "tester",
-      "capacity_per_sprint": 6,
-      "joined_at": "2026-03-01T09:05:00Z"
+      "capacity_per_sprint": 4,
+      "joined_at": "2026-03-23T09:08:00Z"
     }
   },
   {
     "model": "scrum.membership",
-    "pk": 5,
+    "pk": 305,
     "fields": {
-      "user": 6,
-      "project": 1,
+      "user": 106,
+      "project": 201,
       "role": "read-only",
       "team_role": "other",
-      "capacity_per_sprint": 2,
-      "joined_at": "2026-03-01T09:05:00Z"
+      "capacity_per_sprint": 0,
+      "joined_at": "2026-03-23T09:09:00Z"
     }
   },
   {
     "model": "scrum.sprint",
-    "pk": 1,
+    "pk": 401,
     "fields": {
-      "project": 1,
-      "name": "Sprint 1 - Connexion",
-      "goals": "Mettre en place la connexion et l'accès au profil utilisateur.",
+      "project": 201,
+      "name": "Sprint 0 - Fondations",
+      "goals": "Mettre en place l'authentification, la structure du projet et la première story d'ajout de note.",
       "status": "completed",
-      "start_date": "2026-03-02",
-      "end_date": "2026-03-15",
+      "start_date": "2026-03-24",
+      "end_date": "2026-04-03",
       "sprint_capacity": 16,
-      "created_at": "2026-03-01T10:00:00Z"
+      "created_at": "2026-03-23T11:00:00Z"
     }
   },
   {
     "model": "scrum.sprint",
-    "pk": 2,
+    "pk": 402,
     "fields": {
-      "project": 1,
-      "name": "Sprint 2 - Gestion des notes",
-      "goals": "Ajouter, modifier et consulter les notes dans le sprint actif.",
+      "project": 201,
+      "name": "Sprint 1 - Tableau de bord des notes",
+      "goals": "Préparer une démonstration claire pour la soutenance du 14 avril avec un tableau de bord lisible et un bug QA suivi.",
       "status": "active",
-      "start_date": "2026-03-25",
-      "end_date": "2026-04-07",
-      "sprint_capacity": 20,
-      "created_at": "2026-03-20T10:00:00Z"
+      "start_date": "2026-04-06",
+      "end_date": "2026-04-19",
+      "sprint_capacity": 18,
+      "created_at": "2026-04-04T10:00:00Z"
     }
   },
   {
     "model": "scrum.sprint",
-    "pk": 3,
+    "pk": 403,
     "fields": {
-      "project": 1,
-      "name": "Sprint 3 - Tableau de bord",
-      "goals": "Afficher la moyenne générale et un petit résumé visuel.",
+      "project": 201,
+      "name": "Sprint 2 - Export & suivi",
+      "goals": "Préparer l'export du relevé et le rapport de sprint destiné au professeur.",
       "status": "planned",
-      "start_date": "2026-04-08",
-      "end_date": "2026-04-21",
-      "sprint_capacity": 18,
-      "created_at": "2026-03-31T10:00:00Z"
+      "start_date": "2026-04-20",
+      "end_date": "2026-05-03",
+      "sprint_capacity": 14,
+      "created_at": "2026-04-10T10:00:00Z"
     }
   },
   {
     "model": "scrum.ticket",
-    "pk": 1,
+    "pk": 501,
     "fields": {
-      "project": 1,
-      "parent": null,
-      "column": null,
-      "title": "Authentification",
-      "description": "Epic du premier sprint : permettre de se connecter et de consulter son profil.",
-      "labels": "auth,profil",
-      "type": "epic",
-      "status": "done",
-      "priority": "high",
-      "story_points": 8,
-      "attachments": "",
-      "due_date": "2026-03-15",
-      "start_date": "2026-03-02",
-      "assignee": 3,
-      "requester": 2,
-      "backlog_order": 1,
-      "board_order": 1.0,
-      "created_at": "2026-03-02T09:00:00Z",
-      "updated_at": "2026-03-15T17:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 2,
-    "fields": {
-      "project": 1,
-      "parent": 1,
-      "column": null,
-      "title": "Se connecter à l'application",
-      "description": "L'utilisateur peut se connecter avec son identifiant et son mot de passe.",
-      "labels": "auth,login",
-      "type": "user story",
-      "status": "done",
-      "priority": "highest",
-      "story_points": 5,
-      "attachments": "",
-      "due_date": "2026-03-10",
-      "start_date": "2026-03-02",
-      "assignee": 4,
-      "requester": 2,
-      "backlog_order": 2,
-      "board_order": 2.0,
-      "created_at": "2026-03-02T09:30:00Z",
-      "updated_at": "2026-03-10T16:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 3,
-    "fields": {
-      "project": 1,
-      "parent": 2,
-      "column": null,
-      "title": "Créer le formulaire de connexion",
-      "description": "Créer une page simple avec identifiant et mot de passe.",
-      "labels": "frontend,auth",
-      "type": "task",
-      "status": "done",
-      "priority": "high",
-      "story_points": 2,
-      "attachments": "",
-      "due_date": "2026-03-05",
-      "start_date": "2026-03-02",
-      "assignee": 4,
-      "requester": 3,
-      "backlog_order": 3,
-      "board_order": 3.0,
-      "created_at": "2026-03-02T10:00:00Z",
-      "updated_at": "2026-03-04T11:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 4,
-    "fields": {
-      "project": 1,
-      "parent": 2,
-      "column": null,
-      "title": "Vérifier les identifiants côté serveur",
-      "description": "Valider les données avant d'ouvrir la session utilisateur.",
-      "labels": "backend,auth",
-      "type": "task",
-      "status": "done",
-      "priority": "high",
-      "story_points": 3,
-      "attachments": "",
-      "due_date": "2026-03-08",
-      "start_date": "2026-03-03",
-      "assignee": 4,
-      "requester": 3,
-      "backlog_order": 4,
-      "board_order": 4.0,
-      "created_at": "2026-03-03T09:00:00Z",
-      "updated_at": "2026-03-08T15:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 5,
-    "fields": {
-      "project": 1,
-      "parent": 2,
-      "column": null,
-      "title": "Corriger le message d'erreur de connexion",
-      "description": "Le message d'erreur est plus clair quand le mot de passe est incorrect.",
-      "labels": "bug,auth",
-      "type": "bug",
-      "status": "done",
-      "priority": "medium",
-      "story_points": 1,
-      "attachments": "",
-      "due_date": "2026-03-09",
-      "start_date": "2026-03-07",
-      "assignee": 5,
-      "requester": 4,
-      "backlog_order": 5,
-      "board_order": 5.0,
-      "created_at": "2026-03-07T13:00:00Z",
-      "updated_at": "2026-03-09T10:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 6,
-    "fields": {
-      "project": 1,
+      "project": 201,
       "parent": null,
       "column": null,
       "title": "Gestion des notes",
-      "description": "Epic principal du projet : ajouter, modifier, afficher et corriger les notes.",
-      "labels": "notes,crud",
+      "description": "Epic principal du projet : permettre à un professeur de gérer les notes et à un étudiant de suivre ses résultats.",
+      "labels": "notes,epic",
       "type": "epic",
       "status": "in_progress",
       "priority": "highest",
       "story_points": 13,
       "attachments": "",
-      "due_date": "2026-04-21",
-      "start_date": "2026-03-20",
-      "assignee": 3,
-      "requester": 2,
-      "backlog_order": 6,
-      "board_order": 6.0,
-      "created_at": "2026-03-20T09:00:00Z",
-      "updated_at": "2026-03-31T14:00:00Z"
+      "due_date": "2026-05-03",
+      "start_date": "2026-03-24",
+      "assignee": 103,
+      "requester": 102,
+      "backlog_order": 1,
+      "board_order": 1.0,
+      "created_at": "2026-03-24T09:00:00Z",
+      "updated_at": "2026-04-10T14:00:00Z"
     }
   },
   {
     "model": "scrum.ticket",
-    "pk": 7,
+    "pk": 502,
     "fields": {
-      "project": 1,
-      "parent": 6,
+      "project": 201,
+      "parent": 501,
       "column": null,
-      "title": "Ajouter une note par cours",
-      "description": "Un enseignant peut encoder une note avec le cours, la valeur et le coefficient.",
-      "labels": "notes,ajout",
+      "title": "En tant que professeur, je peux ajouter une note à une évaluation",
+      "description": "Créer la première user story pour encoder une note par cours et par étudiant.",
+      "labels": "notes,enseignant",
       "type": "user story",
-      "status": "in_progress",
+      "status": "done",
       "priority": "highest",
       "story_points": 5,
       "attachments": "",
       "due_date": "2026-04-03",
-      "start_date": "2026-03-25",
-      "assignee": 4,
-      "requester": 2,
-      "backlog_order": 7,
-      "board_order": 7.0,
-      "created_at": "2026-03-25T09:00:00Z",
-      "updated_at": "2026-03-31T09:30:00Z"
+      "start_date": "2026-03-24",
+      "assignee": 104,
+      "requester": 102,
+      "backlog_order": 2,
+      "board_order": 2.0,
+      "created_at": "2026-03-24T09:10:00Z",
+      "updated_at": "2026-04-03T16:00:00Z"
     }
   },
   {
     "model": "scrum.ticket",
-    "pk": 8,
+    "pk": 503,
     "fields": {
-      "project": 1,
-      "parent": 7,
+      "project": 201,
+      "parent": 502,
       "column": null,
       "title": "Créer le formulaire d'ajout de note",
-      "description": "Créer un formulaire simple pour encoder une note.",
+      "description": "Page simple pour sélectionner un étudiant, un cours, une évaluation et entrer une note sur 20.",
       "labels": "frontend,notes",
       "type": "task",
       "status": "done",
       "priority": "high",
       "story_points": 2,
       "attachments": "",
-      "due_date": "2026-03-27",
-      "start_date": "2026-03-25",
-      "assignee": 4,
-      "requester": 3,
-      "backlog_order": 8,
-      "board_order": 8.0,
-      "created_at": "2026-03-25T09:30:00Z",
-      "updated_at": "2026-03-27T16:00:00Z"
+      "due_date": "2026-03-30",
+      "start_date": "2026-03-24",
+      "assignee": 104,
+      "requester": 103,
+      "backlog_order": 3,
+      "board_order": 3.0,
+      "created_at": "2026-03-24T09:20:00Z",
+      "updated_at": "2026-03-29T11:00:00Z"
     }
   },
   {
     "model": "scrum.ticket",
-    "pk": 9,
+    "pk": 504,
     "fields": {
-      "project": 1,
-      "parent": 7,
+      "project": 201,
+      "parent": 502,
       "column": null,
-      "title": "Calculer la moyenne après ajout",
-      "description": "Recalculer automatiquement la moyenne générale après l'ajout d'une note.",
-      "labels": "backend,moyenne",
+      "title": "Valider la note entre 0 et 20",
+      "description": "Empêcher l'encodage de valeurs invalides et afficher un message d'erreur clair.",
+      "labels": "backend,validation",
+      "type": "task",
+      "status": "done",
+      "priority": "high",
+      "story_points": 2,
+      "attachments": "",
+      "due_date": "2026-04-01",
+      "start_date": "2026-03-25",
+      "assignee": 104,
+      "requester": 103,
+      "backlog_order": 4,
+      "board_order": 4.0,
+      "created_at": "2026-03-24T09:25:00Z",
+      "updated_at": "2026-04-01T15:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 505,
+    "fields": {
+      "project": 201,
+      "parent": 501,
+      "column": null,
+      "title": "En tant qu'étudiant, je peux consulter mon tableau de bord de notes",
+      "description": "Afficher une vue claire avec la moyenne générale, les dernières évaluations et les cours suivis.",
+      "labels": "dashboard,notes,student",
+      "type": "user story",
+      "status": "in_progress",
+      "priority": "highest",
+      "story_points": 5,
+      "attachments": "",
+      "due_date": "2026-04-19",
+      "start_date": "2026-04-06",
+      "assignee": 104,
+      "requester": 102,
+      "backlog_order": 5,
+      "board_order": 5.0,
+      "created_at": "2026-04-04T09:00:00Z",
+      "updated_at": "2026-04-12T14:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 506,
+    "fields": {
+      "project": 201,
+      "parent": 505,
+      "column": null,
+      "title": "Afficher les cartes résumé de moyenne et de crédits",
+      "description": "Ajouter des cartes visuelles avec moyenne générale, nombre de cours et évaluations validées.",
+      "labels": "dashboard,ui",
       "type": "task",
       "status": "in_progress",
       "priority": "high",
       "story_points": 3,
       "attachments": "",
-      "due_date": "2026-04-02",
-      "start_date": "2026-03-27",
-      "assignee": 4,
-      "requester": 3,
-      "backlog_order": 9,
-      "board_order": 9.0,
-      "created_at": "2026-03-27T10:00:00Z",
-      "updated_at": "2026-03-31T15:30:00Z"
+      "due_date": "2026-04-14",
+      "start_date": "2026-04-07",
+      "assignee": 104,
+      "requester": 103,
+      "backlog_order": 6,
+      "board_order": 6.0,
+      "created_at": "2026-04-04T09:15:00Z",
+      "updated_at": "2026-04-12T18:00:00Z"
     }
   },
   {
     "model": "scrum.ticket",
-    "pk": 10,
+    "pk": 507,
     "fields": {
-      "project": 1,
-      "parent": 6,
+      "project": 201,
+      "parent": 505,
       "column": null,
-      "title": "Modifier ou supprimer une note",
-      "description": "Permettre de corriger une note encodée par erreur.",
-      "labels": "notes,edition",
-      "type": "user story",
-      "status": "todo",
-      "priority": "high",
-      "story_points": 5,
-      "attachments": "",
-      "due_date": "2026-04-05",
-      "start_date": "2026-03-28",
-      "assignee": 4,
-      "requester": 2,
-      "backlog_order": 10,
-      "board_order": 10.0,
-      "created_at": "2026-03-28T09:00:00Z",
-      "updated_at": "2026-03-30T11:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 11,
-    "fields": {
-      "project": 1,
-      "parent": 10,
-      "column": null,
-      "title": "Bug sur la validation des coefficients",
-      "description": "Le coefficient 0 est accepté alors qu'il devrait être refusé.",
-      "labels": "bug,validation",
-      "type": "bug",
-      "status": "todo",
-      "priority": "medium",
-      "story_points": 2,
-      "attachments": "",
-      "due_date": "2026-04-04",
-      "start_date": "2026-03-29",
-      "assignee": 5,
-      "requester": 4,
-      "backlog_order": 11,
-      "board_order": 11.0,
-      "created_at": "2026-03-29T14:00:00Z",
-      "updated_at": "2026-03-30T12:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 12,
-    "fields": {
-      "project": 1,
-      "parent": 6,
-      "column": null,
-      "title": "Consulter la liste des notes",
-      "description": "L'étudiant peut consulter ses notes déjà enregistrées.",
-      "labels": "notes,lecture",
-      "type": "user story",
-      "status": "done",
-      "priority": "medium",
-      "story_points": 3,
-      "attachments": "",
-      "due_date": "2026-03-31",
-      "start_date": "2026-03-25",
-      "assignee": 4,
-      "requester": 2,
-      "backlog_order": 12,
-      "board_order": 12.0,
-      "created_at": "2026-03-25T11:00:00Z",
-      "updated_at": "2026-03-30T17:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 13,
-    "fields": {
-      "project": 1,
-      "parent": 12,
-      "column": null,
-      "title": "Afficher le tableau des notes",
-      "description": "Afficher les notes dans un tableau lisible avec le cours et le coefficient.",
-      "labels": "frontend,tableau",
+      "title": "Afficher le widget des évaluations récentes",
+      "description": "Lister les trois dernières notes avec cours, date et appréciation visuelle.",
+      "labels": "dashboard,widget",
       "type": "task",
-      "status": "done",
-      "priority": "medium",
-      "story_points": 2,
-      "attachments": "",
-      "due_date": "2026-03-30",
-      "start_date": "2026-03-26",
-      "assignee": 4,
-      "requester": 3,
-      "backlog_order": 13,
-      "board_order": 13.0,
-      "created_at": "2026-03-26T10:00:00Z",
-      "updated_at": "2026-03-29T18:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 14,
-    "fields": {
-      "project": 1,
-      "parent": null,
-      "column": null,
-      "title": "Tableau de bord",
-      "description": "Epic pour le résumé global du projet et l'affichage de la moyenne.",
-      "labels": "dashboard,stats",
-      "type": "epic",
-      "status": "open",
-      "priority": "medium",
-      "story_points": 8,
-      "attachments": "",
-      "due_date": "2026-04-21",
-      "start_date": "2026-03-31",
-      "assignee": 3,
-      "requester": 2,
-      "backlog_order": 14,
-      "board_order": 14.0,
-      "created_at": "2026-03-31T09:00:00Z",
-      "updated_at": "2026-03-31T09:00:00Z"
-    }
-  },
-  {
-    "model": "scrum.ticket",
-    "pk": 15,
-    "fields": {
-      "project": 1,
-      "parent": 14,
-      "column": null,
-      "title": "Afficher la moyenne générale sur l'accueil",
-      "description": "Ajouter une petite carte avec la moyenne générale sur la page principale.",
-      "labels": "dashboard,moyenne",
-      "type": "user story",
       "status": "todo",
       "priority": "medium",
-      "story_points": 5,
+      "story_points": 2,
       "attachments": "",
       "due_date": "2026-04-15",
       "start_date": "2026-04-08",
-      "assignee": 4,
-      "requester": 2,
-      "backlog_order": 15,
-      "board_order": 15.0,
-      "created_at": "2026-03-31T09:30:00Z",
-      "updated_at": "2026-03-31T09:30:00Z"
+      "assignee": 104,
+      "requester": 103,
+      "backlog_order": 7,
+      "board_order": 7.0,
+      "created_at": "2026-04-04T09:20:00Z",
+      "updated_at": "2026-04-11T12:00:00Z"
     }
   },
   {
     "model": "scrum.ticket",
-    "pk": 16,
+    "pk": 508,
     "fields": {
-      "project": 1,
-      "parent": 14,
+      "project": 201,
+      "parent": null,
       "column": null,
-      "title": "Exporter les notes en PDF",
-      "description": "Prévoir un export simple pour un futur relevé de notes.",
-      "labels": "pdf,export",
+      "title": "Bug doublon d'étudiants dans une classe",
+      "description": "Lors de l'import démo, certains étudiants peuvent apparaître deux fois dans la liste d'une classe.",
+      "labels": "bug,qa,roster",
+      "type": "bug",
+      "status": "todo",
+      "priority": "high",
+      "story_points": 2,
+      "attachments": "",
+      "due_date": "2026-04-16",
+      "start_date": "2026-04-08",
+      "assignee": 105,
+      "requester": 105,
+      "backlog_order": 8,
+      "board_order": 8.0,
+      "created_at": "2026-04-04T09:30:00Z",
+      "updated_at": "2026-04-12T09:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 509,
+    "fields": {
+      "project": 201,
+      "parent": 501,
+      "column": null,
+      "title": "Réordonner le backlog des évaluations",
+      "description": "Pouvoir ajuster la priorité des stories du backlog avant de préparer le prochain sprint.",
+      "labels": "backlog,planning",
       "type": "user story",
       "status": "todo",
-      "priority": "low",
+      "priority": "medium",
+      "story_points": 2,
+      "attachments": "",
+      "due_date": null,
+      "start_date": null,
+      "assignee": 103,
+      "requester": 102,
+      "backlog_order": 9,
+      "board_order": 9.0,
+      "created_at": "2026-04-04T09:40:00Z",
+      "updated_at": "2026-04-11T10:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 510,
+    "fields": {
+      "project": 201,
+      "parent": 501,
+      "column": null,
+      "title": "En tant que professeur, je peux modifier ou supprimer une note",
+      "description": "Permettre la correction d'une note déjà encodée avec une confirmation avant suppression.",
+      "labels": "notes,crud",
+      "type": "user story",
+      "status": "todo",
+      "priority": "high",
       "story_points": 3,
       "attachments": "",
-      "due_date": "2026-04-18",
-      "start_date": "2026-04-08",
-      "assignee": 4,
-      "requester": 2,
+      "due_date": "2026-04-28",
+      "start_date": "2026-04-20",
+      "assignee": 104,
+      "requester": 102,
+      "backlog_order": 10,
+      "board_order": 10.0,
+      "created_at": "2026-04-05T09:00:00Z",
+      "updated_at": "2026-04-11T10:30:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 511,
+    "fields": {
+      "project": 201,
+      "parent": 510,
+      "column": null,
+      "title": "Filtrer les notes par cours et quadrimestre",
+      "description": "Préparer un filtrage simple pour retrouver rapidement les résultats.",
+      "labels": "filter,notes",
+      "type": "task",
+      "status": "todo",
+      "priority": "medium",
+      "story_points": 2,
+      "attachments": "",
+      "due_date": "2026-04-28",
+      "start_date": "2026-04-21",
+      "assignee": 104,
+      "requester": 103,
+      "backlog_order": 11,
+      "board_order": 11.0,
+      "created_at": "2026-04-05T09:10:00Z",
+      "updated_at": "2026-04-11T10:30:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 512,
+    "fields": {
+      "project": 201,
+      "parent": null,
+      "column": null,
+      "title": "Bug bloquant sur l'upload d'avatar enseignant",
+      "description": "Le changement d'avatar échoue sur Safari et bloque la sauvegarde du profil enseignant.",
+      "labels": "bug,blocked,profile",
+      "type": "bug",
+      "status": "blocked",
+      "priority": "medium",
+      "story_points": 1,
+      "attachments": "",
+      "due_date": null,
+      "start_date": null,
+      "assignee": 104,
+      "requester": 101,
+      "backlog_order": 12,
+      "board_order": 12.0,
+      "created_at": "2026-04-05T09:20:00Z",
+      "updated_at": "2026-04-12T08:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 513,
+    "fields": {
+      "project": 201,
+      "parent": 501,
+      "column": null,
+      "title": "Exporter le rapport de sprint pour le professeur",
+      "description": "Générer un export simple du sprint avec les tickets terminés, en cours et bloqués.",
+      "labels": "reporting,sprint,teacher",
+      "type": "user story",
+      "status": "todo",
+      "priority": "medium",
+      "story_points": 3,
+      "attachments": "",
+      "due_date": "2026-05-02",
+      "start_date": "2026-04-20",
+      "assignee": 103,
+      "requester": 101,
+      "backlog_order": 13,
+      "board_order": 13.0,
+      "created_at": "2026-04-05T09:30:00Z",
+      "updated_at": "2026-04-12T10:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 514,
+    "fields": {
+      "project": 201,
+      "parent": null,
+      "column": null,
+      "title": "Communication pédagogique",
+      "description": "Epic secondaire pour aider le professeur à diffuser des consignes et rappels à la classe.",
+      "labels": "communication,epic",
+      "type": "epic",
+      "status": "open",
+      "priority": "medium",
+      "story_points": 5,
+      "attachments": "",
+      "due_date": "2026-05-03",
+      "start_date": "2026-04-01",
+      "assignee": 103,
+      "requester": 101,
+      "backlog_order": 14,
+      "board_order": 14.0,
+      "created_at": "2026-04-01T09:00:00Z",
+      "updated_at": "2026-04-10T11:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 515,
+    "fields": {
+      "project": 201,
+      "parent": 514,
+      "column": null,
+      "title": "Envoyer un message général aux étudiants",
+      "description": "Pouvoir diffuser une annonce commune pour le lancement du projet ou un rappel de deadline.",
+      "labels": "communication,message",
+      "type": "user story",
+      "status": "done",
+      "priority": "medium",
+      "story_points": 3,
+      "attachments": "",
+      "due_date": "2026-04-03",
+      "start_date": "2026-03-28",
+      "assignee": 103,
+      "requester": 101,
+      "backlog_order": 15,
+      "board_order": 15.0,
+      "created_at": "2026-03-28T10:00:00Z",
+      "updated_at": "2026-04-03T13:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 516,
+    "fields": {
+      "project": 201,
+      "parent": 515,
+      "column": null,
+      "title": "Historiser les annonces envoyées",
+      "description": "Conserver les messages déjà envoyés pour pouvoir les relire pendant la démo.",
+      "labels": "communication,history",
+      "type": "task",
+      "status": "todo",
+      "priority": "low",
+      "story_points": 1,
+      "attachments": "",
+      "due_date": "2026-04-30",
+      "start_date": "2026-04-22",
+      "assignee": 104,
+      "requester": 103,
       "backlog_order": 16,
       "board_order": 16.0,
-      "created_at": "2026-03-31T10:00:00Z",
-      "updated_at": "2026-03-31T10:00:00Z"
+      "created_at": "2026-04-02T10:00:00Z",
+      "updated_at": "2026-04-11T11:30:00Z"
+    }
+  },
+  {
+    "model": "scrum.ticket",
+    "pk": 517,
+    "fields": {
+      "project": 201,
+      "parent": 505,
+      "column": null,
+      "title": "Afficher un message d'état vide quand aucune note n'est disponible",
+      "description": "Éviter une page blanche pour un étudiant qui n'a pas encore de notes encodées.",
+      "labels": "ux,empty-state",
+      "type": "task",
+      "status": "done",
+      "priority": "medium",
+      "story_points": 1,
+      "attachments": "",
+      "due_date": "2026-04-11",
+      "start_date": "2026-04-09",
+      "assignee": 104,
+      "requester": 105,
+      "backlog_order": 17,
+      "board_order": 17.0,
+      "created_at": "2026-04-04T09:45:00Z",
+      "updated_at": "2026-04-11T16:00:00Z"
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 1,
+    "pk": 601,
     "fields": {
-      "sprint": 1,
-      "ticket": 2,
-      "added_at": "2026-03-01T12:00:00Z",
+      "sprint": 401,
+      "ticket": 502,
+      "added_at": "2026-03-24T12:00:00Z",
       "position": 1
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 2,
+    "pk": 602,
     "fields": {
-      "sprint": 1,
-      "ticket": 3,
-      "added_at": "2026-03-01T12:00:00Z",
+      "sprint": 401,
+      "ticket": 503,
+      "added_at": "2026-03-24T12:00:00Z",
       "position": 2
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 3,
+    "pk": 603,
     "fields": {
-      "sprint": 1,
-      "ticket": 4,
-      "added_at": "2026-03-01T12:00:00Z",
+      "sprint": 401,
+      "ticket": 504,
+      "added_at": "2026-03-24T12:00:00Z",
       "position": 3
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 4,
+    "pk": 604,
     "fields": {
-      "sprint": 1,
-      "ticket": 5,
-      "added_at": "2026-03-01T12:00:00Z",
+      "sprint": 401,
+      "ticket": 515,
+      "added_at": "2026-03-28T12:00:00Z",
       "position": 4
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 5,
+    "pk": 605,
     "fields": {
-      "sprint": 2,
-      "ticket": 7,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 402,
+      "ticket": 505,
+      "added_at": "2026-04-04T12:00:00Z",
       "position": 1
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 6,
+    "pk": 606,
     "fields": {
-      "sprint": 2,
-      "ticket": 8,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 402,
+      "ticket": 506,
+      "added_at": "2026-04-04T12:00:00Z",
       "position": 2
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 7,
+    "pk": 607,
     "fields": {
-      "sprint": 2,
-      "ticket": 9,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 402,
+      "ticket": 507,
+      "added_at": "2026-04-04T12:00:00Z",
       "position": 3
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 8,
+    "pk": 608,
     "fields": {
-      "sprint": 2,
-      "ticket": 10,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 402,
+      "ticket": 508,
+      "added_at": "2026-04-04T12:00:00Z",
       "position": 4
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 9,
+    "pk": 609,
     "fields": {
-      "sprint": 2,
-      "ticket": 11,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 402,
+      "ticket": 517,
+      "added_at": "2026-04-04T12:00:00Z",
       "position": 5
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 10,
+    "pk": 610,
     "fields": {
-      "sprint": 2,
-      "ticket": 12,
-      "added_at": "2026-03-20T12:00:00Z",
-      "position": 6
-    }
-  },
-  {
-    "model": "scrum.sprintticket",
-    "pk": 11,
-    "fields": {
-      "sprint": 2,
-      "ticket": 13,
-      "added_at": "2026-03-20T12:00:00Z",
-      "position": 7
-    }
-  },
-  {
-    "model": "scrum.sprintticket",
-    "pk": 12,
-    "fields": {
-      "sprint": 3,
-      "ticket": 15,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 403,
+      "ticket": 510,
+      "added_at": "2026-04-10T12:00:00Z",
       "position": 1
     }
   },
   {
     "model": "scrum.sprintticket",
-    "pk": 13,
+    "pk": 611,
     "fields": {
-      "sprint": 3,
-      "ticket": 16,
-      "added_at": "2026-03-20T12:00:00Z",
+      "sprint": 403,
+      "ticket": 511,
+      "added_at": "2026-04-10T12:00:00Z",
       "position": 2
     }
   },
   {
-    "model": "scrum.comment",
-    "pk": 1,
+    "model": "scrum.sprintticket",
+    "pk": 612,
     "fields": {
-      "ticket": 7,
-      "author": 3,
-      "content": "La structure est prête. Il reste surtout le calcul côté backend.",
-      "created_at": "2026-03-31T09:45:00Z",
-      "updated_at": "2026-03-31T09:45:00Z"
+      "sprint": 403,
+      "ticket": 513,
+      "added_at": "2026-04-10T12:00:00Z",
+      "position": 3
+    }
+  },
+  {
+    "model": "scrum.sprintticket",
+    "pk": 613,
+    "fields": {
+      "sprint": 403,
+      "ticket": 516,
+      "added_at": "2026-04-10T12:00:00Z",
+      "position": 4
     }
   },
   {
     "model": "scrum.comment",
-    "pk": 2,
+    "pk": 701,
     "fields": {
-      "ticket": 10,
-      "author": 5,
-      "content": "Prévoir une confirmation avant la suppression d'une note.",
-      "created_at": "2026-03-30T13:10:00Z",
-      "updated_at": "2026-03-30T13:10:00Z"
+      "ticket": 505,
+      "author": 102,
+      "content": "Le tableau de bord doit être prêt pour la soutenance du 14 avril avec une lecture très simple pour un professeur.",
+      "created_at": "2026-04-10T09:00:00Z",
+      "updated_at": "2026-04-10T09:00:00Z"
     }
   },
   {
     "model": "scrum.comment",
-    "pk": 3,
+    "pk": 702,
     "fields": {
-      "ticket": 12,
-      "author": 2,
-      "content": "La liste des notes est claire pour la démo, c'est nickel.",
-      "created_at": "2026-03-30T17:15:00Z",
-      "updated_at": "2026-03-30T17:15:00Z"
+      "ticket": 508,
+      "author": 105,
+      "content": "Bug reproduit après import démo : deux fois le même étudiant dans la classe 2B lorsque la liste est rechargée.",
+      "created_at": "2026-04-11T10:30:00Z",
+      "updated_at": "2026-04-11T10:30:00Z"
     }
   },
   {
     "model": "scrum.comment",
-    "pk": 4,
+    "pk": 703,
     "fields": {
-      "ticket": 11,
-      "author": 4,
-      "content": "Le bug est simple, je le garde pour la fin du sprint.",
-      "created_at": "2026-03-30T12:20:00Z",
-      "updated_at": "2026-03-30T12:20:00Z"
+      "ticket": 512,
+      "author": 105,
+      "content": "Bloquant sur Safari 17, non reproduit sous Chrome. À garder dans le backlog hors sprint pour la démo.",
+      "created_at": "2026-04-12T08:05:00Z",
+      "updated_at": "2026-04-12T08:05:00Z"
+    }
+  },
+  {
+    "model": "scrum.comment",
+    "pk": 704,
+    "fields": {
+      "ticket": 503,
+      "author": 103,
+      "content": "Le formulaire est volontairement simple pour rester clair pendant la présentation finale.",
+      "created_at": "2026-03-29T11:15:00Z",
+      "updated_at": "2026-03-29T11:15:00Z"
+    }
+  },
+  {
+    "model": "scrum.comment",
+    "pk": 705,
+    "fields": {
+      "ticket": 513,
+      "author": 101,
+      "content": "Ce rapport sera utile au professeur pour résumer l'état du projet à la fin du sprint.",
+      "created_at": "2026-04-12T10:10:00Z",
+      "updated_at": "2026-04-12T10:10:00Z"
     }
   },
   {
     "model": "scrum.activity",
-    "pk": 1,
+    "pk": 801,
     "fields": {
-      "user": 3,
-      "project": 1,
+      "user": 103,
+      "project": 201,
       "ticket": null,
-      "sprint": 1,
+      "sprint": 401,
       "action": "create_sprint",
-      "description": "Création du sprint 1 pour la partie connexion.",
-      "created_at": "2026-03-01T10:05:00Z"
+      "description": "Création de Sprint 0 - Fondations.",
+      "created_at": "2026-03-23T11:00:00Z"
     }
   },
   {
     "model": "scrum.activity",
-    "pk": 2,
+    "pk": 802,
     "fields": {
-      "user": 2,
-      "project": 1,
-      "ticket": 2,
+      "user": 102,
+      "project": 201,
+      "ticket": 502,
       "sprint": null,
       "action": "create_ticket",
-      "description": "Création de la user story de connexion.",
-      "created_at": "2026-03-02T09:31:00Z"
+      "description": "Ajout de la user story sur l'encodage des notes.",
+      "created_at": "2026-03-24T09:10:00Z"
     }
   },
   {
     "model": "scrum.activity",
-    "pk": 3,
+    "pk": 803,
     "fields": {
-      "user": 3,
-      "project": 1,
-      "ticket": null,
-      "sprint": 2,
-      "action": "create_sprint",
-      "description": "Création du sprint 2 pour la gestion des notes.",
-      "created_at": "2026-03-20T10:05:00Z"
-    }
-  },
-  {
-    "model": "scrum.activity",
-    "pk": 4,
-    "fields": {
-      "user": 2,
-      "project": 1,
-      "ticket": 7,
-      "sprint": null,
-      "action": "assign",
-      "description": "La user story d'ajout de note a été attribuée au développeur.",
-      "created_at": "2026-03-25T09:05:00Z"
-    }
-  },
-  {
-    "model": "scrum.activity",
-    "pk": 5,
-    "fields": {
-      "user": 4,
-      "project": 1,
-      "ticket": 7,
+      "user": 104,
+      "project": 201,
+      "ticket": 503,
       "sprint": null,
       "action": "update_description",
-      "description": "Description de la user story d'ajout de note complétée.",
-      "created_at": "2026-03-25T09:10:00Z"
+      "description": "Description du formulaire d'ajout de note enrichie pour la démo.",
+      "created_at": "2026-03-28T10:30:00Z"
     }
   },
   {
     "model": "scrum.activity",
-    "pk": 6,
+    "pk": 804,
     "fields": {
-      "user": 4,
-      "project": 1,
-      "ticket": 8,
+      "user": 103,
+      "project": 201,
+      "ticket": null,
+      "sprint": 402,
+      "action": "create_sprint",
+      "description": "Création du sprint actif centré sur le tableau de bord.",
+      "created_at": "2026-04-04T10:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.activity",
+    "pk": 805,
+    "fields": {
+      "user": 102,
+      "project": 201,
+      "ticket": 505,
+      "sprint": null,
+      "action": "create_ticket",
+      "description": "Ajout de la story de tableau de bord des notes.",
+      "created_at": "2026-04-04T09:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.activity",
+    "pk": 806,
+    "fields": {
+      "user": 103,
+      "project": 201,
+      "ticket": 506,
+      "sprint": null,
+      "action": "assign",
+      "description": "Affectation des cartes résumé à Sara.",
+      "created_at": "2026-04-07T09:30:00Z"
+    }
+  },
+  {
+    "model": "scrum.activity",
+    "pk": 807,
+    "fields": {
+      "user": 104,
+      "project": 201,
+      "ticket": 505,
       "sprint": null,
       "action": "status_change",
-      "description": "Le formulaire d'ajout de note est passé à Done.",
-      "created_at": "2026-03-27T16:01:00Z"
+      "description": "La story du tableau de bord passe en cours.",
+      "created_at": "2026-04-08T14:00:00Z"
     }
   },
   {
     "model": "scrum.activity",
-    "pk": 7,
+    "pk": 808,
     "fields": {
-      "user": 5,
-      "project": 1,
-      "ticket": 11,
+      "user": 105,
+      "project": 201,
+      "ticket": 508,
       "sprint": null,
       "action": "comment",
-      "description": "Ajout d'une remarque sur le bug de validation.",
-      "created_at": "2026-03-30T13:11:00Z"
+      "description": "QA a ajouté une reproduction du bug de doublon d'étudiants.",
+      "created_at": "2026-04-11T10:30:00Z"
     }
   },
   {
     "model": "scrum.activity",
-    "pk": 8,
+    "pk": 809,
     "fields": {
-      "user": 4,
-      "project": 1,
-      "ticket": 12,
+      "user": 103,
+      "project": 201,
+      "ticket": null,
+      "sprint": 403,
+      "action": "create_sprint",
+      "description": "Préparation du sprint suivant pour l'export et le suivi.",
+      "created_at": "2026-04-10T10:00:00Z"
+    }
+  },
+  {
+    "model": "scrum.activity",
+    "pk": 810,
+    "fields": {
+      "user": 101,
+      "project": 201,
+      "ticket": 513,
       "sprint": null,
-      "action": "status_change",
-      "description": "La consultation des notes est terminée.",
-      "created_at": "2026-03-30T17:01:00Z"
+      "action": "update_description",
+      "description": "Le professeur précise le besoin d'un rapport de sprint exportable.",
+      "created_at": "2026-04-12T10:00:00Z"
     }
   }
 ]
