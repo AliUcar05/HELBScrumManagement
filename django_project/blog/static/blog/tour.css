@@ -1,0 +1,386 @@
+/* ============================================================
+   ScrumManagement — Onboarding Tour
+   Overlay + Tooltip system, Bootstrap 4 compatible
+   ============================================================ */
+
+/* ── Overlay ── */
+#tour-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(9, 30, 66, 0.72);
+  z-index: 9000;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+#tour-overlay.visible {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ── Spotlight "hole" cut into overlay ── */
+#tour-spotlight {
+  position: fixed;
+  z-index: 9001;
+  border-radius: 6px;
+  box-shadow:
+    0 0 0 4000px rgba(9, 30, 66, 0.72),
+    0 0 0 3px rgba(0, 82, 204, 0.8),
+    0 0 20px rgba(0, 82, 204, 0.4);
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+#tour-spotlight.hidden { display: none; }
+
+/* ── Tooltip card ── */
+#tour-tooltip {
+  position: fixed;
+  z-index: 9100;
+  width: 340px;
+  background: #ffffff;
+  border-radius: 10px;
+  box-shadow: 0 8px 32px rgba(9,30,66,0.28), 0 2px 8px rgba(9,30,66,0.12);
+  padding: 0;
+  opacity: 0;
+  transform: translateY(8px) scale(0.97);
+  transition: opacity 0.28s ease, transform 0.28s ease;
+  pointer-events: all;
+}
+#tour-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+}
+
+/* Header bar */
+.tour-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px 10px;
+  border-bottom: 1px solid #ebecf0;
+}
+.tour-badge {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #0052cc;
+}
+.tour-badge-dot {
+  width: 8px; height: 8px;
+  background: #0052cc;
+  border-radius: 50%;
+  animation: tour-pulse 1.5s infinite;
+}
+@keyframes tour-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.3); }
+}
+.tour-step-counter {
+  font-size: 0.72rem;
+  color: #6b778c;
+  font-weight: 500;
+}
+#tour-close-btn {
+  background: none;
+  border: none;
+  color: #97a0af;
+  cursor: pointer;
+  font-size: 1.1rem;
+  padding: 0 2px;
+  line-height: 1;
+  transition: color 0.15s;
+}
+#tour-close-btn:hover { color: #344563; }
+
+/* Body */
+.tour-body {
+  padding: 16px 18px;
+}
+.tour-icon {
+  font-size: 1.6rem;
+  margin-bottom: 8px;
+}
+.tour-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: #172b4d;
+  margin-bottom: 6px;
+}
+.tour-desc {
+  font-size: 0.87rem;
+  color: #42526e;
+  line-height: 1.55;
+  margin-bottom: 0;
+}
+.tour-tip {
+  margin-top: 10px;
+  padding: 8px 10px;
+  background: #e9f2ff;
+  border-left: 3px solid #0052cc;
+  border-radius: 4px;
+  font-size: 0.78rem;
+  color: #0747a6;
+}
+
+/* Progress bar */
+.tour-progress {
+  height: 3px;
+  background: #ebecf0;
+  border-radius: 0 0 0 10px;
+  overflow: hidden;
+}
+.tour-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #0052cc, #0065ff);
+  transition: width 0.4s ease;
+  border-radius: 0 0 0 10px;
+}
+
+/* Footer */
+.tour-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 18px 14px;
+  border-top: 1px solid #ebecf0;
+}
+.tour-dots {
+  display: flex;
+  gap: 5px;
+}
+.tour-dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: #dfe1e6;
+  transition: all 0.2s;
+}
+.tour-dot.active {
+  background: #0052cc;
+  width: 18px;
+  border-radius: 4px;
+}
+.tour-dot.done { background: #00875a; }
+.tour-nav { display: flex; gap: 8px; }
+.tour-btn {
+  padding: 6px 16px;
+  border-radius: 5px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.tour-btn-skip {
+  background: none;
+  color: #6b778c;
+}
+.tour-btn-skip:hover { color: #344563; background: #f4f5f7; }
+.tour-btn-prev {
+  background: #f4f5f7;
+  color: #344563;
+}
+.tour-btn-prev:hover { background: #ebecf0; }
+.tour-btn-next {
+  background: #0052cc;
+  color: #fff;
+}
+.tour-btn-next:hover { background: #0747a6; }
+.tour-btn-finish {
+  background: #00875a;
+  color: #fff;
+}
+.tour-btn-finish:hover { background: #006644; }
+
+/* ── Floating launcher button ── */
+#tour-launcher {
+  position: fixed;
+  bottom: 28px;
+  right: 28px;
+  z-index: 8900;
+  background: #0052cc;
+  color: #fff;
+  border: none;
+  border-radius: 50px;
+  padding: 10px 20px 10px 14px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 16px rgba(0,82,204,0.35);
+  transition: all 0.2s;
+}
+#tour-launcher:hover {
+  background: #0747a6;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0,82,204,0.45);
+}
+#tour-launcher i { font-size: 1rem; }
+
+/* ── Welcome modal ── */
+#tour-welcome {
+  position: fixed;
+  inset: 0;
+  z-index: 9500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(9,30,66,0.72);
+}
+#tour-welcome.hidden { display: none; }
+.tour-welcome-card {
+  background: #fff;
+  border-radius: 14px;
+  width: 480px;
+  max-width: 95vw;
+  box-shadow: 0 20px 60px rgba(9,30,66,0.3);
+  overflow: hidden;
+  animation: tour-welcome-in 0.4s cubic-bezier(0.34,1.56,0.64,1);
+}
+@keyframes tour-welcome-in {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+.tour-welcome-hero {
+  background: linear-gradient(135deg, #0052cc 0%, #0747a6 60%, #091e42 100%);
+  padding: 36px 32px 28px;
+  text-align: center;
+}
+.tour-welcome-logo {
+  font-size: 3rem;
+  margin-bottom: 12px;
+}
+.tour-welcome-hero h2 {
+  color: #fff;
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.tour-welcome-hero p {
+  color: rgba(255,255,255,0.8);
+  font-size: 0.9rem;
+  margin: 0;
+}
+.tour-welcome-body {
+  padding: 24px 32px 28px;
+}
+.tour-welcome-body p {
+  color: #42526e;
+  font-size: 0.92rem;
+  line-height: 1.6;
+  margin-bottom: 20px;
+}
+.tour-welcome-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+.tour-welcome-feature {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.82rem;
+  color: #344563;
+  background: #f4f5f7;
+  border-radius: 6px;
+  padding: 8px 10px;
+}
+.tour-welcome-feature i { color: #0052cc; font-size: 0.9rem; }
+.tour-welcome-actions {
+  display: flex;
+  gap: 10px;
+}
+.tour-welcome-actions .tour-btn {
+  flex: 1;
+  padding: 10px;
+  font-size: 0.9rem;
+}
+
+/* Arrow on tooltip */
+#tour-tooltip::before {
+  content: '';
+  position: absolute;
+  width: 12px;
+  height: 12px;
+  background: #fff;
+  transform: rotate(45deg);
+  box-shadow: -2px -2px 4px rgba(9,30,66,0.06);
+}
+#tour-tooltip[data-arrow="bottom"]::before {
+  bottom: -6px; left: 24px;
+  box-shadow: 2px 2px 4px rgba(9,30,66,0.08);
+}
+#tour-tooltip[data-arrow="top"]::before {
+  top: -6px; left: 24px;
+}
+#tour-tooltip[data-arrow="left"]::before {
+  left: -6px; top: 20px;
+  box-shadow: -2px 2px 4px rgba(9,30,66,0.06);
+}
+#tour-tooltip[data-arrow="right"]::before {
+  right: -6px; top: 20px;
+  box-shadow: 2px -2px 4px rgba(9,30,66,0.06);
+}
+#tour-tooltip[data-arrow="none"]::before {
+  display: none;
+}
+
+/* ── Highlight pulse on target ── */
+.tour-highlight-target {
+  position: relative;
+  z-index: 9002 !important;
+  border-radius: 4px;
+}
+
+/* Tour completion toast */
+.tour-completion-toast {
+    position: fixed;
+    bottom: 30px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #36b37e;
+    color: white;
+    padding: 12px 20px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    z-index: 10000;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    animation: slideUpFade 0.3s ease;
+}
+
+@keyframes slideUpFade {
+    from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+    }
+}
+
+.tour-completion-toast i {
+    font-size: 20px;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .tour-tooltip {
+        width: 280px !important;
+    }
+    .tour-welcome-card {
+        width: 90% !important;
+        margin: 0 20px;
+    }
+    .tour-welcome-features {
+        grid-template-columns: 1fr !important;
+    }
+}

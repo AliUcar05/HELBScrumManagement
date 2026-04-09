@@ -1290,8 +1290,64 @@ def sprint_complete(request, pk, sprint_pk):
     sprint = get_object_or_404(Sprint, pk=sprint_pk, project=project)
 
     if request.method == "POST":
+        # Get all tickets in this sprint
+        sprint_tickets = SprintTicket.objects.filter(sprint=sprint).select_related('ticket')
+
+        # Count tickets by status
+        todo_count = sum(1 for st in sprint_tickets if st.ticket.status == 'todo')
+        in_progress_count = sum(1 for st in sprint_tickets if st.ticket.status == 'in_progress')
+        in_review_count = sum(1 for st in sprint_tickets if st.ticket.status == 'in_review')
+        done_count = sum(1 for st in sprint_tickets if st.ticket.status == 'done')
+        total_count = sprint_tickets.count()
+
+        # Get the action for unfinished tickets
+        unfinished_action = request.POST.get('unfinished_action', '')
+
+        # Calculate unfinished tickets
+        unfinished_count = todo_count + in_progress_count + in_review_count
+
+        # If there are unfinished tickets and no action specified, return error
+        if unfinished_count > 0 and not unfinished_action:
+            messages.error(request, "Please choose what to do with unfinished tickets before completing the sprint.")
+            return redirect(request.META.get('HTTP_REFERER', 'product-backlog'), pk=pk)
+
+        # Handle unfinished tickets based on action
+        if unfinished_count > 0:
+            if unfinished_action == 'backlog':
+                # Move unfinished tickets back to backlog
+                for st in sprint_tickets:
+                    if st.ticket.status != 'done':
+                        st.delete()
+                        log_activity(
+                            request.user,
+                            project,
+                            "update_description",
+                            ticket=st.ticket,
+                            sprint=sprint,
+                            message=f"moved {st.ticket.title} back to backlog from completed sprint"
+                        )
+                messages.info(request, f'{unfinished_count} unfinished ticket(s) moved back to backlog.')
+
+            elif unfinished_action == 'mark_done':
+                # Mark all unfinished tickets as done
+                for st in sprint_tickets:
+                    if st.ticket.status != 'done':
+                        st.ticket.status = 'done'
+                        st.ticket.save()
+                        log_activity(
+                            request.user,
+                            project,
+                            "update_status",
+                            ticket=st.ticket,
+                            sprint=sprint,
+                            message=f"marked {st.ticket.title} as done during sprint completion"
+                        )
+                messages.info(request, f'{unfinished_count} ticket(s) marked as Done.')
+
+        # Complete the sprint
         sprint.status = 'completed'
         sprint.save()
+
         log_activity(
             request.user,
             project,
@@ -1299,7 +1355,8 @@ def sprint_complete(request, pk, sprint_pk):
             sprint=sprint,
             message=f"completed sprint {sprint.name}"
         )
-        messages.success(request, f'Sprint "{sprint.name}" completed.')
+
+        messages.success(request, f'Sprint "{sprint.name}" completed successfully.')
 
     return redirect("product-backlog", pk=pk)
 

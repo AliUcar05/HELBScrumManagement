@@ -581,7 +581,7 @@
 
 <!-- Custom Confirmation Modal for Sprint Completion -->
 <div class="custom-confirm-overlay" id="sprintCompleteOverlay">
-    <div class="custom-confirm-modal">
+    <div class="custom-confirm-modal" style="max-width: 600px;">
         <div class="custom-confirm-header">
             <div class="custom-confirm-icon warning" id="confirmIcon">
                 <i class="fas fa-exclamation-triangle"></i>
@@ -604,6 +604,37 @@
                     <div class="custom-confirm-stat-label">Done</div>
                 </div>
             </div>
+
+            <!-- Options for unfinished tickets -->
+            <div id="unfinishedOptions" style="display: none; margin-top: 20px;">
+                <p style="font-weight: 600; color: #172b4d; margin-bottom: 12px;">What should we do with the unfinished tickets?</p>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <label class="unfinished-option-card" style="display: flex; align-items: start; padding: 16px; border: 2px solid #dfe1e6; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="unfinished_action" value="backlog" checked style="margin-top: 2px; margin-right: 12px; width: 18px; height: 18px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #172b4d; margin-bottom: 4px;">
+                                <i class="fas fa-arrow-left" style="color: #0052cc;"></i> Move to Backlog
+                            </div>
+                            <div style="font-size: 0.9rem; color: #5e6c84;">
+                                Unfinished tickets will be removed from this sprint and returned to the product backlog.
+                            </div>
+                        </div>
+                    </label>
+
+                    <label class="unfinished-option-card" style="display: flex; align-items: start; padding: 16px; border: 2px solid #dfe1e6; border-radius: 8px; cursor: pointer; transition: all 0.2s;">
+                        <input type="radio" name="unfinished_action" value="mark_done" style="margin-top: 2px; margin-right: 12px; width: 18px; height: 18px;">
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; color: #172b4d; margin-bottom: 4px;">
+                                <i class="fas fa-check-circle" style="color: #00875a;"></i> Mark as Done
+                            </div>
+                            <div style="font-size: 0.9rem; color: #5e6c84;">
+                                The work is finished but the team forgot to update ticket statuses. Mark all as Done.
+                            </div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
             <div id="confirmWarningBlock" class="custom-confirm-warning">
                 <i class="fas fa-info-circle"></i>
                 <span id="warningText">This action cannot be undone.</span>
@@ -615,6 +646,20 @@
         </div>
     </div>
 </div>
+
+<style>
+.unfinished-option-card:hover {
+    border-color: #0052cc !important;
+    background-color: #f4f5f7;
+}
+.unfinished-option-card input:checked {
+    accent-color: #0052cc;
+}
+.unfinished-option-card:has(input:checked) {
+    border-color: #0052cc !important;
+    background-color: #ebecf0;
+}
+</style>
 
 <!-- Hidden form for sprint completion -->
 {% if active_sprint and active_sprint.pk %}
@@ -745,35 +790,40 @@
         const warningText = document.getElementById('warningText');
         const confirmIcon = document.getElementById('confirmIcon');
         const confirmActionBtn = document.getElementById('confirmActionBtn');
+        const unfinishedOptions = document.getElementById('unfinishedOptions');
 
         if (hasUnfinished && totalIssues > 0) {
-            // Sprint has unfinished work - show warning
+            // Sprint has unfinished work - show options
             confirmIcon.className = 'custom-confirm-icon warning';
             confirmIcon.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
-            confirmTitle.textContent = '⚠️ Unfinished Work Detected';
-            confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> still has unfinished issues.`;
-            confirmWarningBlock.className = 'custom-confirm-warning';
-            warningText.innerHTML = `<strong>${stats.todo} To Do</strong> and <strong>${stats.progress} In Progress</strong> issue${stats.progress !== 1 ? 's' : ''} will remain incomplete.`;
-            confirmActionBtn.innerHTML = 'Complete Anyway';
-            confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-danger';
+            confirmTitle.textContent = '⚠️ Unfinished Tickets Detected';
+            confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has <strong>${stats.todo + stats.progress}</strong> unfinished ticket(s).`;
+            confirmWarningBlock.style.display = 'none';
+            unfinishedOptions.style.display = 'block';
+            confirmActionBtn.innerHTML = 'Complete Sprint';
+            confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-primary';
         } else if (totalIssues === 0) {
             // Sprint has no issues
             confirmIcon.className = 'custom-confirm-icon info';
             confirmIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
             confirmTitle.textContent = 'Complete Empty Sprint?';
-            confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has no issues.`;
+            confirmMessage.innerHTML = `Sprint <strong>${sprintName}</strong> has no tickets.`;
             confirmWarningBlock.className = 'custom-confirm-warning';
-            warningText.innerHTML = 'Completing this sprint will mark it as finished.';
+            confirmWarningBlock.style.display = 'block';
+            warningText.innerHTML = 'This sprint will be marked as completed.';
+            unfinishedOptions.style.display = 'none';
             confirmActionBtn.innerHTML = 'Complete Sprint';
             confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-primary';
         } else if (allDone) {
             // All issues are done - success!
             confirmIcon.className = 'custom-confirm-icon success';
             confirmIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
-            confirmTitle.textContent = '🎉 Sprint Complete!';
-            confirmMessage.innerHTML = `All <strong>${stats.done}</strong> issues in sprint <strong>${sprintName}</strong> are done!`;
+            confirmTitle.textContent = '🎉 All Tickets Completed!';
+            confirmMessage.innerHTML = `All <strong>${stats.done}</strong> ticket(s) in sprint <strong>${sprintName}</strong> are done!`;
             confirmWarningBlock.className = 'custom-confirm-success';
-            warningText.innerHTML = 'Great work, team! Complete this sprint to close it.';
+            confirmWarningBlock.style.display = 'block';
+            warningText.innerHTML = 'Great work, team! Complete this sprint to celebrate.';
+            unfinishedOptions.style.display = 'none';
             confirmActionBtn.innerHTML = 'Complete Sprint';
             confirmActionBtn.className = 'custom-confirm-btn custom-confirm-btn-success';
         }
@@ -797,6 +847,16 @@
     function confirmCompleteSprint() {
         const form = document.getElementById('completeSprintForm');
         if (form && activeSprintPk) {
+            // Get selected action for unfinished tickets (if shown)
+            const selectedAction = document.querySelector('input[name="unfinished_action"]:checked');
+            if (selectedAction) {
+                // Add hidden input to form
+                const actionInput = document.createElement('input');
+                actionInput.type = 'hidden';
+                actionInput.name = 'unfinished_action';
+                actionInput.value = selectedAction.value;
+                form.appendChild(actionInput);
+            }
             form.submit();
         }
         closeCompleteSprintConfirmation();
