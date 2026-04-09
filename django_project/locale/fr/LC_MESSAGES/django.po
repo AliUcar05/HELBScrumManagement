@@ -1,13 +1,12 @@
 # French translations for Scrum Management
 # Copyright (C) 2025
-# This file is distributed under the same license as the ScrumManagement package.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: 1.0\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2026-04-08 18:50+0000\n"
-"PO-Revision-Date: 2025-01-08 12:00+0000\n"
+"POT-Creation-Date: 2026-04-09 12:00+0000\n"
+"PO-Revision-Date: 2026-04-09 12:00+0000\n"
 "Last-Translator: \n"
 "Language-Team: French\n"
 "Language: fr\n"
@@ -16,421 +15,582 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=(n > 1);\n"
 
-# Navigation
-#: blog/templates/blog/base.html:36
+# ── Navigation (base.html) ──
 msgid "Projects"
 msgstr "Projets"
 
-#: blog/templates/blog/base.html:42 blog/templates/blog/base.html:250
 msgid "Current Project"
 msgstr "Projet actuel"
 
-# Project Management
-#: blog/templates/blog/base.html:51
 msgid "View All Projects"
 msgstr "Voir tous les projets"
 
-#: blog/templates/blog/base.html:59
 msgid "Create Project"
 msgstr "Créer un projet"
 
-#: blog/templates/blog/base.html:68 blog/templates/blog/base.html:70
 msgid "Issues"
 msgstr "Tickets"
 
-#: blog/templates/blog/base.html:76 blog/templates/blog/base.html:78
 msgid "Boards"
 msgstr "Tableaux"
 
-#: blog/templates/blog/base.html:84 blog/templates/blog/base.html:86
 msgid "Plans"
 msgstr "Plans"
 
-#: blog/templates/blog/base.html:91
 msgid "Create"
 msgstr "Créer"
 
-#: blog/templates/blog/base.html:94
 msgid "Open Interactive Guide"
 msgstr "Ouvrir le guide interactif"
 
-#: blog/templates/blog/base.html:95
 msgid "Guide"
 msgstr "Guide"
 
-#: blog/templates/blog/base.html:100
 msgid "Change Language"
 msgstr "Changer de langue"
 
-#: blog/templates/blog/base.html:144 blog/templates/blog/base.html:240
 msgid "Notifications"
 msgstr "Notifications"
 
-#: blog/templates/blog/base.html:145
 msgid "View all"
 msgstr "Voir tout"
 
-#: blog/templates/blog/base.html:154
 msgid "ago"
 msgstr "il y a"
 
-#: blog/templates/blog/base.html:156
 msgid "New"
 msgstr "Nouveau"
 
-# Empty States
-#: blog/templates/blog/base.html:162
 msgid "No notifications yet."
 msgstr "Aucune notification pour le moment."
 
-#: blog/templates/blog/base.html:228
 msgid "Dashboard"
 msgstr "Tableau de bord"
 
-#: blog/templates/blog/base.html:234
 msgid "Profile"
 msgstr "Profil"
 
-#: blog/templates/blog/base.html:259
 msgid "Manage Users"
 msgstr "Gérer les utilisateurs"
 
-#: blog/templates/blog/base.html:264
 msgid "Create User"
 msgstr "Créer un utilisateur"
 
-#: blog/templates/blog/base.html:276
 msgid "Logout"
 msgstr "Déconnexion"
 
-#~ msgid "Login"
-#~ msgstr "Connexion"
+msgid "Login"
+msgstr "Connexion"
 
-#~ msgid "Project Settings"
-#~ msgstr "Paramètres du projet"
+msgid "Project Settings"
+msgstr "Paramètres du projet"
 
-#~ msgid "Project members"
-#~ msgstr "Membres du projet"
+msgid "Project members"
+msgstr "Membres du projet"
 
-# Sprint Management
-#~ msgid "Active Sprint"
-#~ msgstr "Sprint actif"
+# ── Dashboard (home.html) ──
+msgid "Good"
+msgstr "Bon"
 
-#~ msgid "Product Backlog"
-#~ msgstr "Backlog produit"
+msgid "Here's what's happening across your projects"
+msgstr "Voici ce qui se passe dans vos projets"
 
-#~ msgid "Sprint"
-#~ msgstr "Sprint"
+msgid "Active Projects"
+msgstr "Projets actifs"
 
-#~ msgid "Start Sprint"
-#~ msgstr "Démarrer le sprint"
+msgid "Open Tickets"
+msgstr "Tickets ouverts"
 
-#~ msgid "Complete Sprint"
-#~ msgstr "Terminer le sprint"
+msgid "My Tasks"
+msgstr "Mes tâches"
 
-#~ msgid "Sprint Planning"
-#~ msgstr "Planification du sprint"
+msgid "Active Sprints"
+msgstr "Sprints actifs"
 
-#~ msgid "No active sprint"
-#~ msgstr "Aucun sprint actif"
+msgid "Recent Projects"
+msgstr "Projets récents"
 
-#~ msgid "Create and start a sprint from the backlog to begin tracking work."
-#~ msgstr ""
-#~ "Créez et démarrez un sprint depuis le backlog pour commencer à suivre le "
-#~ "travail."
+msgid "No projects yet"
+msgstr "Aucun projet pour le moment"
 
-#~ msgid "Go to Backlog"
-#~ msgstr "Aller au backlog"
+msgid "Create your first project"
+msgstr "Créez votre premier projet"
 
-# Ticket Management
-#~ msgid "Create Ticket"
-#~ msgstr "Créer un ticket"
+msgid "My Tickets"
+msgstr "Mes tickets"
 
-#~ msgid "Quick Filters:"
-#~ msgstr "Filtres rapides :"
+msgid "open"
+msgstr "ouvert"
 
-#~ msgid "Only My Issues"
-#~ msgstr "Mes tickets uniquement"
+msgid "No tickets assigned to you"
+msgstr "Aucun ticket ne vous est assigné"
 
-#~ msgid "Recently Updated"
-#~ msgstr "Récemment mis à jour"
+msgid "tickets"
+msgstr "tickets"
 
-#~ msgid "Blocked"
-#~ msgstr "Bloqué"
+msgid "Activity Feed"
+msgstr "Fil d'activité"
 
-#~ msgid "To Do"
-#~ msgstr "À faire"
+msgid "No recent activity"
+msgstr "Aucune activité récente"
 
-#~ msgid "In Progress"
-#~ msgstr "En cours"
+msgid "Quick Actions"
+msgstr "Actions rapides"
 
-#~ msgid "Done"
-#~ msgstr "Terminé"
+msgid "New Project"
+msgstr "Nouveau projet"
 
-#~ msgid "In Review"
-#~ msgstr "En révision"
+msgid "Create Issue"
+msgstr "Créer un ticket"
 
-# Sprint Completion
-#~ msgid "Unfinished Tickets Detected"
-#~ msgstr "Tickets non terminés détectés"
+msgid "Start Sprint"
+msgstr "Démarrer le sprint"
 
-#~ msgid "All Tickets Completed!"
-#~ msgstr "Tous les tickets terminés !"
+msgid "Browse Projects"
+msgstr "Parcourir les projets"
 
-#~ msgid "Complete Empty Sprint?"
-#~ msgstr "Terminer le sprint vide ?"
+msgid "Progress"
+msgstr "Progression"
 
-#~ msgid "What do you want to do with the unfinished tickets?"
-#~ msgstr "Que voulez-vous faire des tickets non terminés ?"
+msgid "days remaining"
+msgstr "jours restants"
 
-#~ msgid "Move to Backlog"
-#~ msgstr "Déplacer vers le backlog"
+msgid "issues"
+msgstr "tickets"
 
-#~ msgid "Mark as Done"
-#~ msgstr "Marquer comme terminé"
+# ── Sprint Management ──
+msgid "Active Sprint"
+msgstr "Sprint actif"
 
-#~ msgid "Tickets will be removed from this sprint and remain in the backlog."
-#~ msgstr ""
-#~ "Les tickets seront retirés de ce sprint et resteront dans le backlog."
+msgid "Product Backlog"
+msgstr "Backlog produit"
 
-#~ msgid "In-progress tickets will be reset to \"To Do\"."
-#~ msgstr "Les tickets en cours seront réinitialisés à \"À faire\"."
+msgid "Backlog"
+msgstr "Backlog"
 
-#~ msgid "Force all unfinished tickets to status \"Done\"."
-#~ msgstr "Forcer tous les tickets non terminés au statut \"Terminé\"."
+msgid "Sprints"
+msgstr "Sprints"
 
-#~ msgid "Tickets will be marked as completed in this sprint."
-#~ msgstr "Les tickets seront marqués comme terminés dans ce sprint."
+msgid "Sprint"
+msgstr "Sprint"
 
-#~ msgid "This action cannot be undone."
-#~ msgstr "Cette action ne peut pas être annulée."
+msgid "Create Sprint"
+msgstr "Créer un sprint"
 
-#~ msgid "Cancel"
-#~ msgstr "Annuler"
+msgid "Start sprint"
+msgstr "Démarrer le sprint"
 
-#~ msgid ""
-#~ "Choose how to handle unfinished tickets before completing the sprint."
-#~ msgstr ""
-#~ "Choisissez comment gérer les tickets non terminés avant de terminer le "
-#~ "sprint."
+msgid "Complete Sprint"
+msgstr "Terminer le sprint"
 
-#~ msgid "unfinished tickets"
-#~ msgstr "tickets non terminés"
+msgid "Complete sprint"
+msgstr "Terminer le sprint"
 
-#~ msgid "Unfinished tickets:"
-#~ msgstr "Tickets non terminés :"
+msgid "An active sprint already exists"
+msgstr "Un sprint actif existe déjà"
 
-# User Interface
-#~ msgid "Next"
-#~ msgstr "Suivant"
+msgid "No active sprint"
+msgstr "Aucun sprint actif"
 
-#~ msgid "Previous"
-#~ msgstr "Précédent"
+msgid "Create and start a sprint from the backlog to begin tracking work."
+msgstr "Créez et démarrez un sprint depuis le backlog pour commencer à suivre le travail."
 
-#~ msgid "Skip"
-#~ msgstr "Passer"
+msgid "Go to Backlog"
+msgstr "Aller au backlog"
 
-#~ msgid "Finish"
-#~ msgstr "Terminer"
+msgid "Sprint Planning"
+msgstr "Planification du sprint"
 
-#~ msgid "Close"
-#~ msgstr "Fermer"
+# ── Ticket Management ──
+msgid "Create Ticket"
+msgstr "Créer un ticket"
 
-#~ msgid "Save"
-#~ msgstr "Enregistrer"
+msgid "Quick Filters:"
+msgstr "Filtres rapides :"
 
-#~ msgid "Delete"
-#~ msgstr "Supprimer"
+msgid "Only My Issues"
+msgstr "Mes tickets uniquement"
 
-#~ msgid "Edit"
-#~ msgstr "Modifier"
+msgid "Recently Updated"
+msgstr "Récemment mis à jour"
 
-#~ msgid "View"
-#~ msgstr "Voir"
+msgid "Blocked"
+msgstr "Bloqué"
 
-#~ msgid "Search"
-#~ msgstr "Rechercher"
+msgid "To Do"
+msgstr "À faire"
 
-#~ msgid "Filter"
-#~ msgstr "Filtrer"
+msgid "In Progress"
+msgstr "En cours"
 
-#~ msgid "Sort"
-#~ msgstr "Trier"
+msgid "Done"
+msgstr "Terminé"
 
-# Messages
-#~ msgid "Success"
-#~ msgstr "Succès"
+msgid "In Review"
+msgstr "En révision"
 
-#~ msgid "Error"
-#~ msgstr "Erreur"
+msgid "No tickets found."
+msgstr "Aucun ticket trouvé."
 
-#~ msgid "Warning"
-#~ msgstr "Avertissement"
+msgid "No projects found."
+msgstr "Aucun projet trouvé."
 
-#~ msgid "Info"
-#~ msgstr "Information"
+msgid "This sprint has no issues yet"
+msgstr "Ce sprint n'a pas encore de tickets"
 
-#~ msgid "You don't have permission to complete sprints."
-#~ msgstr "Vous n'avez pas la permission de terminer les sprints."
+msgid "Great work, team! Complete this sprint to celebrate."
+msgstr "Excellent travail, équipe ! Terminez ce sprint pour célébrer."
 
-#~ msgid "You don't have access to this project."
-#~ msgstr "Vous n'avez pas accès à ce projet."
+# ── Sprint Completion Modal ──
+msgid "Unfinished Tickets Detected"
+msgstr "Tickets non terminés détectés"
 
-# Tour/Guide
-#~ msgid "Welcome to ScrumManagement!"
-#~ msgstr "Bienvenue sur ScrumManagement !"
+msgid "All Tickets Completed!"
+msgstr "Tous les tickets terminés !"
 
-#~ msgid "Your professional Agile project management platform"
-#~ msgstr "Votre plateforme professionnelle de gestion de projet Agile"
+msgid "Complete Empty Sprint?"
+msgstr "Terminer le sprint vide ?"
 
-#~ msgid ""
-#~ "Take a 2-minute interactive tour to learn the key features and get "
-#~ "started quickly."
-#~ msgstr ""
-#~ "Faites un tour interactif de 2 minutes pour découvrir les fonctionnalités "
-#~ "clés et démarrer rapidement."
+msgid "What do you want to do with the unfinished tickets?"
+msgstr "Que voulez-vous faire des tickets non terminés ?"
 
-#~ msgid "Don't Show Again"
-#~ msgstr "Ne plus afficher"
+msgid "Move to Backlog"
+msgstr "Déplacer vers le backlog"
 
-#~ msgid "Skip Tour"
-#~ msgstr "Passer le tour"
+msgid "Mark as Done"
+msgstr "Marquer comme terminé"
 
-#~ msgid "Start Tour"
-#~ msgstr "Démarrer le tour"
+msgid "Tickets will be removed from this sprint and remain in the backlog."
+msgstr "Les tickets seront retirés de ce sprint et resteront dans le backlog."
 
-#~ msgid "Interactive Guide"
-#~ msgstr "Guide interactif"
+msgid "In-progress tickets will be reset to \"To Do\"."
+msgstr "Les tickets en cours seront réinitialisés à \"À faire\"."
 
-#~ msgid "Kanban Boards"
-#~ msgstr "Tableaux Kanban"
+msgid "Force all unfinished tickets to status \"Done\"."
+msgstr "Forcer tous les tickets non terminés au statut \"Terminé\"."
 
-#~ msgid "Team Management"
-#~ msgstr "Gestion d'équipe"
+msgid "Tickets will be marked as completed in this sprint."
+msgstr "Les tickets seront marqués comme terminés dans ce sprint."
 
-#~ msgid "Ticket Tracking"
-#~ msgstr "Suivi des tickets"
+msgid "This action cannot be undone."
+msgstr "Cette action ne peut pas être annulée."
 
-#~ msgid "Burndown Charts"
-#~ msgstr "Graphiques burndown"
+msgid "Cancel"
+msgstr "Annuler"
 
-# Status and Priority
-#~ msgid "High"
-#~ msgstr "Haute"
+msgid "Choose how to handle unfinished tickets before completing the sprint."
+msgstr "Choisissez comment gérer les tickets non terminés avant de terminer le sprint."
 
-#~ msgid "Medium"
-#~ msgstr "Moyenne"
+msgid "unfinished tickets"
+msgstr "tickets non terminés"
 
-#~ msgid "Low"
-#~ msgstr "Basse"
+msgid "Unfinished tickets:"
+msgstr "Tickets non terminés :"
 
-#~ msgid "Epic"
-#~ msgstr "Epic"
+# ── Status and Priority ──
+msgid "High"
+msgstr "Haute"
 
-#~ msgid "User Story"
-#~ msgstr "User Story"
+msgid "Medium"
+msgstr "Moyenne"
 
-#~ msgid "Task"
-#~ msgstr "Tâche"
+msgid "Low"
+msgstr "Basse"
 
-#~ msgid "Bug"
-#~ msgstr "Bug"
+msgid "Epic"
+msgstr "Épique"
 
-# Time
-#~ msgid "days remaining"
-#~ msgstr "jours restants"
+msgid "User Story"
+msgstr "User Story"
 
-#~ msgid "issues"
-#~ msgstr "tickets"
+msgid "Task"
+msgstr "Tâche"
 
-#~ msgid "Progress"
-#~ msgstr "Progression"
+msgid "Bug"
+msgstr "Bug"
 
-#~ msgid "No tickets found."
-#~ msgstr "Aucun ticket trouvé."
+# ── UI Buttons ──
+msgid "Next"
+msgstr "Suivant"
 
-#~ msgid "No projects found."
-#~ msgstr "Aucun projet trouvé."
+msgid "Previous"
+msgstr "Précédent"
 
-#~ msgid "This sprint has no issues yet"
-#~ msgstr "Ce sprint n'a pas encore de tickets"
+msgid "Skip"
+msgstr "Passer"
 
-#~ msgid "Great work, team! Complete this sprint to celebrate."
-#~ msgstr "Excellent travail, équipe ! Terminez ce sprint pour célébrer."
+msgid "Finish"
+msgstr "Terminer"
 
-# Dashboard
-#~ msgid "Good"
-#~ msgstr "Bon"
+msgid "Close"
+msgstr "Fermer"
 
-#~ msgid "Here's what's happening across your projects"
-#~ msgstr "Voici ce qui se passe dans vos projets"
+msgid "Save"
+msgstr "Enregistrer"
 
-#~ msgid "Active Projects"
-#~ msgstr "Projets actifs"
+msgid "Delete"
+msgstr "Supprimer"
 
-#~ msgid "Open Tickets"
-#~ msgstr "Tickets ouverts"
+msgid "Edit"
+msgstr "Modifier"
 
-#~ msgid "My Tasks"
-#~ msgstr "Mes tâches"
+msgid "View"
+msgstr "Voir"
 
-#~ msgid "Active Sprints"
-#~ msgstr "Sprints actifs"
+msgid "Search"
+msgstr "Rechercher"
 
-#~ msgid "Recent Projects"
-#~ msgstr "Projets récents"
+msgid "Filter"
+msgstr "Filtrer"
 
-#~ msgid "No projects yet"
-#~ msgstr "Aucun projet pour le moment"
+msgid "Sort"
+msgstr "Trier"
 
-#~ msgid "Create your first project"
-#~ msgstr "Créez votre premier projet"
+msgid "Submit"
+msgstr "Soumettre"
 
-#~ msgid "My Tickets"
-#~ msgstr "Mes tickets"
+msgid "Add"
+msgstr "Ajouter"
 
-#~ msgid "open"
-#~ msgstr "ouvert"
+msgid "Remove"
+msgstr "Retirer"
 
-#~ msgid "No tickets assigned to you"
-#~ msgstr "Aucun ticket ne vous est assigné"
+msgid "Update"
+msgstr "Mettre à jour"
 
-#~ msgid "tickets"
-#~ msgstr "tickets"
+msgid "Confirm"
+msgstr "Confirmer"
 
-#~ msgid "Activity Feed"
-#~ msgstr "Fil d'activité"
+# ── Messages / Alerts ──
+msgid "Success"
+msgstr "Succès"
 
-#~ msgid "No recent activity"
-#~ msgstr "Aucune activité récente"
+msgid "Error"
+msgstr "Erreur"
 
-#~ msgid "Quick Actions"
-#~ msgstr "Actions rapides"
+msgid "Warning"
+msgstr "Avertissement"
 
-#~ msgid "New Project"
-#~ msgstr "Nouveau projet"
+msgid "Info"
+msgstr "Information"
 
-#~ msgid "Create Issue"
-#~ msgstr "Créer un ticket"
+msgid "You don't have permission to complete sprints."
+msgstr "Vous n'avez pas la permission de terminer les sprints."
 
-#~ msgid "Browse Projects"
-#~ msgstr "Parcourir les projets"
+msgid "You don't have access to this project."
+msgstr "Vous n'avez pas accès à ce projet."
 
-# Backlog & Sprint
-#~ msgid "Sprints"
-#~ msgstr "Sprints"
+# ── Tour / Guide ──
+msgid "Welcome to ScrumManagement!"
+msgstr "Bienvenue sur ScrumManagement !"
 
-#~ msgid "Create Sprint"
-#~ msgstr "Créer un sprint"
+msgid "Your professional Agile project management platform"
+msgstr "Votre plateforme professionnelle de gestion de projet Agile"
 
-#~ msgid "Start sprint"
-#~ msgstr "Démarrer le sprint"
+msgid "Take a 2-minute interactive tour to learn the key features and get started quickly."
+msgstr "Faites un tour interactif de 2 minutes pour découvrir les fonctionnalités clés et démarrer rapidement."
 
-#~ msgid "An active sprint already exists"
-#~ msgstr "Un sprint actif existe déjà"
+msgid "Don't Show Again"
+msgstr "Ne plus afficher"
 
-#~ msgid "Complete sprint"
-#~ msgstr "Terminer le sprint"
+msgid "Skip Tour"
+msgstr "Passer le tour"
 
-#~ msgid "Backlog"
-#~ msgstr "Backlog"
+msgid "Start Tour"
+msgstr "Démarrer le tour"
+
+msgid "Interactive Guide"
+msgstr "Guide interactif"
+
+msgid "Kanban Boards"
+msgstr "Tableaux Kanban"
+
+msgid "Team Management"
+msgstr "Gestion d'équipe"
+
+msgid "Ticket Tracking"
+msgstr "Suivi des tickets"
+
+msgid "Burndown Charts"
+msgstr "Graphiques burndown"
+
+# ── Profile / Users ──
+msgid "First Name"
+msgstr "Prénom"
+
+msgid "Last Name"
+msgstr "Nom de famille"
+
+msgid "Email"
+msgstr "E-mail"
+
+msgid "Username"
+msgstr "Nom d'utilisateur"
+
+msgid "Password"
+msgstr "Mot de passe"
+
+msgid "Change Password"
+msgstr "Changer le mot de passe"
+
+msgid "Confirm Password"
+msgstr "Confirmer le mot de passe"
+
+msgid "Register"
+msgstr "S'inscrire"
+
+msgid "Bio"
+msgstr "Biographie"
+
+msgid "Job Title"
+msgstr "Titre du poste"
+
+msgid "Update Profile"
+msgstr "Mettre à jour le profil"
+
+msgid "Profile updated successfully."
+msgstr "Profil mis à jour avec succès."
+
+msgid "Password changed successfully."
+msgstr "Mot de passe changé avec succès."
+
+# ── Project Settings ──
+msgid "Project Name"
+msgstr "Nom du projet"
+
+msgid "Project Code"
+msgstr "Code du projet"
+
+msgid "Description"
+msgstr "Description"
+
+msgid "Project Type"
+msgstr "Type de projet"
+
+msgid "Software"
+msgstr "Logiciel"
+
+msgid "Business"
+msgstr "Entreprise"
+
+msgid "Team Capacity"
+msgstr "Capacité de l'équipe"
+
+msgid "Sprint Duration"
+msgstr "Durée du sprint"
+
+msgid "Archive Project"
+msgstr "Archiver le projet"
+
+msgid "Delete Project"
+msgstr "Supprimer le projet"
+
+msgid "Danger Zone"
+msgstr "Zone dangereuse"
+
+msgid "Members"
+msgstr "Membres"
+
+msgid "Role"
+msgstr "Rôle"
+
+msgid "Invite Member"
+msgstr "Inviter un membre"
+
+msgid "Admin"
+msgstr "Administrateur"
+
+msgid "Contributor"
+msgstr "Contributeur"
+
+msgid "Viewer"
+msgstr "Observateur"
+
+# ── Roadmap ──
+msgid "Roadmap"
+msgstr "Feuille de route"
+
+msgid "No epics found"
+msgstr "Aucune épique trouvée"
+
+# ── Reports ──
+msgid "Reports"
+msgstr "Rapports"
+
+msgid "Burndown Chart"
+msgstr "Graphique burndown"
+
+msgid "Sprint Report"
+msgstr "Rapport de sprint"
+
+msgid "Velocity"
+msgstr "Vélocité"
+
+msgid "Story Points"
+msgstr "Points d'histoire"
+
+msgid "Completed"
+msgstr "Terminé"
+
+msgid "Remaining"
+msgstr "Restant"
+
+# ── Notifications ──
+msgid "Mark as read"
+msgstr "Marquer comme lu"
+
+msgid "Mark all as read"
+msgstr "Tout marquer comme lu"
+
+msgid "No notifications"
+msgstr "Aucune notification"
+
+# ── Password Reset ──
+msgid "Reset Password"
+msgstr "Réinitialiser le mot de passe"
+
+msgid "Password Reset"
+msgstr "Réinitialisation du mot de passe"
+
+msgid "Enter your email address to reset your password."
+msgstr "Entrez votre adresse e-mail pour réinitialiser votre mot de passe."
+
+msgid "Send Reset Email"
+msgstr "Envoyer l'e-mail de réinitialisation"
+
+msgid "Password Reset Done"
+msgstr "Réinitialisation effectuée"
+
+msgid "Check your email for instructions."
+msgstr "Consultez votre e-mail pour les instructions."
+
+msgid "Set New Password"
+msgstr "Définir un nouveau mot de passe"
+
+msgid "Password Reset Complete"
+msgstr "Réinitialisation du mot de passe terminée"
+
+msgid "Your password has been set."
+msgstr "Votre mot de passe a été défini."
+
+# ── Settings ──
+msgid "Settings"
+msgstr "Paramètres"
+
+msgid "General"
+msgstr "Général"
+
+msgid "Security"
+msgstr "Sécurité"
+
+msgid "Preferences"
+msgstr "Préférences"
+
+msgid "Language"
+msgstr "Langue"
+
+msgid "Timezone"
+msgstr "Fuseau horaire"
+
+msgid "Notifications Settings"
+msgstr "Paramètres des notifications"

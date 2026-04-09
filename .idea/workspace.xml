@@ -4,20 +4,10 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="d065ea19-74c2-457b-8ac9-813e940ad2c9" name="Changes" comment="warning message for spriny without goals and for close sprint with open ticket, add README.md for lauch the project without any issues">
-      <change afterPath="$PROJECT_DIR$/django_project/blog/static/blog/tour.css" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/django_project/blog/static/blog/tour.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/django_project/blog/static/blog/tour_improved.js" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/django_project/scrum/templates/scrum/global/_tour.html" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/django_project/scrum/tour_helpers.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/blog/templates/blog/base.html" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/blog/templates/blog/base.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/blog/templates/blog/home.html" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/blog/templates/blog/home.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/django_project/settings.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/django_project/settings.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/django_project/urls.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/django_project/urls.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/scrum/static/scrum/css/backlog.css" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/scrum/static/scrum/css/backlog.css" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/scrum/templates/scrum/sprint/active_sprint.html" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/scrum/templates/scrum/sprint/active_sprint.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/scrum/templates/scrum/ticket/product_backlog.html" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/scrum/templates/scrum/ticket/product_backlog.html" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/django_project/scrum/views.py" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/scrum/views.py" afterDir="false" />
+    <list default="true" id="d065ea19-74c2-457b-8ac9-813e940ad2c9" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_project/locale/fr/LC_MESSAGES/django.mo" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/locale/fr/LC_MESSAGES/django.mo" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/django_project/locale/fr/LC_MESSAGES/django.po" beforeDir="false" afterPath="$PROJECT_DIR$/django_project/locale/fr/LC_MESSAGES/django.po" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -28,7 +18,7 @@
     <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform))&#10;import django; print('Django %s' % django.get_version())&#10;sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;if 'setup' in dir(django): django.setup()&#10;import django_manage_shell; django_manage_shell.run(PROJECT_ROOT)" />
   </component>
   <component name="EmbeddingIndexingInfo">
-    <option name="cachedIndexableFilesCount" value="133" />
+    <option name="cachedIndexableFilesCount" value="140" />
     <option name="fileBasedEmbeddingIndicesEnabled" value="true" />
   </component>
   <component name="FileTemplateManagerImpl">
@@ -75,8 +65,8 @@
     "RunOnceActivity.git.unshallow": "true",
     "RunOnceActivity.typescript.service.memoryLimit.init": "true",
     "ai.playground.ignore.import.keys.banner.in.settings": "true",
-    "git-widget-placeholder": "main",
-    "last_opened_file_path": "/Users/jademarx/Documents/Costa/Projet/Prjt_Jira_GestionDeProjet_2526/ScrumManagement/django_project/scrum",
+    "git-widget-placeholder": "test-merge-main",
+    "last_opened_file_path": "/Users/jademarx/Documents/Costa/Projet/Prjt_Jira_GestionDeProjet_2526/ScrumManagement/django_project/locale/fr/LC_MESSAGES",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -88,12 +78,14 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/django_project/locale/nl/LC_MESSAGES" />
+      <recent name="$PROJECT_DIR$/django_project/locale/fr/LC_MESSAGES" />
       <recent name="$PROJECT_DIR$/django_project/scrum" />
       <recent name="$PROJECT_DIR$/django_project/blog/static/blog" />
       <recent name="$PROJECT_DIR$/django_project/scrum/templates/scrum/global" />
-      <recent name="$PROJECT_DIR$" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$/django_project/locale/fr/LC_MESSAGES" />
       <recent name="$PROJECT_DIR$/django_project/scrum/templates/scrum/sprint" />
     </key>
   </component>
@@ -115,6 +107,7 @@
       <workItem from="1775386483465" duration="12717000" />
       <workItem from="1775501160137" duration="690000" />
       <workItem from="1775572508343" duration="15092000" />
+      <workItem from="1775725759185" duration="3311000" />
     </task>
     <task id="LOCAL-00001" summary="warning message for spriny without goals and for close sprint with open ticket, add README.md for lauch the project without any issues">
       <option name="closed" value="true" />
