@@ -7,9 +7,52 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 
+        <style id="anti-flash">
+
+            html.dark-mode { 
+                background-color: #0d1117 !important;
+            }
+            body {
+                background-color: #f4f6f9;
+            }
+            body.dark-mode {
+                background-color: #0d1117 !important;
+            }
+        </style>
+        <script>
+            (function() {
+                var isDark = localStorage.getItem('darkMode') === 'true';
+                if (isDark) {
+                    document.documentElement.classList.add('dark-mode');
+                    document.body.classList.add('dark-mode');
+                    document.documentElement.style.backgroundColor = '#0d1117';
+                } else {
+                    document.documentElement.style.backgroundColor = '#f4f6f9';
+                }
+                var cssLink = document.getElementById('main-css');
+                if (cssLink) {
+                    cssLink.onload = function() {
+                        document.documentElement.style.visibility = 'visible';
+                        document.documentElement.style.opacity = '1';
+                    };
+                    setTimeout(function() {
+                        if (document.documentElement.style.visibility !== 'visible') {
+                            document.documentElement.style.visibility = 'visible';
+                            document.documentElement.style.opacity = '1';
+                        }
+                    }, 1000);
+                } else {
+                    document.addEventListener('DOMContentLoaded', function() {
+                        document.documentElement.style.visibility = 'visible';
+                        document.documentElement.style.opacity = '1';
+                    });
+                }
+            })();
+        </script>
+
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/css/bootstrap.min.css">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-        <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}">
+        <link rel="stylesheet" type="text/css" href="{% static 'blog/main.css' %}" id="main-css">
 
         <title>ScrumManagement</title>
     </head>
@@ -20,9 +63,7 @@
                 <div class="container-fluid px-3">
 
                     <a class="navbar-brand d-flex align-items-center" href="{% url 'home' %}">
-                        <span class="logo-wrapper mr-2">
-                            <img src="{% static 'blog/images/logo.jpg' %}" class="navbar-logo" alt="Logo">
-                        </span>
+                        <img src="{% static 'blog/images/logo.jpg' %}" class="mr-2" alt="Logo">
                         HELBScrumManagement
                     </a>
 
